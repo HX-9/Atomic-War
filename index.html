@@ -9,9 +9,36 @@
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Main Stylesheet -->
-    <link rel="stylesheet" href="Style.css?v=3.2">
+    <link rel="stylesheet" href="Style.css?v=4.1">
 </head>
 <body class="app-body">
+
+    <!-- ================= 00. الشاشة الترحيبية واختيار الوضع ================= -->
+    <section id="welcomeScreen" class="welcome-screen">
+        <div class="glass-panel welcome-card">
+            <div class="welcome-logo">
+                <i class="fa-solid fa-atom welcome-logo-icon"></i>
+            </div>
+
+            <h1 class="welcome-title">الحرب الذرية</h1>
+            <p class="welcome-subtitle">التفاعل الانشطاري المتسلسل (Atomic War)</p>
+
+            <div class="welcome-modes-actions">
+                <button type="button" id="btnStartNormalMode" class="welcome-mode-btn welcome-mode-btn--normal">
+                    <i class="fa-solid fa-crosshairs"></i>
+                    <span>الوضع العادي</span>
+                </button>
+
+                <button type="button" id="btnStartAdvancedMode" class="welcome-mode-btn welcome-mode-btn--advanced">
+                    <i class="fa-solid fa-atom"></i>
+                    <span>الوضع المطور</span>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ================= حاوية شاشة المعركة الرئيسية ================= -->
+    <div id="battleScreen" class="battle-screen hidden">
 
     <!-- ================= 01. شريط القيادة العلوي ومؤشرات المفاعل ================= -->
     <header class="app-header">
@@ -23,7 +50,7 @@
                 </div>
                 <div>
                     <h1 class="brand-title">
-                        الحرب الذرية <span class="brand-subtitle">(انشطار متسلسل)</span>
+                        الحرب الذرية <span class="brand-subtitle" id="activeModeBadge">(الوضع العادي)</span>
                     </h1>
                     <p class="brand-meta" id="headerBoardInfo">مفاعل 7×7 • 49 غرفة انشطار</p>
                 </div>
@@ -41,6 +68,10 @@
 
             <!-- أزرار التحكم السريع -->
             <div class="header-actions">
+                <button id="btnBackToWelcome" title="العودة لشاشة اختيار الوضع" class="action-btn">
+                    <i class="fa-solid fa-house icon-amber"></i>
+                    <span class="action-btn-label">الأوضاع</span>
+                </button>
                 <button id="btnToggleNumbers" title="إظهار/إخفاء أعداد الذرات" class="action-btn">
                     <i class="fa-solid fa-hashtag icon-sky"></i>
                     <span class="action-btn-label">الذرات</span>
@@ -148,6 +179,8 @@
         الحرب الذرية (Atomic War) • محاكي الانشطار النووي والتفاعل المتسلسل
     </footer>
 
+    </div><!-- نهاية حاوية شاشة المعركة #battleScreen -->
+
     <!-- ================= 04. النوافذ المنبثقة (Modals) ================= -->
 
     <!-- 1. نافذة النصر والسيطرة النووية المطلقة -->
@@ -156,6 +189,7 @@
             <div class="victory-trophy-circle">
                 <i class="fa-solid fa-trophy victory-trophy-icon"></i>
             </div>
+            <div id="victoryModeBadge" class="victory-mode-badge">الوضع العادي</div>
             <h2 class="victory-heading">سيطرة نووية مطلقة!</h2>
             <p class="victory-subtitle">تمت الهيمنة الكاملة على غرف المفاعل الذري</p>
 
@@ -181,7 +215,10 @@
 
             <div class="modal-actions">
                 <button id="btnPlayAgainModal" class="modal-btn-primary">
-                    <i class="fa-solid fa-play"></i> معركة نووية جديدة
+                    <i class="fa-solid fa-play"></i> معركة جديدة
+                </button>
+                <button id="btnBackToWelcomeFromWin" class="modal-btn-secondary" title="العودة لاختيار وضع اللعب">
+                    <i class="fa-solid fa-layer-group icon-amber"></i> تغيير الوضع
                 </button>
                 <button id="btnOpenSettingsFromWin" class="modal-btn-secondary" title="إعدادات المفاعل">
                     <i class="fa-solid fa-sliders"></i>
@@ -292,7 +329,7 @@
                     <h3 class="rule-title icon-sky">
                         <i class="fa-solid fa-shield-halved icon-emerald"></i> 2. آلية التلقيم والتمركز ومربع الحماية 3×3
                     </h3>
-                    <p class="rule-text">يبدأ كل لاعب دورته الأولى بوضع <strong>ذرة ثلاثية (3 ذرات مشعة)</strong> في أي غرفة فارغة لتأسيس قلعته النووية، ويُحاط المربع تلقائياً <strong>بنطاق حماية كامل 3×3 بدرع طاقة واقٍ</strong> طوال الجولة الأولى يمنع أي خصم من محاصرته أو التمركز بجواره أو اختراقه بانشطارات نووية. وعند عودة اللعب على اللاعب ينهار درعه وتشتعل المعركة الشاملة.</p>
+                    <p id="rulePlacementDesc" class="rule-text">يبدأ كل لاعب دورته الأولى بوضع <strong>ذرة ثلاثية (3 ذرات مشعة)</strong> في أي غرفة فارغة لتأسيس قلعته النووية، ويُحاط المربع تلقائياً <strong>بنطاق حماية كامل 3×3 بدرع طاقة واقٍ</strong> طوال الجولة الأولى يمنع أي خصم من محاصرته أو التمركز بجواره أو اختراقه بانشطارات نووية. وعند عودة اللعب على اللاعب ينهار درعه وتشتعل المعركة الشاملة.</p>
                 </div>
 
                 <div class="rule-card">
@@ -322,6 +359,6 @@
     </div>
 
     <!-- Script Application -->
-    <script src="Script.js?v=3.0"></script>
+    <script src="Script.js?v=4.1"></script>
 </body>
 </html>

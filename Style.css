@@ -3,6 +3,7 @@
    ملف التنسيقات الموحد والمنظم (Style.css)
    ==========================================================================
    فهرس الأقسام (Table of Contents):
+   00. الشاشة الترحيبية ومركز اختيار وضع اللعب (Welcome & Mode Selection Screen)
    01. المتغيرات العامة وإعادة الضبط (Root Variables & Base Reset)
    02. الهيكل العام وشريط القيادة العلوي (App Layout & Top Header)
    03. مؤشر الدور الفعال وأزرار التحكم (Turn Banner & Header Actions)
@@ -100,6 +101,113 @@ body.app-body::before {
 }
 
 /* ==========================================================================
+   00. الشاشة الترحيبية واختيار الوضع (Welcome & Mode Selection Screen)
+   ========================================================================== */
+.welcome-screen {
+    width: 100%;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    position: relative;
+    z-index: 20;
+}
+
+.welcome-card {
+    width: 100%;
+    max-width: 28rem;
+    padding: 2.5rem 2rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.welcome-logo {
+    width: 4.5rem;
+    height: 4.5rem;
+    border-radius: 1.25rem;
+    background: linear-gradient(135deg, var(--color-emerald), var(--color-teal), var(--color-sky));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.25rem;
+    box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.45);
+}
+
+.welcome-logo-icon {
+    font-size: 2.25rem;
+    color: #ffffff;
+    animation: slowAtomSpin 8s linear infinite;
+}
+
+.welcome-title {
+    font-size: 2.25rem;
+    font-weight: 900;
+    margin: 0 0 0.35rem 0;
+    background: linear-gradient(to left, #ffffff, #a7f3d0, #38bdf8);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.welcome-subtitle {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    margin: 0 0 2rem 0;
+}
+
+.welcome-modes-actions {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.875rem;
+}
+
+.welcome-mode-btn {
+    width: 100%;
+    padding: 1rem 1.25rem;
+    border-radius: 0.875rem;
+    border: none;
+    font-family: inherit;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #ffffff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.65rem;
+    transition: transform 0.15s ease, opacity 0.2s ease, box-shadow 0.2s ease;
+}
+
+.welcome-mode-btn:hover {
+    transform: translateY(-2px);
+    opacity: 0.95;
+}
+
+.welcome-mode-btn--normal {
+    background: linear-gradient(to left, #059669, #0d9488, #0284c7);
+    box-shadow: 0 8px 20px -4px rgba(16, 185, 129, 0.4);
+}
+
+.welcome-mode-btn--advanced {
+    background: linear-gradient(to left, #9333ea, #7c3aed, #db2777);
+    box-shadow: 0 8px 20px -4px rgba(168, 85, 247, 0.4);
+}
+
+/* حاوية شاشة المعركة */
+.battle-screen {
+    width: 100%;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+/* ==========================================================================
    02. الهيكل العام وشريط القيادة العلوي (App Layout & Top Header)
    ========================================================================== */
 .app-header {
@@ -154,6 +262,13 @@ body.app-body::before {
     100% { transform: rotate(360deg); }
 }
 
+.brand-title-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+
 .brand-title {
     font-size: 1.125rem;
     font-weight: 900;
@@ -163,6 +278,28 @@ body.app-body::before {
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
+}
+
+.active-mode-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.68rem;
+    font-weight: 800;
+    padding: 0.15rem 0.6rem;
+    border-radius: 9999px;
+}
+
+.active-mode-badge--normal {
+    background: rgba(16, 185, 129, 0.16);
+    color: #6ee7b7;
+    border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+.active-mode-badge--advanced {
+    background: rgba(168, 85, 247, 0.2);
+    color: #d8b4fe;
+    border: 1px solid rgba(168, 85, 247, 0.4);
 }
 
 @media (min-width: 640px) {
@@ -347,8 +484,9 @@ body.app-body::before {
 @media (min-width: 1024px) {
     .main-workspace {
         flex-direction: row;
-        align-items: stretch;
-        gap: 2.25rem;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 2rem;
     }
 }
 
@@ -362,7 +500,7 @@ body.app-body::before {
 
 @media (min-width: 1024px) {
     .reactor-sidebar {
-        width: 24rem;
+        width: 26rem;
         flex-shrink: 0;
         order: 1;
     }
@@ -694,17 +832,17 @@ body.app-body::before {
 .game-board {
     display: grid;
     grid-template-columns: repeat(var(--grid-cols), minmax(0, 1fr));
-    gap: 7px;
-    width: min(88vw, 520px);
-    height: min(88vw, 520px);
+    gap: 8px;
+    width: min(88vw, 540px);
+    height: min(88vw, 540px);
     position: relative;
     touch-action: manipulation;
 }
 
 @media (min-width: 1024px) {
     .game-board {
-        width: min(68vh, 570px);
-        height: min(68vh, 570px);
+        width: min(72vh, 600px);
+        height: min(72vh, 600px);
     }
 }
 
@@ -742,6 +880,17 @@ body.app-body::before {
 .board-cell.invalid-move {
     cursor: not-allowed;
     opacity: 0.92;
+}
+
+/* غرفة فارغة مغلقة في الوضع العادي بعد الجولة الأولى */
+.board-cell.cell-locked-normal {
+    background: radial-gradient(circle at center, rgba(15, 23, 42, 0.92) 0%, rgba(9, 13, 22, 0.98) 100%);
+    border-style: dashed;
+}
+
+/* غرفة مملوكة للاعب الحالي وجاهزة للشحن */
+.board-cell.cell-owned-active {
+    box-shadow: inset 0 0 12px var(--turn-glow);
 }
 
 /* وميض الانفجار الذري للخلية */
@@ -1275,6 +1424,18 @@ body.app-body::before {
 @keyframes trophyBounce {
     0% { transform: translateY(0); }
     100% { transform: translateY(-6px); }
+}
+
+.victory-mode-badge {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 800;
+    padding: 0.2rem 0.75rem;
+    border-radius: 9999px;
+    background: rgba(16, 185, 129, 0.16);
+    color: #6ee7b7;
+    border: 1px solid rgba(16, 185, 129, 0.35);
+    margin-bottom: 0.5rem;
 }
 
 .victory-heading {
