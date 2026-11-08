@@ -322,13 +322,13 @@ class AtomicWarsEngine {
     /**
      * فحص ديناميكي لمالك نطاق الحماية 3×3 (يعتمد حصراً على وجود درع نشط)
      */
-    getCellShieldZoneOwner(r, c) {
+    getCellShieldZoneOwner(r, c, board = this.board) {
         for (let dr = -1; dr <= 1; dr++) {
             for (let dc = -1; dc <= 1; dc++) {
                 const nr = r + dr;
                 const nc = c + dc;
                 if (nr >= 0 && nr < this.rows && nc >= 0 && nc < this.cols) {
-                    const nCell = this.board[nr][nc];
+                    const nCell = board[nr][nc];
                     if (nCell.hasShield && nCell.shieldPlayer !== null) {
                         return nCell.shieldPlayer;
                     }
@@ -822,8 +822,8 @@ class AtomicWarsUIController {
             this.sound.enabled = !this.sound.enabled;
             const icon = document.getElementById('soundIcon');
             icon.className = this.sound.enabled
-                ? 'fa-solid fa-volume-high text-emerald-400'
-                : 'fa-solid fa-volume-xmark text-rose-400';
+                ? 'fa-solid fa-volume-high icon-emerald'
+                : 'fa-solid fa-volume-xmark icon-rose';
         });
 
         // إغلاق النوافذ المنبثقة عند النقر على الخلفية أو الضغط على Esc
@@ -896,21 +896,18 @@ class AtomicWarsUIController {
     }
 
     updateButtonGroupHighlight(selector, activeBtn, colorKey) {
+        const activeClasses = ['option-btn--active-purple', 'option-btn--active-sky', 'option-btn--active-emerald'];
         document.querySelectorAll(selector).forEach(btn => {
-            btn.classList.remove('border-2', 'border-purple-500', 'border-sky-500', 'border-emerald-500', 'bg-purple-500/20', 'bg-sky-500/20', 'bg-emerald-500/20', 'text-white');
-            btn.classList.add('border', 'border-slate-700', 'bg-slate-800/70', 'text-slate-300');
+            btn.classList.remove(...activeClasses);
         });
-        activeBtn.classList.remove('border', 'border-slate-700', 'bg-slate-800/70', 'text-slate-300');
-        activeBtn.classList.add('border-2', `border-${colorKey}-500`, `bg-${colorKey}-500/20`, 'text-white');
+        activeBtn.classList.add(`option-btn--active-${colorKey}`);
     }
 
     toggleModal(modalEl, show) {
         if (show) {
             modalEl.classList.remove('hidden');
-            modalEl.classList.add('flex');
         } else {
             modalEl.classList.add('hidden');
-            modalEl.classList.remove('flex');
         }
     }
 
@@ -1254,7 +1251,7 @@ class AtomicWarsUIController {
                 cellEl.classList.toggle('invalid-move', !canClick);
 
                 // نطاق مربع الحماية 3×3 - فحص ديناميكي يعتمد على الدرع النشط
-                const zoneOwner = this.engine.getCellShieldZoneOwner(r, c);
+                const zoneOwner = this.engine.getCellShieldZoneOwner(r, c, boardMatrix);
                 if (zoneOwner !== null && this.engine.players[zoneOwner]) {
                     const zonePlayer = this.engine.players[zoneOwner];
                     cellEl.classList.add('cell-shield-zone');
@@ -1372,13 +1369,13 @@ class AtomicWarsUIController {
         playersList.forEach(p => {
             const isTurn = !this.engine.isGameOver && p.id === currentId;
             const card = document.createElement('div');
-            card.className = `p-3 rounded-xl border transition-all duration-300 flex items-center justify-between ${
-                !p.alive
-                    ? 'bg-slate-900/40 border-slate-800 opacity-50 grayscale'
-                    : isTurn
-                        ? 'bg-slate-800/95 border-2 shadow-lg scale-[1.02]'
-                        : 'bg-slate-800/50 border-slate-700/70'
-            }`;
+            const stateClass = !p.alive
+                ? 'player-card--eliminated'
+                : isTurn
+                    ? 'player-card--active'
+                    : '';
+
+            card.className = `player-card ${stateClass}`.trim();
 
             if (isTurn && p.alive) {
                 card.style.borderColor = p.color;
@@ -1386,32 +1383,32 @@ class AtomicWarsUIController {
             }
 
             const statusLabel = !p.alive
-                ? '<span class="text-[10px] px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 font-bold">مُدمّر بالكامل</span>'
+                ? '<span class="player-status-tag player-status-tag--eliminated">مُدمّر بالكامل</span>'
                 : isTurn
-                    ? `<span class="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold animate-pulse">${!p.hasPlayed ? 'بداية ثلاثية ×3' : 'إطلاق نووي'}</span>`
+                    ? `<span class="player-status-tag player-status-tag--turn">${!p.hasPlayed ? 'بداية ثلاثية ×3' : 'إطلاق نووي'}</span>`
                     : !p.hasPlayed
-                        ? '<span class="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-amber-300/80 border border-amber-500/20 font-semibold">بانتظار الضربة ×3</span>'
+                        ? '<span class="player-status-tag player-status-tag--waiting">بانتظار الضربة ×3</span>'
                         : '';
 
             card.innerHTML = `
-                <div class="flex items-center gap-2.5 min-w-0">
-                    <span class="w-4 h-4 rounded-full shrink-0 shadow-sm" style="background-color: ${p.color}; box-shadow: 0 0 8px ${p.color};"></span>
-                    <div class="truncate">
-                        <div class="font-bold text-xs sm:text-sm text-white flex items-center gap-1.5 truncate">
+                <div class="player-card-info">
+                    <span class="player-color-dot" style="background-color: ${p.color}; box-shadow: 0 0 8px ${p.color};"></span>
+                    <div class="player-meta-box">
+                        <div class="player-name-row">
                             <span>${p.name}</span>
-                            ${p.isAI ? '<i class="fa-solid fa-robot text-[11px] text-sky-400" title="ذكاء اصطناعي"></i>' : ''}
+                            ${p.isAI ? '<i class="fa-solid fa-robot icon-sky" title="ذكاء اصطناعي"></i>' : ''}
                         </div>
                         ${statusLabel}
                     </div>
                 </div>
-                <div class="flex items-center gap-3 text-left shrink-0">
-                    <div class="text-center">
-                        <div class="text-[10px] text-slate-400">الغرف</div>
-                        <div class="text-xs sm:text-sm font-black text-slate-200">${p.cellCount}</div>
+                <div class="player-stats-group">
+                    <div class="player-stat-box">
+                        <div class="player-stat-label">الغرف</div>
+                        <div class="player-stat-value">${p.cellCount}</div>
                     </div>
-                    <div class="text-center">
-                        <div class="text-[10px] text-slate-400">الذرات</div>
-                        <div class="text-xs sm:text-sm font-black" style="color: ${p.color}">${p.atomCount}</div>
+                    <div class="player-stat-box">
+                        <div class="player-stat-label">الذرات</div>
+                        <div class="player-stat-value" style="color: ${p.color}">${p.atomCount}</div>
                     </div>
                 </div>
             `;
@@ -1428,7 +1425,7 @@ class AtomicWarsUIController {
         document.documentElement.style.setProperty('--turn-glow', currentPlayer.glow);
 
         const isFirstMove = !currentPlayer.hasPlayed;
-        const initialBadge = isFirstMove ? ' <span class="text-[10px] sm:text-xs text-amber-300 font-bold bg-amber-500/20 border border-amber-500/40 px-2 py-0.5 rounded-full mr-1.5 shadow-sm">ضربة افتتاحية ×3</span>' : '';
+        const initialBadge = isFirstMove ? ' <span class="opening-strike-badge">ضربة افتتاحية ×3</span>' : '';
 
         this.currentPlayerNameEl.innerHTML = currentPlayer.name + (currentPlayer.isAI ? ' (آلي)' : '') + initialBadge;
         this.currentPlayerNameEl.style.color = currentPlayer.color;
@@ -1439,9 +1436,9 @@ class AtomicWarsUIController {
     setWaveStatus(text, colorKey) {
         this.chainWaveStatusEl.textContent = text;
         if (colorKey === 'amber') {
-            this.chainWaveStatusEl.className = 'text-xs font-extrabold px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse';
+            this.chainWaveStatusEl.className = 'reactor-status-badge reactor-status-badge--active';
         } else {
-            this.chainWaveStatusEl.className = 'text-xs font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+            this.chainWaveStatusEl.className = 'reactor-status-badge reactor-status-badge--stable';
         }
     }
 
@@ -1516,23 +1513,23 @@ class AtomicWarsUIController {
         for (let i = 0; i < this.config.playerCount; i++) {
             const pSetup = this.config.playersSetup[i];
             const row = document.createElement('div');
-            row.className = 'flex items-center gap-2 bg-slate-800/70 p-2.5 rounded-xl border border-slate-700';
+            row.className = 'player-setup-row';
 
             const colorSwatches = ISOTOPE_PALETTES.map((pal, idx) => `
                 <button type="button" data-player="${i}" data-palette="${idx}"
-                    class="palette-swatch w-6 h-6 rounded-full border-2 transition transform ${pSetup.paletteIndex === idx ? 'border-white scale-110' : 'border-transparent opacity-60 hover:opacity-100'}"
+                    class="palette-swatch ${pSetup.paletteIndex === idx ? 'palette-swatch--selected' : ''}"
                     style="background-color: ${pal.color};" title="${pal.name}">
                 </button>
             `).join('');
 
             row.innerHTML = `
                 <input type="text" data-player-name="${i}" value="${pSetup.name}" maxlength="18"
-                    class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-bold text-white w-28 sm:w-36 focus:outline-none focus:border-purple-500" />
-                <div class="flex items-center gap-1.5 flex-1 justify-center">
+                    class="player-name-input" />
+                <div class="player-swatches-group">
                     ${colorSwatches}
                 </div>
-                <label class="flex items-center gap-1.5 text-xs text-slate-300 cursor-pointer bg-slate-900/80 px-2.5 py-1.5 rounded-lg border border-slate-700">
-                    <input type="checkbox" data-player-ai="${i}" ${pSetup.isAI ? 'checked' : ''} class="accent-sky-500 rounded" />
+                <label class="player-ai-toggle">
+                    <input type="checkbox" data-player-ai="${i}" ${pSetup.isAI ? 'checked' : ''} class="player-ai-checkbox" />
                     <span>آلي</span>
                 </label>
             `;
