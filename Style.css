@@ -138,6 +138,30 @@ body::before {
     z-index: 25;
 }
 
+/* موجة الصدمة النووية المتوسعة */
+.nuclear-shockwave {
+    position: absolute;
+    inset: 0;
+    border-radius: 14px;
+    border: 2px solid var(--explode-color, #10b981);
+    pointer-events: none;
+    z-index: 30;
+    animation: shockwaveExpand 0.4s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+}
+
+@keyframes shockwaveExpand {
+    0% {
+        transform: scale(0.7);
+        opacity: 1;
+        box-shadow: 0 0 10px var(--explode-color, #fff);
+    }
+    100% {
+        transform: scale(1.9);
+        opacity: 0;
+        box-shadow: 0 0 25px var(--explode-color, #fff);
+    }
+}
+
 @keyframes nuclearFlash {
     0% {
         background-color: #ffffff;
@@ -186,9 +210,23 @@ body::before {
     height: 100%;
     border-radius: 50%;
     border: 1px dashed var(--atom-color);
-    opacity: 0.45;
+    opacity: 0.55;
     pointer-events: none;
     z-index: 1;
+}
+
+/* الإلكترون المضيء الدائر حول المدار */
+.electron-orbit::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: 50%;
+    width: 4.5px;
+    height: 4.5px;
+    border-radius: 50%;
+    background: #ffffff;
+    box-shadow: 0 0 6px var(--atom-color, #10b981), 0 0 10px #ffffff;
+    transform: translateX(-50%);
 }
 
 .orbit-1 {
@@ -269,8 +307,7 @@ body::before {
    حالة الكتلة الحرجة والاهتزاز الإشعاعي (Critical Mass Warning)
    ========================================================================== */
 .critical-ready {
-    border-color: rgba(239, 68, 68, 0.7) !important;
-    box-shadow: inset 0 0 15px rgba(239, 68, 68, 0.35), 0 0 12px rgba(239, 68, 68, 0.25) !important;
+    box-shadow: inset 0 0 16px rgba(255, 255, 255, 0.28), 0 0 10px rgba(255, 255, 255, 0.2);
 }
 
 .critical-ready .atom-cluster {
@@ -283,8 +320,8 @@ body::before {
     top: 2px;
     left: 4px;
     font-size: 0.65rem;
-    color: #ef4444;
-    text-shadow: 0 0 6px #ef4444;
+    color: #fbbf24;
+    text-shadow: 0 0 6px #fbbf24;
     animation: blinkWarning 0.7s infinite alternate;
     pointer-events: none;
     z-index: 10;
@@ -299,6 +336,168 @@ body::before {
 @keyframes blinkWarning {
     0% { opacity: 0.3; }
     100% { opacity: 1; }
+}
+
+/* ==========================================================================
+   الدرع النووي الافتتاحي ومربع الحماية 3×3 (Nuclear Forcefield & 3x3 Safe Zone)
+   جميع تفاصيل الدرع متطابقة 100% مع لون ذرة كل لاعب
+   ========================================================================== */
+.cell-shield-zone {
+    border-color: var(--shield-color) !important;
+    box-shadow: inset 0 0 14px var(--shield-glow) !important;
+    background: radial-gradient(circle at center, var(--shield-glow) 0%, rgba(30, 41, 59, 0.9) 100%) !important;
+    transition: all 0.3s ease;
+}
+
+.cell-shield-zone::after {
+    content: '';
+    position: absolute;
+    inset: 1px;
+    border-radius: 12px;
+    border: 1px dashed var(--shield-color);
+    background: radial-gradient(circle at center, var(--shield-glow) 0%, transparent 75%);
+    pointer-events: none;
+    opacity: 0.45;
+}
+
+.cell-shielded {
+    box-shadow: 0 0 24px var(--shield-color), inset 0 0 16px var(--shield-color) !important;
+    border-color: var(--shield-color) !important;
+}
+
+.cell-shielded::before {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 16px;
+    border: 2px dashed var(--shield-color);
+    background: radial-gradient(circle at center, var(--shield-glow) 0%, transparent 75%);
+    box-shadow: 0 0 14px var(--shield-glow), inset 0 0 8px var(--shield-glow);
+    pointer-events: none;
+    z-index: 12;
+    animation: shieldSpinPulse 4s linear infinite;
+}
+
+.shield-badge {
+    position: absolute;
+    top: 3px;
+    left: 4px;
+    font-size: 0.78rem;
+    color: var(--shield-color);
+    text-shadow: 0 0 8px var(--shield-color), 0 0 14px var(--shield-glow);
+    pointer-events: none;
+    z-index: 15;
+    animation: shieldGlow 1.5s infinite alternate ease-in-out;
+}
+
+@keyframes shieldSpinPulse {
+    0% { transform: rotate(0deg) scale(0.98); opacity: 0.8; }
+    50% { transform: rotate(180deg) scale(1.04); opacity: 1; }
+    100% { transform: rotate(360deg) scale(0.98); opacity: 0.8; }
+}
+
+@keyframes shieldGlow {
+    0% { opacity: 0.75; transform: scale(0.95); }
+    100% { opacity: 1; transform: scale(1.12); }
+}
+
+/* ==========================================================================
+   أنيميشن انهيار الدرع (Shield Collapse Animation)
+   ========================================================================== */
+.shield-collapsing {
+    animation: shieldCollapseCore 0.52s cubic-bezier(0.2, 0.85, 0.25, 1) forwards !important;
+    z-index: 30;
+}
+
+@keyframes shieldCollapseCore {
+    0% {
+        transform: scale(1);
+        filter: brightness(1.7);
+        box-shadow: 0 0 35px var(--shield-color), inset 0 0 20px #ffffff;
+        border-color: #ffffff !important;
+    }
+    35% {
+        transform: scale(1.12);
+        filter: brightness(2);
+        box-shadow: 0 0 45px var(--shield-color), 0 0 60px var(--shield-glow);
+    }
+    70% {
+        transform: scale(0.96);
+        filter: brightness(1.1);
+        box-shadow: 0 0 15px var(--shield-color);
+    }
+    100% {
+        transform: scale(1);
+        filter: brightness(1);
+        box-shadow: none;
+        border-color: var(--atom-color, rgba(148, 163, 184, 0.3)) !important;
+    }
+}
+
+.zone-collapsing {
+    animation: shieldCollapseZone 0.52s ease-out forwards !important;
+}
+
+@keyframes shieldCollapseZone {
+    0% {
+        filter: brightness(1.6);
+        box-shadow: inset 0 0 16px var(--shield-glow);
+    }
+    50% {
+        filter: brightness(1.2);
+        box-shadow: inset 0 0 8px var(--shield-glow);
+    }
+    100% {
+        filter: brightness(1);
+        box-shadow: none;
+        border-color: rgba(148, 163, 184, 0.16) !important;
+    }
+}
+
+/* شظايا طاقة متطايرة عند انهيار الدرع */
+.shield-collapse-particle {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #ffffff;
+    box-shadow: 0 0 10px var(--shield-color), 0 0 16px var(--shield-glow);
+    pointer-events: none;
+    z-index: 50;
+    transform: translate(-50%, -50%);
+    animation: particleScatter 0.52s cubic-bezier(0.1, 0.85, 0.25, 1) forwards;
+}
+
+@keyframes particleScatter {
+    0% {
+        transform: translate(-50%, -50%) scale(1.6);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.15);
+        opacity: 0;
+    }
+}
+
+/* وميض صد واعتراض المقذوفات بواسطة الدرع */
+.shield-deflect-flash {
+    animation: shieldDeflectPulse 0.35s ease-out forwards;
+    z-index: 25;
+}
+
+@keyframes shieldDeflectPulse {
+    0% {
+        transform: scale(1.08);
+        box-shadow: 0 0 25px var(--shield-color), inset 0 0 15px #ffffff !important;
+        border-color: #ffffff !important;
+    }
+    50% {
+        transform: scale(1.04);
+        box-shadow: 0 0 18px var(--shield-color) !important;
+    }
+    100% {
+        transform: scale(1);
+    }
 }
 
 /* دوران هادئ للأنوية المستقرة متعددة الذرات */

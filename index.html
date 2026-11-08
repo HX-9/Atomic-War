@@ -11,7 +11,7 @@
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Main Stylesheet -->
-    <link rel="stylesheet" href="Style.css">
+    <link rel="stylesheet" href="Style.css?v=2.2">
 </head>
 <body class="flex flex-col min-h-screen justify-between p-2 sm:p-4">
 
@@ -102,6 +102,7 @@
                 <div>
                     <div class="flex justify-between text-[11px] text-slate-400 mb-1 font-semibold">
                         <span>مستوى الإشعاع النشط (Geiger Activity):</span>
+                        <span id="geigerValueText" class="text-emerald-400 font-mono font-bold">0.14 μSv/h</span>
                     </div>
                     <div class="geiger-meter-bar">
                         <div id="geigerMeterFill" class="geiger-meter-fill"></div>
@@ -293,9 +294,9 @@
 
                 <div class="p-3 rounded-xl bg-slate-800/60 border border-slate-700/60">
                     <h3 class="font-bold text-white mb-1 text-sky-400 flex items-center gap-2">
-                        <i class="fa-solid fa-hand-pointer"></i> 2. آلية التلقيم والتمركز
+                        <i class="fa-solid fa-shield-halved text-emerald-400"></i> 2. آلية التلقيم والتمركز ومربع الحماية 3×3
                     </h3>
-                    <p>في كل دور، يضع اللاعب ذرة واحدة مشعة في <strong>غرفة انشطار فارغة</strong> أو في <strong>غرفة يمتلكها مسبقاً</strong>. لا يمكن وضع ذرة مباشرة في غرفة يسيطر عليها الخصم.</p>
+                    <p>يبدأ كل لاعب دورته الأولى بوضع <strong>ذرة ثلاثية (3 ذرات مشعة)</strong> في أي غرفة فارغة لتأسيس قلعته النووية، ويُحاط المربع تلقائياً <strong>بنطاق حماية كامل 3×3 بدرع طاقة واقٍ</strong> طوال الجولة الأولى يمنع أي خصم من محاصرته أو التمركز بجواره أو اختراقه بانشطارات نووية. وفي الجولة الثانية تنتهي صلاحية الدروع وتشتعل المعركة الشاملة.</p>
                 </div>
 
                 <div class="p-3 rounded-xl bg-slate-800/60 border border-slate-700/60">
@@ -325,6 +326,6 @@
     </div>
 
     <!-- Script Application -->
-    <script src="Script.js"></script>
+    <script src="Script.js?v=2.2"></script>
 </body>
 </html>

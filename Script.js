@@ -31,8 +31,9 @@ class NuclearSoundManager {
 
     /**
      * صوت نقرة عداد غايغر عند وضع ذرة جديدة
+     * @param {boolean} isFirstMove هل هذه الضربة الافتتاحية (ذرة ثلاثية)
      */
-    playPlaceAtom() {
+    playPlaceAtom(isFirstMove = false) {
         if (!this.enabled) return;
         this.init();
         if (!this.ctx) return;
@@ -40,6 +41,26 @@ class NuclearSoundManager {
         const now = this.ctx.currentTime;
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
+
+        if (isFirstMove) {
+            // نغمة تدشين قوية للذرة الثلاثية الافتتاحية
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(220, now);
+            osc.frequency.exponentialRampToValueAtTime(880, now + 0.16);
+
+            gain.gain.setValueAtTime(0.28, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.18);
+
+            this.playGeigerClick(now + 0.02);
+            this.playGeigerClick(now + 0.06);
+            this.playGeigerClick(now + 0.1);
+            return;
+        }
 
         // تردد رنيني يحاكي شحن جسيم ذري
         osc.type = 'sine';
@@ -135,6 +156,66 @@ class NuclearSoundManager {
             osc.stop(start + 0.39);
         });
     }
+
+    /**
+     * صوت صد واعتراض المقذوفات بواسطة الدرع النووي
+     */
+    playShieldDeflect() {
+        if (!this.enabled) return;
+        this.init();
+        if (!this.ctx) return;
+
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(560, now);
+        osc.frequency.exponentialRampToValueAtTime(180, now + 0.16);
+
+        gain.gain.setValueAtTime(0.24, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.17);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.17);
+    }
+
+    /**
+     * صوت انهيار وتفريغ درع الطاقة
+     */
+    playShieldCollapse() {
+        if (!this.enabled) return;
+        this.init();
+        if (!this.ctx) return;
+
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const subOsc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        // تردد متنازل يحاكي تفريغ وانهيار حقل الطاقة النووي
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(820, now);
+        osc.frequency.exponentialRampToValueAtTime(95, now + 0.38);
+
+        subOsc.type = 'sine';
+        subOsc.frequency.setValueAtTime(340, now);
+        subOsc.frequency.exponentialRampToValueAtTime(50, now + 0.42);
+
+        gain.gain.setValueAtTime(0.26, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.42);
+
+        osc.connect(gain);
+        subOsc.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        osc.start(now);
+        subOsc.start(now);
+        osc.stop(now + 0.42);
+        subOsc.stop(now + 0.42);
+    }
 }
 
 /**
@@ -186,7 +267,10 @@ class AtomicWarsEngine {
                     owner: null,                        // معرّف اللاعب المالك
                     atoms: 0,                           // عدد الذرات داخل الغرفة
                     maxStableCapacity: criticalMass - 1, // أقصى استيعاب مستقر (1 زاوية، 2 طرف، 3 قلب)
-                    criticalMass: criticalMass          // الكتلة الحرجة التي تؤدي للانشطار (2، 3، 4)
+                    criticalMass: criticalMass,         // الكتلة الحرجة التي تؤدي للانشطار (2، 3، 4)
+                    hasShield: false,                   // درع طاقة واقٍ في الجولة الأولى
+                    shieldPlayer: null,                 // اللاعب صاحب الدرع
+                    shieldZoneOwner: null               // مالك نطاق الحماية 3×3
                 });
             }
             this.board.push(row);
@@ -236,13 +320,59 @@ class AtomicWarsEngine {
     }
 
     /**
+     * فحص ديناميكي لمالك نطاق الحماية 3×3 (يعتمد حصراً على وجود درع نشط)
+     */
+    getCellShieldZoneOwner(r, c) {
+        for (let dr = -1; dr <= 1; dr++) {
+            for (let dc = -1; dc <= 1; dc++) {
+                const nr = r + dr;
+                const nc = c + dc;
+                if (nr >= 0 && nr < this.rows && nc >= 0 && nc < this.cols) {
+                    const nCell = this.board[nr][nc];
+                    if (nCell.hasShield && nCell.shieldPlayer !== null) {
+                        return nCell.shieldPlayer;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * فحص ما إذا كان المربع يقع داخل مربع الحماية 3×3 لأي خصم آخر
+     */
+    isInsideOpponentShieldZone(r, c, playerId) {
+        for (let dr = -1; dr <= 1; dr++) {
+            for (let dc = -1; dc <= 1; dc++) {
+                const nr = r + dr;
+                const nc = c + dc;
+                if (nr >= 0 && nr < this.rows && nc >= 0 && nc < this.cols) {
+                    const nCell = this.board[nr][nc];
+                    // إذا كان المربع ضمن مسافة 1 (محيط 3×3) يحمل درع نواة نشط لخصم آخر
+                    if (nCell.hasShield && nCell.shieldPlayer !== null && nCell.shieldPlayer !== playerId) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
      * التحقق من صلاحية إضافة ذرة في الغرفة (r, c)
      */
     isValidMove(r, c, playerId = this.currentPlayerIndex) {
         if (this.isGameOver) return false;
         if (r < 0 || r >= this.rows || c < 0 || c >= this.cols) return false;
         const cell = this.board[r][c];
-        return cell.owner === null || cell.owner === playerId;
+        if (cell.owner !== null && cell.owner !== playerId) return false;
+
+        // حظر نهائي لوضع الذرة داخل مربع الحماية 3×3 لأي خصم ما دام درعه نشطاً
+        if (this.isInsideOpponentShieldZone(r, c, playerId)) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -255,9 +385,36 @@ class AtomicWarsEngine {
         }
 
         const cell = this.board[r][c];
+        const player = this.players[playerId];
+        const isFirstMove = !player.hasPlayed;
+
+        // إذا كان هذا هو الدور الثاني أو اللاحق للاعب، تنتهي صلاحية درعه الخاص بعد انقضاء جولة الحماية
+        if (!isFirstMove) {
+            this.clearPlayerShield(playerId);
+        }
+
+        const atomsToAdd = isFirstMove ? 3 : 1;
+
         cell.owner = playerId;
-        cell.atoms += 1;
-        this.players[playerId].hasPlayed = true;
+        cell.atoms += atomsToAdd;
+        player.hasPlayed = true;
+
+        // تفعيل درع الطاقة النووي ومربع الحماية 3×3 في الجولة الأولى
+        if (isFirstMove) {
+            cell.hasShield = true;
+            cell.shieldPlayer = playerId;
+
+            // تحديد وتأمين نطاق مربع الحماية 3×3
+            for (let dr = -1; dr <= 1; dr++) {
+                for (let dc = -1; dc <= 1; dc++) {
+                    const nr = r + dr;
+                    const nc = c + dc;
+                    if (nr >= 0 && nr < this.rows && nc >= 0 && nc < this.cols) {
+                        this.board[nr][nc].shieldZoneOwner = playerId;
+                    }
+                }
+            }
+        }
 
         // طابور الغرف التي بلغت أو تجاوزت الكتلة الحرجة
         let fissionQueue = [];
@@ -317,6 +474,13 @@ class AtomicWarsEngine {
             const nextQueueCandidates = [];
             for (const t of transfers) {
                 const targetCell = this.board[t.toRow][t.toCol];
+                
+                // إذا كانت الغرفة الهدف داخل مربع حماية 3×3 لخصم آخر أو محمية بدرع
+                if (this.isInsideOpponentShieldZone(t.toRow, t.toCol, playerId) || (targetCell.hasShield && targetCell.owner !== null && targetCell.owner !== playerId)) {
+                    // درع الطاقة يصد الهجوم بالكامل داخل نطاق الحماية 3×3
+                    continue;
+                }
+
                 targetCell.owner = playerId;
                 targetCell.atoms += 1;
                 if (targetCell.atoms >= targetCell.criticalMass) {
@@ -431,10 +595,86 @@ class AtomicWarsEngine {
     }
 
     /**
+     * فحص ما إذا كان للاعب درع نشط على اللوحة
+     */
+    hasActiveShield(playerId) {
+        for (let r = 0; r < this.rows; r++) {
+            for (let c = 0; c < this.cols; c++) {
+                if (this.board[r][c].hasShield && this.board[r][c].shieldPlayer === playerId) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * جلب إحداثيات الخلية المركزية وخلايا نطاق 3×3 لدرع اللاعب
+     */
+    getPlayerShieldCells(playerId) {
+        let centerCell = null;
+        const zoneCells = [];
+        for (let r = 0; r < this.rows; r++) {
+            for (let c = 0; c < this.cols; c++) {
+                if (this.board[r][c].hasShield && this.board[r][c].shieldPlayer === playerId) {
+                    centerCell = { r, c };
+                    break;
+                }
+            }
+            if (centerCell) break;
+        }
+
+        if (centerCell) {
+            for (let dr = -1; dr <= 1; dr++) {
+                for (let dc = -1; dc <= 1; dc++) {
+                    const nr = centerCell.r + dr;
+                    const nc = centerCell.c + dc;
+                    if (nr >= 0 && nr < this.rows && nc >= 0 && nc < this.cols) {
+                        zoneCells.push({ r: nr, c: nc });
+                    }
+                }
+            }
+        }
+        return { centerCell, zoneCells };
+    }
+
+    /**
+     * تعطيل درع ومربع حماية 3×3 للاعب معين بعد انقضاء جولة الحماية الخاصة به
+     */
+    clearPlayerShield(playerId) {
+        for (let r = 0; r < this.rows; r++) {
+            for (let c = 0; c < this.cols; c++) {
+                if (this.board[r][c].shieldPlayer === playerId) {
+                    this.board[r][c].hasShield = false;
+                    this.board[r][c].shieldPlayer = null;
+                }
+                if (this.board[r][c].shieldZoneOwner === playerId) {
+                    this.board[r][c].shieldZoneOwner = null;
+                }
+            }
+        }
+    }
+
+    /**
+     * تعطيل كافة الدروع ومربعات الحماية
+     */
+    clearAllShields() {
+        for (let r = 0; r < this.rows; r++) {
+            for (let c = 0; c < this.cols; c++) {
+                this.board[r][c].hasShield = false;
+                this.board[r][c].shieldPlayer = null;
+                this.board[r][c].shieldZoneOwner = null;
+            }
+        }
+    }
+
+    /**
      * ذكاء اصطناعي استراتيجي (AI Bot) للمنافس الآلي
      */
     computeBestAIMove() {
         const aiId = this.currentPlayerIndex;
+        const isFirstMove = !this.players[aiId].hasPlayed;
+        const atomsToAdd = isFirstMove ? 3 : 1;
         const validMoves = [];
 
         for (let r = 0; r < this.rows; r++) {
@@ -455,7 +695,7 @@ class AtomicWarsEngine {
             const neighbors = this.getOrthogonalNeighbors(move.r, move.c);
             let score = 0;
 
-            const willExplode = (cell.atoms + 1) === cell.criticalMass;
+            const willExplode = (cell.atoms + atomsToAdd) >= cell.criticalMass;
             let enemyRisk = false;
 
             for (const n of neighbors) {
@@ -471,12 +711,24 @@ class AtomicWarsEngine {
                 }
             }
 
-            // أفضلية استراتيجية للزوايا والأطراف في المراحل الأولى
-            if (cell.owner === null) {
-                if (cell.criticalMass === 2) score += 9;      // زاوية
-                else if (cell.criticalMass === 3) score += 5; // طرف
+            // استراتيجية الضربة الافتتاحية (ذرة ثلاثية)
+            if (isFirstMove) {
+                // في الضربة الأولى، يفضل الذكاء الاصطناعي قلب المفاعل لتكوين نواة حرجة قوية، أو الزوايا
+                if (cell.criticalMass === 4) {
+                    score += 15; // قلب المفاعل يستوعب 3 ذرات ويصبح قوة ضاربة
+                } else if (cell.criticalMass === 2) {
+                    score += 12; // الزاوية تنشطر فوراً وتنشر ذرات للمجاورين
+                } else {
+                    score += 8;
+                }
             } else {
-                if (!enemyRisk) score += 6;
+                // أفضلية استراتيجية للزوايا والأطراف في المراحل العادية
+                if (cell.owner === null) {
+                    if (cell.criticalMass === 2) score += 9;      // زاوية
+                    else if (cell.criticalMass === 3) score += 5; // طرف
+                } else {
+                    if (!enemyRisk) score += 6;
+                }
             }
 
             score += Math.random() * 3;
@@ -549,6 +801,7 @@ class AtomicWarsUIController {
         this.chainWaveStatusEl = document.getElementById('chainWaveStatus');
         this.headerBoardInfoEl = document.getElementById('headerBoardInfo');
         this.geigerFillEl = document.getElementById('geigerMeterFill');
+        this.geigerValEl = document.getElementById('geigerValueText');
 
         // النوافذ المنبثقة
         this.victoryModal = document.getElementById('victoryModal');
@@ -571,6 +824,19 @@ class AtomicWarsUIController {
             icon.className = this.sound.enabled
                 ? 'fa-solid fa-volume-high text-emerald-400'
                 : 'fa-solid fa-volume-xmark text-rose-400';
+        });
+
+        // إغلاق النوافذ المنبثقة عند النقر على الخلفية أو الضغط على Esc
+        [this.rulesModal, this.settingsModal].forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) this.toggleModal(modal, false);
+            });
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                this.toggleModal(this.rulesModal, false);
+                this.toggleModal(this.settingsModal, false);
+            }
         });
 
         // نافذة القواعد
@@ -705,6 +971,7 @@ class AtomicWarsUIController {
 
                 cellDiv.innerHTML = `
                     <div class="capacity-indicator" title="أقصى استقرار: ${cellData.maxStableCapacity} ذرات">${capSlotsHtml}</div>
+                    <span class="shield-badge hidden" title="درع نووي واقٍ ضد المحاصرة والاختراق (الجولة الأولى)"><i class="fa-solid fa-shield-halved"></i></span>
                     <div class="atom-cluster"></div>
                     <span class="cell-badge hidden">0</span>
                 `;
@@ -722,6 +989,15 @@ class AtomicWarsUIController {
         const currentPlayer = this.engine.getCurrentPlayer();
         if (currentPlayer.isAI) return;
 
+        if (!this.engine.isValidMove(r, c)) {
+            // تنبيه فوري وصوت اعتراض إذا حاول اللاعب وضع ذرة داخل مربع الحماية 3×3 لأي درع نشط
+            if (this.engine.isInsideOpponentShieldZone(r, c, currentPlayer.id)) {
+                this.setWaveStatus('مربع محظور: محمي بواسطة درع طاقة الخصم!', 'amber');
+                this.sound.playShieldDeflect();
+            }
+            return;
+        }
+
         await this.processPlayerMove(r, c);
     }
 
@@ -733,9 +1009,10 @@ class AtomicWarsUIController {
 
         this.isAnimating = true;
         const actingPlayer = this.engine.getCurrentPlayer();
+        const isFirstMove = !actingPlayer.hasPlayed;
         
-        // تشغيل صوت وضع الذرة فوراً
-        this.sound.playPlaceAtom();
+        // تشغيل صوت وضع الذرة فوراً (مع نغمة تدشين قوية للذرة الثلاثية الافتتاحية)
+        this.sound.playPlaceAtom(isFirstMove);
 
         const result = this.engine.executeTurn(r, c);
         if (!result.valid) {
@@ -771,11 +1048,103 @@ class AtomicWarsUIController {
             return;
         }
 
+        const nextPlayer = this.engine.getCurrentPlayer();
+        this.updateTurnIndicator();
+
+        // عندما يعود اللعب على اللاعب ولديه درع نشط من الجولة الأولى (بدء جولته الثانية)
+        // ينهار الدرع فعلياً وبصرياً بأنيميشن انهيار مخصص بنفس لون ذرة اللاعب
+        if (nextPlayer.hasPlayed && this.engine.hasActiveShield(nextPlayer.id)) {
+            await this.collapsePlayerShield(nextPlayer.id);
+        }
+
         this.updateTurnIndicator();
         this.renderBoardState(this.engine.board);
         this.isAnimating = false;
 
         this.checkAndTriggerAITurn();
+    }
+
+    /**
+     * أنيميشن انهيار الدرع بصرياً وتعطيله فعلياً عند عودة الدور على اللاعب
+     */
+    async collapsePlayerShield(playerId) {
+        const shieldData = this.engine.getPlayerShieldCells(playerId);
+        if (!shieldData.centerCell) return;
+
+        this.isAnimating = true;
+        const player = this.engine.players[playerId];
+
+        this.setWaveStatus(`انهيار درع الطاقة لـ ${player.name}!`, 'amber');
+        this.sound.playShieldCollapse();
+
+        // إزالة الدرع فوراً من المحرك لتعطيل الحماية فعلياً
+        this.engine.clearPlayerShield(playerId);
+
+        const centerEl = this.cellElements[shieldData.centerCell.r][shieldData.centerCell.c];
+        centerEl.style.setProperty('--shield-color', player.color);
+        centerEl.style.setProperty('--shield-glow', player.glow);
+        centerEl.classList.add('shield-collapsing');
+
+        // تناثر جزيئات شظايا طاقة الدرع بنفس لون الذرة
+        this.spawnShieldCollapseParticles(centerEl, player);
+
+        // انهيار خلايا نطاق 3×3 (باستثناء الخلية المركزية التي تحمل shield-collapsing)
+        for (const coord of shieldData.zoneCells) {
+            if (coord.r === shieldData.centerCell.r && coord.c === shieldData.centerCell.c) continue;
+            const el = this.cellElements[coord.r][coord.c];
+            el.style.setProperty('--shield-color', player.color);
+            el.style.setProperty('--shield-glow', player.glow);
+            el.classList.add('zone-collapsing');
+        }
+
+        // الانتظار حتى اكتمال أنيميشن الانهيار (480ms)
+        await new Promise(resolve => setTimeout(resolve, 480));
+
+        centerEl.classList.remove('shield-collapsing', 'cell-shielded', 'cell-shield-zone');
+        const centerBadge = centerEl.querySelector('.shield-badge');
+        if (centerBadge) centerBadge.classList.add('hidden');
+
+        for (const coord of shieldData.zoneCells) {
+            const el = this.cellElements[coord.r][coord.c];
+            el.classList.remove('zone-collapsing', 'cell-shield-zone', 'cell-shielded');
+            const badge = el.querySelector('.shield-badge');
+            if (badge) badge.classList.add('hidden');
+        }
+
+        // إعادة رسم لوحة المفاعل بدقة تامة
+        this.renderBoardState(this.engine.board);
+        this.setWaveStatus('المفاعل في حالة استقرار', 'emerald');
+    }
+
+    /**
+     * توليد شظايا طاقة نووية متطايرة بنفس لون ذرة اللاعب عند انهيار الدرع
+     */
+    spawnShieldCollapseParticles(parentCellEl, player) {
+        const rect = parentCellEl.getBoundingClientRect();
+        const boardRect = this.boardEl.getBoundingClientRect();
+        const centerX = (rect.left - boardRect.left) + rect.width / 2;
+        const centerY = (rect.top - boardRect.top) + rect.height / 2;
+
+        const particleCount = 14;
+        for (let i = 0; i < particleCount; i++) {
+            const p = document.createElement('div');
+            p.className = 'shield-collapse-particle';
+            p.style.setProperty('--shield-color', player.color);
+            p.style.setProperty('--shield-glow', player.glow);
+            p.style.left = `${centerX}px`;
+            p.style.top = `${centerY}px`;
+
+            const angle = (i / particleCount) * Math.PI * 2;
+            const dist = rect.width * (0.65 + Math.random() * 0.45);
+            const dx = Math.cos(angle) * dist;
+            const dy = Math.sin(angle) * dist;
+
+            p.style.setProperty('--dx', `${dx}px`);
+            p.style.setProperty('--dy', `${dy}px`);
+
+            this.boardEl.appendChild(p);
+            setTimeout(() => p.remove(), 550);
+        }
     }
 
     /**
@@ -786,11 +1155,18 @@ class AtomicWarsUIController {
             const duration = this.config.waveSpeedMs;
             const flyingEls = [];
 
-            // وميض الغرف المنشطرة
+            // وميض وموجة صدمة الغرف المنشطرة
             for (const exp of wave.explosions) {
                 const cellEl = this.cellElements[exp.row][exp.col];
                 cellEl.style.setProperty('--explode-color', playerObj.color);
                 cellEl.classList.add('cell-exploding');
+
+                const shockwave = document.createElement('div');
+                shockwave.className = 'nuclear-shockwave';
+                shockwave.style.setProperty('--explode-color', playerObj.color);
+                cellEl.appendChild(shockwave);
+                setTimeout(() => shockwave.remove(), 400);
+
                 const cluster = cellEl.querySelector('.atom-cluster');
                 if (cluster) cluster.innerHTML = '';
             }
@@ -826,6 +1202,18 @@ class AtomicWarsUIController {
                 void flyer.offsetWidth;
 
                 flyingEls.push({ el: flyer, deltaX, deltaY });
+
+                // تأثير صوتي وبصري إذا اصطدم المقذوف بمربع الحماية 3×3 للخصم
+                const isDeflected = this.engine.isInsideOpponentShieldZone(t.toRow, t.toCol, playerObj.id) ||
+                    (this.engine.board[t.toRow][t.toCol].hasShield && this.engine.board[t.toRow][t.toCol].owner !== null && this.engine.board[t.toRow][t.toCol].owner !== playerObj.id);
+                
+                if (isDeflected) {
+                    setTimeout(() => {
+                        toCell.classList.add('shield-deflect-flash');
+                        this.sound.playShieldDeflect();
+                        setTimeout(() => toCell.classList.remove('shield-deflect-flash'), 350);
+                    }, duration * 0.85);
+                }
             }
 
             requestAnimationFrame(() => {
@@ -859,10 +1247,42 @@ class AtomicWarsUIController {
                 const clusterEl = cellEl.querySelector('.atom-cluster');
                 const badgeEl = cellEl.querySelector('.cell-badge');
                 const slotEls = cellEl.querySelectorAll('.capacity-slot');
+                const shieldBadgeEl = cellEl.querySelector('.shield-badge');
 
-                const canClick = !this.engine.isGameOver && (cell.owner === null || cell.owner === currentPlayerId);
+                const canClick = !this.engine.isGameOver && this.engine.isValidMove(r, c, currentPlayerId);
                 cellEl.classList.toggle('valid-move', canClick);
                 cellEl.classList.toggle('invalid-move', !canClick);
+
+                // نطاق مربع الحماية 3×3 - فحص ديناميكي يعتمد على الدرع النشط
+                const zoneOwner = this.engine.getCellShieldZoneOwner(r, c);
+                if (zoneOwner !== null && this.engine.players[zoneOwner]) {
+                    const zonePlayer = this.engine.players[zoneOwner];
+                    cellEl.classList.add('cell-shield-zone');
+                    cellEl.style.setProperty('--shield-color', zonePlayer.color);
+                    cellEl.style.setProperty('--shield-glow', zonePlayer.glow);
+                    cellEl.style.setProperty('--shield-dark', zonePlayer.darkColor);
+                } else {
+                    cellEl.classList.remove('cell-shield-zone');
+                }
+
+                // حالة الدرع النووي الواقي - جميع التفاصيل بنفس لون ذرة اللاعب
+                if (cell.hasShield && cell.shieldPlayer !== null && this.engine.players[cell.shieldPlayer]) {
+                    const shieldPlayer = this.engine.players[cell.shieldPlayer];
+                    cellEl.classList.add('cell-shielded');
+                    cellEl.style.setProperty('--shield-color', shieldPlayer.color);
+                    cellEl.style.setProperty('--shield-glow', shieldPlayer.glow);
+                    cellEl.style.setProperty('--shield-dark', shieldPlayer.darkColor);
+                    if (shieldBadgeEl) {
+                        shieldBadgeEl.classList.remove('hidden');
+                        shieldBadgeEl.style.color = shieldPlayer.color;
+                        shieldBadgeEl.style.textShadow = `0 0 8px ${shieldPlayer.color}, 0 0 14px ${shieldPlayer.glow}`;
+                    }
+                } else {
+                    cellEl.classList.remove('cell-shielded');
+                    if (shieldBadgeEl) {
+                        shieldBadgeEl.classList.add('hidden');
+                    }
+                }
 
                 cellEl.classList.remove('critical-ready', 'stable-cluster');
                 clusterEl.className = 'atom-cluster';
@@ -918,6 +1338,13 @@ class AtomicWarsUIController {
                         clusterEl.appendChild(orbit2);
                     }
 
+                    if (cell.atoms >= 3) {
+                        const orbit3 = document.createElement('div');
+                        orbit3.className = 'electron-orbit orbit-3';
+                        orbit3.style.setProperty('--atom-color', ownerPlayer.color);
+                        clusterEl.appendChild(orbit3);
+                    }
+
                     // شارة الرقم
                     if (this.config.showNumbers) {
                         badgeEl.textContent = cell.atoms;
@@ -961,8 +1388,10 @@ class AtomicWarsUIController {
             const statusLabel = !p.alive
                 ? '<span class="text-[10px] px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 font-bold">مُدمّر بالكامل</span>'
                 : isTurn
-                    ? '<span class="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold animate-pulse">إطلاق نووي</span>'
-                    : '';
+                    ? `<span class="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold animate-pulse">${!p.hasPlayed ? 'بداية ثلاثية ×3' : 'إطلاق نووي'}</span>`
+                    : !p.hasPlayed
+                        ? '<span class="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-amber-300/80 border border-amber-500/20 font-semibold">بانتظار الضربة ×3</span>'
+                        : '';
 
             card.innerHTML = `
                 <div class="flex items-center gap-2.5 min-w-0">
@@ -998,7 +1427,10 @@ class AtomicWarsUIController {
         document.documentElement.style.setProperty('--turn-color', currentPlayer.color);
         document.documentElement.style.setProperty('--turn-glow', currentPlayer.glow);
 
-        this.currentPlayerNameEl.textContent = currentPlayer.name + (currentPlayer.isAI ? ' (آلي)' : '');
+        const isFirstMove = !currentPlayer.hasPlayed;
+        const initialBadge = isFirstMove ? ' <span class="text-[10px] sm:text-xs text-amber-300 font-bold bg-amber-500/20 border border-amber-500/40 px-2 py-0.5 rounded-full mr-1.5 shadow-sm">ضربة افتتاحية ×3</span>' : '';
+
+        this.currentPlayerNameEl.innerHTML = currentPlayer.name + (currentPlayer.isAI ? ' (آلي)' : '') + initialBadge;
         this.currentPlayerNameEl.style.color = currentPlayer.color;
         this.turnDotEl.style.backgroundColor = currentPlayer.color;
         this.turnPingEl.style.backgroundColor = currentPlayer.color;
@@ -1137,10 +1569,14 @@ if (typeof window !== 'undefined') {
     window.NuclearSoundManager = NuclearSoundManager;
     window.AtomicWarsEngine = AtomicWarsEngine;
     window.AtomicWarsUIController = AtomicWarsUIController;
-    if (typeof document !== 'undefined' && document.addEventListener) {
-        document.addEventListener('DOMContentLoaded', () => {
+    if (typeof document !== 'undefined') {
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                window.atomicWarsApp = new AtomicWarsUIController();
+            });
+        } else {
             window.atomicWarsApp = new AtomicWarsUIController();
-        });
+        }
     }
 }
 if (typeof global !== 'undefined') {
