@@ -1,0 +1,438 @@
+/* ==========================================================================
+   الحرب الذرية (Atomic War) - التفاعل الانشطاري المتسلسل
+   ملف التنسيقات الرئيسي (Style.css)
+   ========================================================================== */
+
+:root {
+    --turn-color: #10b981;
+    --turn-glow: rgba(16, 185, 129, 0.45);
+    --grid-cols: 7;
+    --fly-duration: 210ms;
+}
+
+* {
+    box-sizing: border-box;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    font-family: 'Cairo', sans-serif;
+    background: radial-gradient(circle at 50% 15%, #0f172a 0%, #030712 60%, #010409 100%);
+    color: #f8fafc;
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+}
+
+/* خلفية شبكة المفاعل التكتيكية */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: 
+        radial-gradient(rgba(16, 185, 129, 0.05) 1px, transparent 1px),
+        linear-gradient(to right, rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+    background-size: 32px 32px, 64px 64px, 64px 64px;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* ==========================================================================
+   لوحة المفاعل الذري (Reactor Board)
+   ========================================================================== */
+.game-board-wrapper {
+    position: relative;
+    padding: 14px;
+    border-radius: 24px;
+    background: linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(8, 14, 26, 0.98));
+    border: 2px solid var(--turn-color);
+    box-shadow: 
+        0 0 35px var(--turn-glow), 
+        inset 0 0 20px var(--turn-glow),
+        0 20px 40px -15px rgba(0, 0, 0, 0.8);
+    transition: border-color 0.4s ease, box-shadow 0.4s ease;
+    z-index: 10;
+}
+
+/* شريط التحذير الإشعاعي حول اللوحة */
+.game-board-wrapper::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 26px;
+    border: 1px dashed var(--turn-color);
+    opacity: 0.35;
+    pointer-events: none;
+    animation: rotateDashed 40s linear infinite;
+}
+
+@keyframes rotateDashed {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.005); }
+    100% { transform: scale(1); }
+}
+
+.game-board {
+    display: grid;
+    grid-template-columns: repeat(var(--grid-cols), minmax(0, 1fr));
+    gap: 7px;
+    width: min(88vw, 520px);
+    height: min(88vw, 520px);
+    position: relative;
+    touch-action: manipulation;
+}
+
+@media (min-width: 1024px) {
+    .game-board {
+        width: min(65vh, 540px);
+        height: min(65vh, 540px);
+    }
+}
+
+/* ==========================================================================
+   غرف الانشطار (Board Cells / Reactor Chambers)
+   ========================================================================== */
+.board-cell {
+    position: relative;
+    background: radial-gradient(circle at center, rgba(30, 41, 59, 0.85) 0%, rgba(15, 23, 42, 0.95) 100%);
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.15s ease, background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+    overflow: visible;
+}
+
+.board-cell::before {
+    content: '';
+    position: absolute;
+    inset: 2px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    pointer-events: none;
+}
+
+.board-cell.valid-move:hover {
+    background: radial-gradient(circle at center, rgba(51, 65, 85, 0.9) 0%, rgba(30, 41, 59, 0.95) 100%);
+    border-color: var(--turn-color);
+    box-shadow: inset 0 0 14px var(--turn-glow), 0 0 10px var(--turn-glow);
+    transform: scale(1.035);
+    z-index: 5;
+}
+
+.board-cell.invalid-move {
+    cursor: not-allowed;
+    opacity: 0.92;
+}
+
+/* وميض الانفجار الذري للخلية */
+.board-cell.cell-exploding {
+    animation: nuclearFlash 0.35s ease-out forwards;
+    z-index: 25;
+}
+
+@keyframes nuclearFlash {
+    0% {
+        background-color: #ffffff;
+        box-shadow: 0 0 35px #ffffff, inset 0 0 20px var(--explode-color, #fff);
+        transform: scale(1.15);
+    }
+    50% {
+        background-color: var(--explode-color, #fff);
+        box-shadow: 0 0 25px var(--explode-color, #fff);
+        transform: scale(1.08);
+    }
+    100% {
+        background-color: rgba(30, 41, 59, 0.85);
+        box-shadow: none;
+        transform: scale(1);
+    }
+}
+
+/* ==========================================================================
+   النماذج الذرية (Atomic Models & Orbitals)
+   ========================================================================== */
+.atom-cluster {
+    position: relative;
+    width: 82%;
+    height: 82%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+}
+
+/* النواة الذرية (Atomic Nucleus) */
+.atomic-nucleus {
+    position: absolute;
+    border-radius: 50%;
+    background: radial-gradient(circle at 32% 32%, #ffffff 0%, var(--atom-color) 50%, var(--atom-dark) 95%);
+    box-shadow: 0 0 12px var(--atom-color), inset 0 0 5px rgba(255, 255, 255, 0.75);
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease;
+    z-index: 2;
+}
+
+/* المدارات الإلكترونية (Electron Orbits) */
+.electron-orbit {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 1px dashed var(--atom-color);
+    opacity: 0.45;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.orbit-1 {
+    transform: rotateX(65deg) rotateY(15deg);
+    animation: spinOrbit1 3s linear infinite;
+}
+
+.orbit-2 {
+    transform: rotateX(65deg) rotateY(105deg);
+    animation: spinOrbit2 4s linear infinite reverse;
+}
+
+.orbit-3 {
+    transform: rotateX(65deg) rotateY(195deg);
+    animation: spinOrbit3 3.5s linear infinite;
+}
+
+@keyframes spinOrbit1 {
+    0% { transform: rotateX(65deg) rotateY(15deg) rotateZ(0deg); }
+    100% { transform: rotateX(65deg) rotateY(15deg) rotateZ(360deg); }
+}
+
+@keyframes spinOrbit2 {
+    0% { transform: rotateX(65deg) rotateY(105deg) rotateZ(0deg); }
+    100% { transform: rotateX(65deg) rotateY(105deg) rotateZ(360deg); }
+}
+
+@keyframes spinOrbit3 {
+    0% { transform: rotateX(65deg) rotateY(195deg) rotateZ(0deg); }
+    100% { transform: rotateX(65deg) rotateY(195deg) rotateZ(360deg); }
+}
+
+/* تموضع الأنوية حسب عدد الذرات */
+/* ذرة واحدة */
+.atom-count-1 .atomic-nucleus:nth-child(1) {
+    width: 48%;
+    height: 48%;
+    transform: translate(0, 0);
+    box-shadow: 0 0 14px var(--atom-color), inset 0 0 5px rgba(255, 255, 255, 0.85);
+}
+
+/* ذرتان */
+.atom-count-2 .atomic-nucleus:nth-child(1) {
+    width: 40%;
+    height: 40%;
+    transform: translate(-30%, -10%);
+}
+.atom-count-2 .atomic-nucleus:nth-child(2) {
+    width: 40%;
+    height: 40%;
+    transform: translate(30%, 10%);
+}
+
+/* ثلاث ذرات */
+.atom-count-3 .atomic-nucleus:nth-child(1) {
+    width: 36%;
+    height: 36%;
+    transform: translate(0, -32%);
+}
+.atom-count-3 .atomic-nucleus:nth-child(2) {
+    width: 36%;
+    height: 36%;
+    transform: translate(-30%, 24%);
+}
+.atom-count-3 .atomic-nucleus:nth-child(3) {
+    width: 36%;
+    height: 36%;
+    transform: translate(30%, 24%);
+}
+
+/* أكثر من 3 ذرات (قبل الانفجار مباشرة) */
+.atom-count-many .atomic-nucleus:nth-child(1) { width: 32%; height: 32%; transform: translate(-26%, -26%); }
+.atom-count-many .atomic-nucleus:nth-child(2) { width: 32%; height: 32%; transform: translate(26%, -26%); }
+.atom-count-many .atomic-nucleus:nth-child(3) { width: 32%; height: 32%; transform: translate(-26%, 26%); }
+.atom-count-many .atomic-nucleus:nth-child(4) { width: 32%; height: 32%; transform: translate(26%, 26%); }
+
+/* ==========================================================================
+   حالة الكتلة الحرجة والاهتزاز الإشعاعي (Critical Mass Warning)
+   ========================================================================== */
+.critical-ready {
+    border-color: rgba(239, 68, 68, 0.7) !important;
+    box-shadow: inset 0 0 15px rgba(239, 68, 68, 0.35), 0 0 12px rgba(239, 68, 68, 0.25) !important;
+}
+
+.critical-ready .atom-cluster {
+    animation: criticalVibration 0.35s infinite alternate ease-in-out;
+}
+
+.critical-ready::after {
+    content: '☢';
+    position: absolute;
+    top: 2px;
+    left: 4px;
+    font-size: 0.65rem;
+    color: #ef4444;
+    text-shadow: 0 0 6px #ef4444;
+    animation: blinkWarning 0.7s infinite alternate;
+    pointer-events: none;
+    z-index: 10;
+}
+
+@keyframes criticalVibration {
+    0% { transform: rotate(-8deg) scale(1.05); }
+    50% { transform: rotate(0deg) scale(1.12); }
+    100% { transform: rotate(8deg) scale(1.05); }
+}
+
+@keyframes blinkWarning {
+    0% { opacity: 0.3; }
+    100% { opacity: 1; }
+}
+
+/* دوران هادئ للأنوية المستقرة متعددة الذرات */
+.stable-cluster .atom-cluster {
+    animation: gentleOrbital 5s infinite linear;
+}
+
+@keyframes gentleOrbital {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* ==========================================================================
+   المقذوفات الذرية الطائرة (Flying Plasma Orbs)
+   ========================================================================== */
+.flying-atom {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 60;
+    background: radial-gradient(circle at 30% 30%, #ffffff 0%, var(--atom-color) 50%, var(--atom-dark) 95%);
+    box-shadow: 0 0 16px var(--atom-color), 0 0 30px var(--atom-color), inset 0 0 6px #ffffff;
+    transition: transform var(--fly-duration, 220ms) cubic-bezier(0.2, 0.85, 0.3, 1);
+}
+
+.flying-atom::after {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: 50%;
+    background: var(--atom-color);
+    filter: blur(4px);
+    opacity: 0.8;
+    z-index: -1;
+}
+
+/* ==========================================================================
+   مؤشرات الخلية وسعة غرف المفاعل
+   ========================================================================== */
+/* شارة العدد الذري */
+.cell-badge {
+    position: absolute;
+    bottom: 2px;
+    left: 4px;
+    font-size: 0.68rem;
+    font-weight: 800;
+    line-height: 1;
+    padding: 1px 4.5px;
+    border-radius: 6px;
+    background: rgba(15, 23, 42, 0.9);
+    color: #f8fafc;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    pointer-events: none;
+    z-index: 10;
+    font-family: monospace;
+}
+
+/* فتحات استيعاب النظائر (Chamber Capacity Bars) */
+.capacity-indicator {
+    position: absolute;
+    top: 3px;
+    right: 4px;
+    display: flex;
+    gap: 2px;
+    pointer-events: none;
+    z-index: 10;
+}
+
+.capacity-slot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: rgba(148, 163, 184, 0.3);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.capacity-slot.filled {
+    background: var(--atom-color, #10b981);
+    box-shadow: 0 0 4px var(--atom-color, #10b981);
+}
+
+/* ==========================================================================
+   البطاقات الزجاجية (Glassmorphism Control Panels)
+   ========================================================================== */
+.glass-panel {
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(14px);
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    border-radius: 18px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+}
+
+/* مؤشر النشاط الإشعاعي (Geiger Bar) */
+.geiger-meter-bar {
+    height: 6px;
+    background: rgba(30, 41, 59, 0.8);
+    border-radius: 3px;
+    overflow: hidden;
+    position: relative;
+}
+
+.geiger-meter-fill {
+    height: 100%;
+    width: 15%;
+    background: linear-gradient(90deg, #10b981, #eab308, #ef4444);
+    border-radius: 3px;
+    transition: width 0.3s ease;
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.6);
+}
+
+/* ==========================================================================
+   أزرار وخيارات التخصيص
+   ========================================================================== */
+.option-btn {
+    transition: all 0.2s ease;
+}
+
+.option-btn.active {
+    border-width: 2px;
+    transform: scale(1.02);
+}
+
+/* مخصص شريط التمرير */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: #0f172a;
+}
+::-webkit-scrollbar-thumb {
+    background: #334155;
+    border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #475569;
+}
