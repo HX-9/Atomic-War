@@ -66,6 +66,7 @@ class AtomicWarsUIController {
         this.activeModeBadgeEl = document.getElementById('activeModeBadge');
         this.rulePlacementDescEl = document.getElementById('rulePlacementDesc');
         this.victoryModeBadgeEl = document.getElementById('victoryModeBadge');
+        this.criticalGuideGridEl = document.getElementById('criticalGuideGrid');
 
         // النوافذ المنبثقة
         this.victoryModal = document.getElementById('victoryModal');
@@ -342,6 +343,46 @@ class AtomicWarsUIController {
 
         if (this.victoryModeBadgeEl) {
             this.victoryModeBadgeEl.textContent = modeName;
+        }
+
+        if (this.criticalGuideGridEl) {
+            if (this.config.gameMode === 'normal') {
+                this.criticalGuideGridEl.innerHTML = `
+                    <div class="critical-guide-card">
+                        <div class="critical-guide-capacity icon-amber">3 <span class="critical-guide-unit">ذرات</span></div>
+                        <div class="critical-guide-type">غرفة زاوية</div>
+                        <div class="critical-guide-trigger">تنشطر عند 4 (تضيع 2 بالحواف)</div>
+                    </div>
+                    <div class="critical-guide-card">
+                        <div class="critical-guide-capacity icon-sky">3 <span class="critical-guide-unit">ذرات</span></div>
+                        <div class="critical-guide-type">غرفة طرفية</div>
+                        <div class="critical-guide-trigger">تنشطر عند 4 (تضيع 1 بالحافة)</div>
+                    </div>
+                    <div class="critical-guide-card">
+                        <div class="critical-guide-capacity icon-emerald">3 <span class="critical-guide-unit">ذرات</span></div>
+                        <div class="critical-guide-type">قلب المفاعل</div>
+                        <div class="critical-guide-trigger">تنشطر عند 4 (تنتقل الـ 4)</div>
+                    </div>
+                `;
+            } else {
+                this.criticalGuideGridEl.innerHTML = `
+                    <div class="critical-guide-card">
+                        <div class="critical-guide-capacity icon-amber">1 <span class="critical-guide-unit">ذرة</span></div>
+                        <div class="critical-guide-type">غرفة زاوية</div>
+                        <div class="critical-guide-trigger">تنشطر عند 2</div>
+                    </div>
+                    <div class="critical-guide-card">
+                        <div class="critical-guide-capacity icon-sky">2 <span class="critical-guide-unit">ذرة</span></div>
+                        <div class="critical-guide-type">غرفة طرفية</div>
+                        <div class="critical-guide-trigger">تنشطر عند 3</div>
+                    </div>
+                    <div class="critical-guide-card">
+                        <div class="critical-guide-capacity icon-emerald">3 <span class="critical-guide-unit">ذرات</span></div>
+                        <div class="critical-guide-type">قلب المفاعل</div>
+                        <div class="critical-guide-trigger">تنشطر عند 4</div>
+                    </div>
+                `;
+            }
         }
     }
 
@@ -866,17 +907,27 @@ class AtomicWarsUIController {
             // 2. تتبع المقذوفات الناتجة عن الانشطار
             for (const t of wave.transfers) {
                 const fromCell = this.cellElements[t.fromRow][t.fromCol];
-                const toCell = this.cellElements[t.toRow][t.toCol];
-
                 const fromRect = fromCell.getBoundingClientRect();
-                const toRect = toCell.getBoundingClientRect();
-
                 const atomSize = Math.max(16, fromRect.width * 0.38);
                 const startX = (fromRect.left - boardRect.left) + (fromRect.width / 2) - (atomSize / 2);
                 const startY = (fromRect.top - boardRect.top) + (fromRect.height / 2) - (atomSize / 2);
 
-                const deltaX = (toRect.left - fromRect.left);
-                const deltaY = (toRect.top - fromRect.top);
+                let deltaX = 0;
+                let deltaY = 0;
+                let toCell = null;
+
+                if (t.isVoid && t.outDir) {
+                    // مقذوف ضائع في الحافة: يقذف خارج الرقعة ويتلاشى
+                    deltaX = t.outDir.dc * fromRect.width * 1.15;
+                    deltaY = t.outDir.dr * fromRect.height * 1.15;
+                } else if (this.cellElements[t.toRow] && this.cellElements[t.toRow][t.toCol]) {
+                    toCell = this.cellElements[t.toRow][t.toCol];
+                    const toRect = toCell.getBoundingClientRect();
+                    deltaX = (toRect.left - fromRect.left);
+                    deltaY = (toRect.top - fromRect.top);
+                } else {
+                    continue;
+                }
 
                 const flyer = document.createElement('div');
                 flyer.className = 'flying-atom';
@@ -890,9 +941,14 @@ class AtomicWarsUIController {
                 this.boardEl.appendChild(flyer);
                 void flyer.offsetWidth;
 
-                flyingEls.push({ el: flyer, deltaX, deltaY });
+                flyingEls.push({ el: flyer, deltaX, deltaY, isVoid: !!t.isVoid });
 
                 // التحقق من استجابات الاصطدام الدفاعية التكتيكية:
+                if (t.isVoid || !toCell) {
+                    // لا تفاعل اصطدام مع الغرف للجسيمات الضائعة في الفضاء
+                    continue;
+                }
+
                 if (t.absorbedByControlRod) {
                     // امتصاص الدرع النووي الواقي
                     setTimeout(() => {
@@ -926,7 +982,10 @@ class AtomicWarsUIController {
 
             requestAnimationFrame(() => {
                 for (const item of flyingEls) {
-                    item.el.style.transform = `translate(${item.deltaX}px, ${item.deltaY}px)`;
+                    item.el.style.transform = `translate(${item.deltaX}px, ${item.deltaY}px)${item.isVoid ? ' scale(0.35)' : ''}`;
+                    if (item.isVoid) {
+                        item.el.style.opacity = '0';
+                    }
                 }
             });
 

@@ -169,7 +169,7 @@
     z-index: 60;
     background: radial-gradient(circle at 30% 30%, #ffffff 0%, var(--atom-color) 50%, var(--atom-dark) 95%);
     box-shadow: 0 0 16px var(--atom-color), 0 0 30px var(--atom-color), inset 0 0 6px #ffffff;
-    transition: transform var(--fly-duration, 220ms) cubic-bezier(0.2, 0.85, 0.3, 1);
+    transition: transform var(--fly-duration, 220ms) cubic-bezier(0.2, 0.85, 0.3, 1), opacity var(--fly-duration, 220ms) cubic-bezier(0.2, 0.85, 0.3, 1);
 }
 
 .flying-atom::after {
