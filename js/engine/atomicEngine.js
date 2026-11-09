@@ -99,9 +99,14 @@ class AtomicWarsEngine {
     }
 
     /**
-     * حساب عتبة الكتلة الحرجة للغرفة بحسب موقعها الهندسي
+     * حساب عتبة الكتلة الحرجة للغرفة بحسب موقعها الهندسي ووضع اللعبة
      */
     calculateCriticalMass(r, c) {
+        // في الوضع العادي (Normal Mode): كل الغرف متماثلة، تتسع لـ 3 ذرات كحد أقصى وتنفجر عند 4
+        if (this.gameMode === 'normal' || (this.mode && typeof this.mode.hasUniformCriticalMass === 'function' && this.mode.hasUniformCriticalMass())) {
+            return 4;
+        }
+
         const isTopOrBottom = (r === 0 || r === this.rows - 1);
         const isLeftOrRight = (c === 0 || c === this.cols - 1);
 
@@ -367,7 +372,6 @@ class AtomicWarsEngine {
             // 1. انشطار جميع الغرف غير المستقرة في هذه الموجة بالتزامن
             for (const { row, col } of uniqueCoords) {
                 const explodingCell = this.board[row][col];
-                const neighbors = this.getOrthogonalNeighbors(row, col);
 
                 explodingCell.atoms -= explodingCell.criticalMass;
                 if (explodingCell.atoms <= 0) {
@@ -377,20 +381,48 @@ class AtomicWarsEngine {
 
                 waveExplosions.push({ row, col, playerId });
 
-                for (const n of neighbors) {
-                    transfers.push({
-                        fromRow: row,
-                        fromCol: col,
-                        toRow: n.row,
-                        toCol: n.col,
-                        playerId: playerId
-                    });
+                const dirs = [
+                    { dr: -1, dc: 0 },
+                    { dr: 1,  dc: 0 },
+                    { dr: 0,  dc: 1 },
+                    { dr: 0,  dc: -1 }
+                ];
+
+                for (const d of dirs) {
+                    const nr = row + d.dr;
+                    const nc = col + d.dc;
+                    const inBounds = (nr >= 0 && nr < this.rows && nc >= 0 && nc < this.cols);
+
+                    if (inBounds) {
+                        transfers.push({
+                            fromRow: row,
+                            fromCol: col,
+                            toRow: nr,
+                            toCol: nc,
+                            playerId: playerId,
+                            isVoid: false
+                        });
+                    } else if (explodingCell.criticalMass === 4) {
+                        // في الغرف ذات السعة الموحدة 3 (تنفجر عند 4): المقذوفات المنطلقة للخارج تضيع في حواف الفضاء
+                        transfers.push({
+                            fromRow: row,
+                            fromCol: col,
+                            toRow: nr,
+                            toCol: nc,
+                            playerId: playerId,
+                            isVoid: true,
+                            outDir: { dr: d.dr, dc: d.dc }
+                        });
+                    }
                 }
             }
 
             // 2. توزيع الجسيمات المنشطرة على الغرف المجاورة والسيطرة عليها
             const nextQueueCandidates = [];
             for (const t of transfers) {
+                if (t.isVoid) {
+                    continue; // مقذوف ضائع في الفضاء خارج حدود المفاعل
+                }
                 const targetCell = this.board[t.toRow][t.toCol];
                 
                 // إذا كانت الغرفة الهدف داخل مربع حماية 3×3 لخصم آخر أو محمية بدرع

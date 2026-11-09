@@ -201,7 +201,7 @@
                         <i class="fa-solid fa-triangle-exclamation icon-amber"></i>
                         الكتلة الحرجة للاستقرار:
                     </h3>
-                    <div class="critical-guide-grid">
+                    <div class="critical-guide-grid" id="criticalGuideGrid">
                         <div class="critical-guide-card">
                             <div class="critical-guide-capacity icon-amber">1 <span class="critical-guide-unit">ذرة</span></div>
                             <div class="critical-guide-type">غرفة زاوية</div>
@@ -471,12 +471,8 @@
                     <h3 class="rule-title icon-amber">
                         <i class="fa-solid fa-atom"></i> 3. نظام الكتلة الحرجة والانشطار
                     </h3>
-                    <p class="rule-text">لكل غرفة حد أقصى للاستقرار (الكتلة الحرجة) يعتمد على عدد جيرانها الملاصقين:</p>
-                    <ul class="rule-bullets">
-                        <li><strong>غرف الزوايا:</strong> تتحمل ذرة واحدة فقط، وتنشطر عند إضافة الذرة <strong>الثانية</strong>.</li>
-                        <li><strong>غرف الأطراف:</strong> تتحمل ذرتين، وتنشطر عند إضافة الذرة <strong>الثالثة</strong>.</li>
-                        <li><strong>غرف قلب المفاعل الداخلية:</strong> تتحمل 3 ذرات، وتنشطر عند إضافة الذرة <strong>الرابعة</strong>.</li>
-                    </ul>
+                    <p class="rule-text"><strong>في الوضع العادي:</strong> تتسع جميع الغرف (الزوايا والأطراف والقلب) لـ <strong>3 ذرات كحد أقصى وتنشطر عند الذرة الرابعة (4)</strong> بالتساوي دون اختلاف، مع <strong>تطاير وضياع الذرات الزائدة</strong> المنقذفة خارج حواف الرقعة في الفضاء عند انفجار الغرف الطرفية والزوايا.</p>
+                    <p class="rule-text" style="margin-top: 0.4rem; font-size: 0.8rem; color: #94a3b8;">* في الأنماط التكتيكية الأخرى (كالبطاقات الذرية): يعتمد حد الاستقرار على موقع الغرفة (الزوايا 2، الأطراف 3، والقلب 4).</p>
                 </div>
 
                 <div class="rule-card">
