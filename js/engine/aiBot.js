@@ -32,9 +32,9 @@ class AtomicAIBot {
                 } else if (hasNeutrons) {
                     // في نظام النيوترونات:
                     if (cell.owner === aiId && availableNeutrons >= 1) {
-                        // خيار تغذية خلية مملوكة بـ 1 نيوترون
-                        if (engine.isValidMove(r, c, aiId, 1, 'atom')) {
-                            candidateOptions.push({ r, c, atomCount: 1, actionType: 'atom' });
+                        // خيار تغذية خلية مملوكة بـ 1 نيوترون (بدون بطاقات)
+                        if (engine.isValidMove(r, c, aiId, 1, 'feed')) {
+                            candidateOptions.push({ r, c, atomCount: 1, actionType: 'feed' });
                         }
                         // خيار تثبيت درع نووي واقٍ (قضيب تحكم) بـ 5 نيوترونات
                         const rodCost = (engine.mode && typeof engine.mode.getControlRodCost === 'function') ? engine.mode.getControlRodCost() : 5;

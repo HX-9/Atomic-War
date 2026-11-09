@@ -206,7 +206,7 @@ class AtomicWarsEngine {
 
         // تطبيق قاعدة الوضع المخصص (مثل الوضع العادي المقيد أو المطور بنظام النيوترونات)
         if (this.mode && typeof this.mode.isValidMove === 'function') {
-            if (!this.mode.isValidMove(this, r, c, playerId, atomCount, 'atom')) {
+            if (!this.mode.isValidMove(this, r, c, playerId, atomCount, actionType)) {
                 return false;
             }
         }

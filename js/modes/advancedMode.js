@@ -102,29 +102,30 @@ class AdvancedGameMode extends (typeof BaseGameMode !== 'undefined' ? BaseGameMo
             return (player.neutrons || 0) >= this.getEnergyDrainCost();
         }
 
-        // 1. الضربة الافتتاحية: ذرة ثلاثية في أي غرفة فارغة
+        // 3. الضربة الافتتاحية: ذرة ثلاثية في أي غرفة فارغة
         if (!player.hasPlayed) {
             return cell.owner === null;
         }
 
-        // 2. إذا كانت الغرفة فارغة: يُسمح بوضع ذرة خارجية بحسب تكلفة المستوى (2 للأحادية، 4 للثنائية، 6 للثلاثية)
-        if (cell.owner === null) {
-            const cost = this.getExternalAtomCost(atomCount);
-            return (player.neutrons || 0) >= cost;
-        }
-
-        // 3. إذا كانت الغرفة مملوكة للاعب:
-        // قاعدة صارمة: "لا يمكن دمج ذرة خارجية داخل أي ذرة، بل الذرات الخارجية توضع في مكان فارغ"
-        // لذلك داخل الغرفة المملوكة، يُسمح فقط بتغذية نيوترونية واحدة (atomCount = 1) بتكلفة 1 نيوترون
-        if (cell.owner === playerId) {
-            if (atomCount > 1) {
-                // لا يُسمح بإلقاء ذرات خارجية ثنائية أو ثلاثية فوق ذرات قائمة
-                return false;
+        // 4. إذا كانت هناك بطاقة عناصر محددة (actionType === 'atom'):
+        // قاعدة صارمة: بطاقات العناصر توضع في الأماكن الفارغة فقط، ولا يمكن دمجها أو إلقاؤها فوق ذرة قائمة (حليفة أو معادية).
+        if (actionType === 'atom') {
+            if (cell.owner === null) {
+                const cost = this.getExternalAtomCost(atomCount);
+                return (player.neutrons || 0) >= cost;
             }
-            return (player.neutrons || 0) >= 1;
+            return false;
         }
 
-        // 4. غرف الخصم محظورة
+        // 5. إذا لم يكن هناك بطاقة محددة (actionType === null أو 'feed'):
+        // قاعدة: "إضافة ذرة داخل ذرة حليفة يتم فقط إذا لم يكن اللاعب محدد بطاقات"
+        if (actionType === null || actionType === 'feed') {
+            if (cell.owner === playerId) {
+                return (player.neutrons || 0) >= 1;
+            }
+            return false;
+        }
+
         return false;
     }
 
