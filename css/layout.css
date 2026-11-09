@@ -299,13 +299,14 @@
 .app-footer {
     width: 100%;
     max-width: 82rem;
-    margin: 0.75rem auto 0 auto;
+    margin: 1rem auto 0.25rem auto;
     text-align: center;
     font-size: 0.75rem;
     color: #64748b;
-    padding: 0.25rem 0;
+    padding: 0.35rem 0;
     position: relative;
     z-index: 10;
+    flex-shrink: 0;
 }
 
 ::-webkit-scrollbar {
