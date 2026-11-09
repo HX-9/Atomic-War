@@ -57,12 +57,12 @@
         <!-- 02. الأزرار العائمة مباشرة على الخلفية -->
         <div class="welcome-floating-content">
             <div class="welcome-floating-modes">
-                <!-- الصف الأول: يمين (الوضع المطور)، منتصف (الوضع العادي)، يسار (وضع 2 مغلق) -->
+                <!-- الصف الأول: يمين (البطاقات الذرية)، منتصف (الوضع العادي)، يسار (وضع 2 مغلق) -->
                 <div class="welcome-modes-row">
-                    <!-- اليمين: الوضع المطور -->
+                    <!-- اليمين: البطاقات الذرية -->
                     <button type="button" id="btnStartAdvancedMode" class="rect-mode-btn rect-mode-btn--advanced">
                         <i class="fa-solid fa-atom rect-mode-icon"></i>
-                        <span class="rect-mode-label">الوضع المطور</span>
+                        <span class="rect-mode-label">البطاقات الذرية</span>
                     </button>
 
                     <!-- المنتصف: الوضع العادي -->
@@ -222,7 +222,7 @@
             </div>
         </aside>
 
-        <!-- لوحة المفاعل الذري المركزية وشريط الترسانة (html/board.html) -->
+        <!-- لوحة المفاعل الذري المركزية وشريط البطاقات التكتيكية (html/board.html) -->
         <section class="reactor-section">
             <div id="boardWrapper" class="game-board-wrapper">
                 <div id="gameBoard" class="game-board">
@@ -230,44 +230,79 @@
                 </div>
             </div>
 
-            <!-- شريط الترسانة ورصيد النيوترونات التكتيكي (يظهر في الوضع المطور فقط) -->
-            <div id="neutronArsenalBar" class="neutron-arsenal-bar hidden">
-                <!-- مقياس رصيد النيوترونات -->
-                <div class="neutron-reserve-panel">
-                    <div class="neutron-reserve-header">
-                        <span class="neutron-reserve-label">
-                            <i class="fa-solid fa-atom icon-sky"></i> رصيد النيوترونات:
+            <!-- شريط بطاقات العناصر والمساعدة التكتيكية (وضع البطاقات الذرية فقط) -->
+            <div id="neutronArsenalBar" class="neutron-floating-dock hidden">
+                <!-- لوحة رصيد النيوترونات -->
+                <div class="dock-neutron-info">
+                    <div class="dock-neutron-header">
+                        <span class="dock-neutron-label">
+                            <i class="fa-solid fa-atom icon-sky"></i> رصيد النيوترونات
                         </span>
-                        <span id="neutronValueDisplay" class="neutron-value-text">0 / 10</span>
+                        <span id="neutronValueDisplay" class="dock-neutron-val">0 / 10</span>
                     </div>
-                    <!-- شريط الشرائح الضوئية الـ 10 للنيوترونات -->
                     <div class="neutron-meter-track" id="neutronMeterTrack">
-                        <!-- يتم توليد 10 شرائح ضوئية ديناميكياً بواسطة js/app.js -->
+                        <!-- 10 مؤشرات ضوئية -->
                     </div>
                 </div>
 
-                <!-- أزرار اختيار الذرات الخارجية من الترسانة -->
-                <div class="arsenal-types-group">
-                    <button type="button" class="arsenal-btn active" data-atoms="1" data-cost="2" id="btnArsenalSingle" title="إلقاء ذرة أحادية في غرفة فارغة (تكلفة 2 نيوترون)">
-                        <span class="arsenal-atom-preview preview-1">●</span>
-                        <span class="arsenal-btn-name">ذرة أحادية</span>
-                        <span class="arsenal-btn-cost">⚡ 2 n⁰</span>
-                    </button>
-                    <button type="button" class="arsenal-btn" data-atoms="2" data-cost="4" id="btnArsenalDouble" title="إلقاء ذرة ثنائية في غرفة فارغة (تكلفة 4 نيوترونات)">
-                        <span class="arsenal-atom-preview preview-2">●●</span>
-                        <span class="arsenal-btn-name">ذرة ثنائية</span>
-                        <span class="arsenal-btn-cost">⚡ 4 n⁰</span>
-                    </button>
-                    <button type="button" class="arsenal-btn" data-atoms="3" data-cost="6" id="btnArsenalTriple" title="إلقاء نواة ثلاثية في غرفة فارغة (تكلفة 6 نيوترونات)">
-                        <span class="arsenal-atom-preview preview-3">●●●</span>
-                        <span class="arsenal-btn-name">نواة ثلاثية</span>
-                        <span class="arsenal-btn-cost">⚡ 6 n⁰</span>
-                    </button>
+                <div class="dock-divider"></div>
+
+                <!-- خانة البطاقات التكتيكية (مقسمة: بطاقات العناصر وبطاقات المساعدة) -->
+                <div class="dock-cards-container">
+                    <!-- 1. قسم بطاقات العناصر -->
+                    <div class="dock-card-subgroup dock-card-subgroup--elements">
+                        <div class="dock-subgroup-header">
+                            <span class="dock-subgroup-title">
+                                <i class="fa-solid fa-atom icon-sky"></i> بطاقات العناصر
+                            </span>
+                        </div>
+                        <div class="dock-subgroup-cards">
+                            <button type="button" class="arsenal-btn active" data-action="atom" data-atoms="1" data-cost="3" id="btnArsenalSingle" title="إلقاء ذرة أحادية في غرفة فارغة (تكلفة 3 نيوترونات)">
+                                <span class="arsenal-atom-preview preview-1">●</span>
+                                <span class="arsenal-btn-name">أحادية</span>
+                                <span class="arsenal-btn-cost">⚡ 3</span>
+                            </button>
+                            <button type="button" class="arsenal-btn" data-action="atom" data-atoms="2" data-cost="6" id="btnArsenalDouble" title="إلقاء ذرة ثنائية في غرفة فارغة (تكلفة 6 نيوترونات)">
+                                <span class="arsenal-atom-preview preview-2">●●</span>
+                                <span class="arsenal-btn-name">ثنائية</span>
+                                <span class="arsenal-btn-cost">⚡ 6</span>
+                            </button>
+                            <button type="button" class="arsenal-btn" data-action="atom" data-atoms="3" data-cost="9" id="btnArsenalTriple" title="إلقاء نواة ثلاثية في غرفة فارغة (تكلفة 9 نيوترونات)">
+                                <span class="arsenal-atom-preview preview-3">●●●</span>
+                                <span class="arsenal-btn-name">ثلاثية</span>
+                                <span class="arsenal-btn-cost">⚡ 9</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- فاصل عمودي أنيق بين الفئتين -->
+                    <div class="dock-subgroup-separator"></div>
+
+                    <!-- 2. قسم بطاقات المساعدة -->
+                    <div class="dock-card-subgroup dock-card-subgroup--support">
+                        <div class="dock-subgroup-header">
+                            <span class="dock-subgroup-title">
+                                <i class="fa-solid fa-wand-magic-sparkles icon-amber"></i> بطاقات المساعدة
+                            </span>
+                        </div>
+                        <div class="dock-subgroup-cards">
+                            <button type="button" class="arsenal-btn arsenal-btn--control-rod" data-action="controlRod" data-cost="5" id="btnArsenalControlRod" title="تثبيت درع نووي واقٍ على إحدى غرفك لامتصاص الانفجارات (تكلفة 5 نيوترونات)">
+                                <i class="fa-solid fa-shield-halved arsenal-rod-icon"></i>
+                                <span class="arsenal-btn-name">درع نووي</span>
+                                <span class="arsenal-btn-cost arsenal-btn-cost--rod">🛡️ 5</span>
+                            </button>
+                            <button type="button" class="arsenal-btn arsenal-btn--energy-drain" data-action="energyDrain" data-cost="3" id="btnArsenalEnergyDrain" title="إلقاء هجوم على ذرة معادية لإرجاعها إلى المستوى الأول (تكلفة 3 نيوترونات)">
+                                <i class="fa-solid fa-bolt-slash arsenal-drain-icon"></i>
+                                <span class="arsenal-btn-name">إخماد طاقة</span>
+                                <span class="arsenal-btn-cost arsenal-btn-cost--drain">⚡ 3</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- إرشاد تكتيكي واضح للقاعدة الفيزيائية -->
-                <div id="arsenalHintText" class="arsenal-hint-text">
-                    💡 الذرات الخارجية توضع في الغرف الفارغة فقط • النقر المباشر على غرفتك يغذيها بـ +1 نيوترون (تكلفة 1)
+                <!-- نص إرشادي تكتيكي مدمج -->
+                <div id="arsenalHintText" class="dock-hint-text">
+                    💡 تغذية غرفتك 1 n⁰ • الذرات في الفراغ (⚡3, ⚡6, ⚡9) • الدرع (🛡️ 5) يمتص الصدمة • الإخماد (⚡ 3) يعيد ذرة الخصم لمستوى 1
                 </div>
             </div>
         </section>
