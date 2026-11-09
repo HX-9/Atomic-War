@@ -2,7 +2,7 @@
  * ============================================================================
  * الحرب الذرية (Atomic War) - ذكاء المنافس الآلي (AtomicAIBot)
  * خوارزمية استراتيجية لتقييم الحركات واختيار أفضل خطة هجومية/دفاعية
- * مع دعم نظام رصيد النيوترونات التكتيكي في الوضع المطور
+ * مع دعم نظام رصيد النيوترونات التكتيكي في وضع البطاقات الذرية
  * ============================================================================
  */
 class AtomicAIBot {
@@ -33,21 +33,32 @@ class AtomicAIBot {
                     // في نظام النيوترونات:
                     if (cell.owner === aiId && availableNeutrons >= 1) {
                         // خيار تغذية خلية مملوكة بـ 1 نيوترون
-                        if (engine.isValidMove(r, c, aiId, 1)) {
-                            candidateOptions.push({ r, c, atomCount: 1 });
+                        if (engine.isValidMove(r, c, aiId, 1, 'atom')) {
+                            candidateOptions.push({ r, c, atomCount: 1, actionType: 'atom' });
+                        }
+                        // خيار تثبيت درع نووي واقٍ (قضيب تحكم) بـ 5 نيوترونات
+                        const rodCost = (engine.mode && typeof engine.mode.getControlRodCost === 'function') ? engine.mode.getControlRodCost() : 5;
+                        if (!cell.hasControlRod && availableNeutrons >= rodCost && engine.isValidMove(r, c, aiId, 1, 'controlRod')) {
+                            candidateOptions.push({ r, c, atomCount: 1, actionType: 'controlRod' });
+                        }
+                    } else if (cell.owner !== null && cell.owner !== aiId) {
+                        // خيار شن هجوم إخماد طاقة ذرة معادية بـ 3 نيوترونات
+                        const drainCost = (engine.mode && typeof engine.mode.getEnergyDrainCost === 'function') ? engine.mode.getEnergyDrainCost() : 3;
+                        if (availableNeutrons >= drainCost && engine.isValidMove(r, c, aiId, 1, 'energyDrain')) {
+                            candidateOptions.push({ r, c, atomCount: 1, actionType: 'energyDrain' });
                         }
                     } else if (cell.owner === null) {
                         // خيارات إلقاء ذرة خارجية في خلية فارغة بحسب رصيد النيوترونات (2 للأحادية، 4 للثنائية، 6 للثلاثية)
                         for (let count = 1; count <= 3; count++) {
-                            if (engine.isValidMove(r, c, aiId, count)) {
-                                candidateOptions.push({ r, c, atomCount: count });
+                            if (engine.isValidMove(r, c, aiId, count, 'atom')) {
+                                candidateOptions.push({ r, c, atomCount: count, actionType: 'atom' });
                             }
                         }
                     }
                 } else {
                     // الوضع العادي (ذرة واحدة دائماً)
-                    if (engine.isValidMove(r, c, aiId, 1)) {
-                        candidateOptions.push({ r, c, atomCount: 1 });
+                    if (engine.isValidMove(r, c, aiId, 1, 'atom')) {
+                        candidateOptions.push({ r, c, atomCount: 1, actionType: 'atom' });
                     }
                 }
             }
@@ -103,6 +114,21 @@ class AtomicAIBot {
                     }
                     if (cell.criticalMass === 2) score += 9;
                     else if (cell.criticalMass === 3) score += 5;
+                } else if (option.actionType === 'controlRod') {
+                    // تقييم جدوى تثبيت قضيب تحكم نووي (مهدئ) لحماية الغرفة من انفجارات وشيكة
+                    let threatFound = false;
+                    for (const n of neighbors) {
+                        const nCell = engine.board[n.row][n.col];
+                        if (nCell.owner !== null && nCell.owner !== aiId && nCell.atoms >= nCell.criticalMass - 1) {
+                            threatFound = true;
+                            score += 32 + (cell.atoms * 5);
+                        }
+                    }
+                    if (!threatFound) score -= 18; // تجنب إهدار المهدئ في موقع آمن
+                } else if (option.actionType === 'energyDrain') {
+                    // تقييم هجوم إخماد طاقة ذرة معادية: تخفيض قنبلة وشيكة يعطي مكافأة دفاعية كبرى
+                    const isEnemyCritical = (cell.atoms >= cell.criticalMass - 1);
+                    score += 26 + (cell.atoms * 10) + (isEnemyCritical ? 24 : 0);
                 } else {
                     // تغذية غرفة مملوكة
                     if (!enemyRisk) {

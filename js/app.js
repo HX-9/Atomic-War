@@ -79,6 +79,7 @@ class AtomicWarsUIController {
         this.arsenalHintTextEl = document.getElementById('arsenalHintText');
         this.arsenalBtns = document.querySelectorAll('.arsenal-btn');
         this.selectedArsenalAtom = 1;
+        this.selectedAction = 'atom'; // 'atom' أو 'controlRod'
     }
 
     bindEvents() {
@@ -236,12 +237,19 @@ class AtomicWarsUIController {
             }
         });
 
-        // أزرار شريط الترسانة في الوضع المطور
+        // أزرار شريط الترسانة في وضع البطاقات الذرية
         if (this.arsenalBtns) {
             this.arsenalBtns.forEach(btn => {
                 btn.addEventListener('click', () => {
-                    const count = parseInt(btn.dataset.atoms, 10);
-                    this.setArsenalSelectedAtom(count);
+                    const action = btn.dataset.action || 'atom';
+                    if (action === 'controlRod') {
+                        this.setArsenalAction('controlRod');
+                    } else if (action === 'energyDrain') {
+                        this.setArsenalAction('energyDrain');
+                    } else {
+                        const count = parseInt(btn.dataset.atoms, 10) || 1;
+                        this.setArsenalAction('atom', count);
+                    }
                 });
             });
         }
@@ -305,7 +313,7 @@ class AtomicWarsUIController {
      */
     updateModeUI() {
         const mode = (typeof GAME_MODES !== 'undefined' && GAME_MODES[this.config.gameMode]) || null;
-        const modeName = mode ? mode.name : (this.config.gameMode === 'normal' ? 'الوضع العادي' : 'الوضع المطور');
+        const modeName = mode ? mode.name : (this.config.gameMode === 'normal' ? 'الوضع العادي' : 'البطاقات الذرية');
         const modeDesc = mode && typeof mode.getRuleDescription === 'function' 
             ? mode.getRuleDescription() 
             : (this.config.gameMode === 'normal' 
@@ -385,6 +393,7 @@ class AtomicWarsUIController {
         this.toggleModal(this.rulesModal, false);
 
         if (this.battleScreenEl) this.battleScreenEl.classList.add('hidden');
+        document.body.classList.remove('has-arsenal-dock');
         if (this.welcomeScreenEl) {
             this.welcomeScreenEl.classList.remove('hidden');
             if (this.welcomeSim) {
@@ -470,6 +479,7 @@ class AtomicWarsUIController {
                 cellDiv.innerHTML = `
                     <div class="capacity-indicator" title="أقصى استقرار: ${cellData.maxStableCapacity} ذرات">${capSlotsHtml}</div>
                     <span class="shield-badge hidden" title="درع نووي واقٍ ضد المحاصرة والاختراق (الجولة الأولى)"><i class="fa-solid fa-shield-halved"></i></span>
+                    <span class="cell-control-rod-badge hidden" title="درع نووي واقٍ يمتص الانفجارات المعادية"><i class="fa-solid fa-shield-halved"></i></span>
                     <div class="atom-cluster"></div>
                     <span class="cell-badge hidden">0</span>
                 `;
@@ -491,12 +501,74 @@ class AtomicWarsUIController {
         const hasNeutrons = this.engine.mode && typeof this.engine.mode.hasNeutronSystem === 'function' && this.engine.mode.hasNeutronSystem();
         const isFirstMove = !currentPlayer.hasPlayed;
 
+        // التحقق من إجراء تثبيت الدرع النووي الواقي (مهدئ المفاعل)
+        if (this.selectedAction === 'controlRod') {
+            if (isFirstMove) {
+                this.setWaveStatus('لا يمكن تثبيت الدرع النووي في الضربة الافتتاحية!', 'amber');
+                this.sound.playShieldDeflect();
+                return;
+            }
+            if (cell.owner !== currentPlayer.id) {
+                this.setWaveStatus('الدرع النووي يثبت فقط على الغرف التي تمتلكها!', 'amber');
+                this.sound.playShieldDeflect();
+                return;
+            }
+            if (cell.hasControlRod) {
+                this.setWaveStatus('هذه الغرفة مجهزة بالفعل بدرع نووي واقٍ!', 'sky');
+                this.sound.playShieldDeflect();
+                return;
+            }
+            const rodCost = (this.engine.mode && typeof this.engine.mode.getControlRodCost === 'function') ? this.engine.mode.getControlRodCost() : 5;
+            if ((currentPlayer.neutrons || 0) < rodCost) {
+                this.setWaveStatus(`رصيد النيوترونات غير كافٍ! تحتاج ${rodCost} n⁰ لتثبيت الدرع النووي`, 'amber');
+                this.sound.playShieldDeflect();
+                return;
+            }
+
+            await this.processPlayerMove(r, c, 1, 'controlRod');
+            return;
+        }
+
+        // التحقق من إجراء هجوم إخماد طاقة ذرة معادية (بطاقة مساعدة)
+        if (this.selectedAction === 'energyDrain') {
+            if (isFirstMove) {
+                this.setWaveStatus('لا يمكن استخدام بطاقات المساعدة في الضربة الافتتاحية!', 'amber');
+                this.sound.playShieldDeflect();
+                return;
+            }
+            if (cell.owner === null || cell.owner === currentPlayer.id) {
+                this.setWaveStatus('بطاقة إخماد الطاقة تستهدف غرف الخصم فقط!', 'amber');
+                this.sound.playShieldDeflect();
+                return;
+            }
+            if (cell.atoms <= 1) {
+                this.setWaveStatus('هذه الذرة في مستواها الأول بالفعل (1 ذرة)!', 'sky');
+                this.sound.playShieldDeflect();
+                return;
+            }
+            if (this.engine.isInsideOpponentShieldZone(r, c, currentPlayer.id) || cell.hasShield) {
+                this.setWaveStatus('مربع محظور: محمي بواسطة درع طاقة الخصم!', 'amber');
+                this.sound.playShieldDeflect();
+                return;
+            }
+            const drainCost = (this.engine.mode && typeof this.engine.mode.getEnergyDrainCost === 'function') ? this.engine.mode.getEnergyDrainCost() : 3;
+            if ((currentPlayer.neutrons || 0) < drainCost) {
+                this.setWaveStatus(`رصيد النيوترونات غير كافٍ! تحتاج ${drainCost} n⁰ لإلقاء بطاقة الإخماد`, 'amber');
+                this.sound.playShieldDeflect();
+                return;
+            }
+
+            await this.processPlayerMove(r, c, 1, 'energyDrain');
+            return;
+        }
+
+        // إجراء وضع الذرات العادية
         let atomsToPlace = 1;
         if (!isFirstMove && hasNeutrons) {
             if (cell.owner === null) {
-                // إلقاء ذرة خارجية في غرفة فارغة (2 للأحادية، 4 للثنائية، 6 للثلاثية)
+                // إلقاء ذرة خارجية في غرفة فارغة (3 للأحادية، 6 للثنائية، 9 للثلاثية)
                 atomsToPlace = this.selectedArsenalAtom || 1;
-                const cost = atomsToPlace === 1 ? 2 : (atomsToPlace === 2 ? 4 : 6);
+                const cost = atomsToPlace === 1 ? 3 : (atomsToPlace === 2 ? 6 : 9);
                 if ((currentPlayer.neutrons || 0) < cost) {
                     this.setWaveStatus(`رصيد النيوترونات غير كافٍ! تحتاج ${cost} n⁰ لإلقاء هذه الذرة`, 'amber');
                     this.sound.playShieldDeflect();
@@ -516,7 +588,7 @@ class AtomicWarsUIController {
             }
         }
 
-        if (!this.engine.isValidMove(r, c, currentPlayer.id, atomsToPlace)) {
+        if (!this.engine.isValidMove(r, c, currentPlayer.id, atomsToPlace, 'atom')) {
             if (this.engine.isInsideOpponentShieldZone(r, c, currentPlayer.id)) {
                 this.setWaveStatus('مربع محظور: محمي بواسطة درع طاقة الخصم!', 'amber');
                 this.sound.playShieldDeflect();
@@ -529,28 +601,51 @@ class AtomicWarsUIController {
             return;
         }
 
-        await this.processPlayerMove(r, c, atomsToPlace);
+        await this.processPlayerMove(r, c, atomsToPlace, 'atom');
     }
 
     /**
      * معالجة حركة اللاعب وعرض الانشطارات المتسلسلة
      */
-    async processPlayerMove(r, c, atomsToPlace = 1) {
-        if (!this.engine.isValidMove(r, c, this.engine.currentPlayerIndex, atomsToPlace)) return;
+    async processPlayerMove(r, c, atomsToPlace = 1, actionType = 'atom') {
+        if (!this.engine.isValidMove(r, c, this.engine.currentPlayerIndex, atomsToPlace, actionType)) return;
 
         this.isAnimating = true;
         const actingPlayer = this.engine.getCurrentPlayer();
         const isFirstMove = !actingPlayer.hasPlayed;
         
-        this.sound.playPlaceAtom(isFirstMove);
+        if (actionType === 'controlRod') {
+            this.sound.playControlRodDeploy();
+            this.setWaveStatus(`تم تثبيت درع نووي واقٍ في الغرفة [${r+1}, ${c+1}] بنجاح!`, 'sky');
+        } else if (actionType === 'energyDrain') {
+            this.sound.playEnergyDrain();
+            this.setWaveStatus(`إطلاق هجوم إخماد الطاقة على الغرفة [${r+1}, ${c+1}]...`, 'amber');
+        } else {
+            this.sound.playPlaceAtom(isFirstMove);
+        }
 
-        const result = this.engine.executeTurn(r, c, atomsToPlace);
+        const result = this.engine.executeTurn(r, c, atomsToPlace, actionType);
         if (!result.valid) {
             this.isAnimating = false;
             return;
         }
 
-        if (result.waves.length > 0) {
+        if (actionType === 'energyDrain') {
+            const targetEl = this.cellElements[r][c];
+            if (result.absorbedByRod) {
+                targetEl.classList.add('control-rod-absorb-flash');
+                this.sound.playControlRodAbsorb();
+                this.setWaveStatus('درع الخصم امتص هجوم الإخماد واستُهلك بالكامل لحماية الغرفة!', 'sky');
+                setTimeout(() => targetEl.classList.remove('control-rod-absorb-flash'), 450);
+            } else {
+                targetEl.classList.add('cell-energy-drained');
+                this.setWaveStatus('تم إخماد طاقة ذرة الخصم بنجاح وإرجاعها للمستوى الأول (1 ذرة)!', 'amber');
+                setTimeout(() => targetEl.classList.remove('cell-energy-drained'), 500);
+            }
+            this.renderBoardState(this.engine.board);
+            this.renderScoreboard(this.engine.players);
+            await new Promise(res => setTimeout(res, 400));
+        } else if (result.waves.length > 0) {
             for (let i = 0; i < result.waves.length; i++) {
                 const wave = result.waves[i];
                 this.setWaveStatus(`انشطار متسلسل • موجة ${wave.waveIndex}`, 'amber');
@@ -670,17 +765,20 @@ class AtomicWarsUIController {
     }
 
     /**
-     * تحريك الجسيمات الذرية المقذوفة نحو الغرف المجاورة
+     * تحريك الجسيمات الذرية المقذوفة نحو الغرف المجاورة بتمهل وتنسيق تكتيكي
      */
     animateExplosionWave(wave, playerObj) {
         return new Promise(resolve => {
-            const duration = this.config.waveSpeedMs;
+            // وتيرة تفاعلية تدريجية حسب عمق موجة الانشطار لإعطاء اللاعب وقتاً لفهم السلسلة
+            const baseDuration = this.config.waveSpeedMs;
+            const pacedDuration = Math.min(380, Math.max(baseDuration, baseDuration + (wave.waveIndex * 15)));
             const flyingEls = [];
 
+            // 1. وميض ما قبل الانشطار (Pre-detonation white-hot pulse)
             for (const exp of wave.explosions) {
                 const cellEl = this.cellElements[exp.row][exp.col];
                 cellEl.style.setProperty('--explode-color', playerObj.color);
-                cellEl.classList.add('cell-exploding');
+                cellEl.classList.add('cell-about-to-fission', 'cell-exploding');
 
                 const shockwave = document.createElement('div');
                 shockwave.className = 'nuclear-shockwave';
@@ -694,6 +792,7 @@ class AtomicWarsUIController {
 
             const boardRect = this.boardEl.getBoundingClientRect();
 
+            // 2. تتبع المقذوفات الناتجة عن الانشطار
             for (const t of wave.transfers) {
                 const fromCell = this.cellElements[t.fromRow][t.fromCol];
                 const toCell = this.cellElements[t.toRow][t.toCol];
@@ -722,15 +821,35 @@ class AtomicWarsUIController {
 
                 flyingEls.push({ el: flyer, deltaX, deltaY });
 
-                const isDeflected = this.engine.isInsideOpponentShieldZone(t.toRow, t.toCol, playerObj.id) ||
-                    (this.engine.board[t.toRow][t.toCol].hasShield && this.engine.board[t.toRow][t.toCol].owner !== null && this.engine.board[t.toRow][t.toCol].owner !== playerObj.id);
-                
-                if (isDeflected) {
+                // التحقق من استجابات الاصطدام الدفاعية التكتيكية:
+                if (t.absorbedByControlRod) {
+                    // امتصاص الدرع النووي الواقي
                     setTimeout(() => {
-                        toCell.classList.add('shield-deflect-flash');
-                        this.sound.playShieldDeflect();
-                        setTimeout(() => toCell.classList.remove('shield-deflect-flash'), 350);
-                    }, duration * 0.85);
+                        toCell.classList.add('control-rod-absorb-flash');
+                        this.sound.playControlRodAbsorb();
+                        this.setWaveStatus('الدرع النووي يمتص الانفجار بنجاح ويخمد المقذوف!', 'sky');
+                        setTimeout(() => toCell.classList.remove('control-rod-absorb-flash'), 450);
+                    }, pacedDuration * 0.85);
+                } else if (t.coreResisted) {
+                    // صمود النواة الثلاثية وامتصاص المقذوف والتحول إلى ذرة أحادية (3 ➔ 1)
+                    setTimeout(() => {
+                        toCell.classList.add('cell-core-resisted');
+                        this.sound.playCoreResist();
+                        this.setWaveStatus('صمود النواة الثلاثية: تم امتصاص الشحنة والتحول إلى ذرة أحادية (3 ➔ 1)!', 'amber');
+                        setTimeout(() => toCell.classList.remove('cell-core-resisted'), 450);
+                    }, pacedDuration * 0.85);
+                } else {
+                    // ارتداد درع البداية الواقي
+                    const isDeflected = this.engine.isInsideOpponentShieldZone(t.toRow, t.toCol, playerObj.id) ||
+                        (this.engine.board[t.toRow][t.toCol].hasShield && this.engine.board[t.toRow][t.toCol].owner !== null && this.engine.board[t.toRow][t.toCol].owner !== playerObj.id);
+                    
+                    if (isDeflected) {
+                        setTimeout(() => {
+                            toCell.classList.add('shield-deflect-flash');
+                            this.sound.playShieldDeflect();
+                            setTimeout(() => toCell.classList.remove('shield-deflect-flash'), 350);
+                        }, pacedDuration * 0.85);
+                    }
                 }
             }
 
@@ -745,10 +864,10 @@ class AtomicWarsUIController {
                     item.el.remove();
                 }
                 for (const exp of wave.explosions) {
-                    this.cellElements[exp.row][exp.col].classList.remove('cell-exploding');
+                    this.cellElements[exp.row][exp.col].classList.remove('cell-exploding', 'cell-about-to-fission');
                 }
                 resolve();
-            }, duration);
+            }, pacedDuration);
         });
     }
 
@@ -767,8 +886,11 @@ class AtomicWarsUIController {
                 const badgeEl = cellEl.querySelector('.cell-badge');
                 const slotEls = cellEl.querySelectorAll('.capacity-slot');
                 const shieldBadgeEl = cellEl.querySelector('.shield-badge');
+                const rodBadgeEl = cellEl.querySelector('.cell-control-rod-badge');
 
-                const canClick = !this.engine.isGameOver && this.engine.isValidMove(r, c, currentPlayerId);
+                const atomsForCheck = (this.selectedAction === 'controlRod' || this.selectedAction === 'energyDrain') ? 1 : (this.selectedArsenalAtom || 1);
+                const actionForCheck = this.selectedAction || 'atom';
+                const canClick = !this.engine.isGameOver && this.engine.isValidMove(r, c, currentPlayerId, atomsForCheck, actionForCheck);
                 cellEl.classList.toggle('valid-move', canClick);
                 cellEl.classList.toggle('invalid-move', !canClick);
 
@@ -802,6 +924,15 @@ class AtomicWarsUIController {
                     cellEl.classList.remove('cell-shielded');
                     if (shieldBadgeEl) {
                         shieldBadgeEl.classList.add('hidden');
+                    }
+                }
+
+                // شارة مهدئ المفاعل النووي (قضيب التحكم)
+                if (rodBadgeEl) {
+                    if (cell.hasControlRod) {
+                        rodBadgeEl.classList.remove('hidden');
+                    } else {
+                        rodBadgeEl.classList.add('hidden');
                     }
                 }
 
@@ -958,14 +1089,29 @@ class AtomicWarsUIController {
         this.updateNeutronArsenalUI();
     }
 
-    setArsenalSelectedAtom(count) {
-        this.selectedArsenalAtom = count;
+    setArsenalAction(actionType, count = 1) {
+        this.selectedAction = actionType;
+        if (actionType === 'atom') {
+            this.selectedArsenalAtom = count;
+        }
         if (this.arsenalBtns) {
             this.arsenalBtns.forEach(btn => {
-                const btnAtoms = parseInt(btn.dataset.atoms, 10);
-                btn.classList.toggle('active', btnAtoms === count);
+                const bAction = btn.dataset.action || 'atom';
+                if (bAction === 'controlRod') {
+                    btn.classList.toggle('active', actionType === 'controlRod');
+                } else if (bAction === 'energyDrain') {
+                    btn.classList.toggle('active', actionType === 'energyDrain');
+                } else {
+                    const btnAtoms = parseInt(btn.dataset.atoms, 10);
+                    btn.classList.toggle('active', actionType === 'atom' && btnAtoms === count);
+                }
             });
         }
+        this.renderBoardState(this.engine.board);
+    }
+
+    setArsenalSelectedAtom(count) {
+        this.setArsenalAction('atom', count);
     }
 
     updateNeutronArsenalUI() {
@@ -974,10 +1120,12 @@ class AtomicWarsUIController {
         
         if (!hasNeutrons) {
             this.neutronArsenalBarEl.classList.add('hidden');
+            document.body.classList.remove('has-arsenal-dock');
             return;
         }
 
         this.neutronArsenalBarEl.classList.remove('hidden');
+        document.body.classList.add('has-arsenal-dock');
         const currentPlayer = this.engine.getCurrentPlayer();
         const isFirstMove = !currentPlayer.hasPlayed;
         const neutrons = currentPlayer.neutrons || 0;
@@ -1019,10 +1167,20 @@ class AtomicWarsUIController {
             });
 
             // إذا كان الزر المختار غير متاح بسبب نقص النيوترونات، اختيار الأنسب المتاح
-            const currentCost = this.selectedArsenalAtom === 1 ? 2 : (this.selectedArsenalAtom === 2 ? 4 : 6);
-            if (!isFirstMove && neutrons < currentCost) {
-                if (neutrons >= 4) this.setArsenalSelectedAtom(2);
-                else if (neutrons >= 2) this.setArsenalSelectedAtom(1);
+            const rodCost = (this.engine.mode && typeof this.engine.mode.getControlRodCost === 'function') ? this.engine.mode.getControlRodCost() : 5;
+            const drainCost = (this.engine.mode && typeof this.engine.mode.getEnergyDrainCost === 'function') ? this.engine.mode.getEnergyDrainCost() : 3;
+            if (!isFirstMove) {
+                if (this.selectedAction === 'controlRod' && neutrons < rodCost) {
+                    this.setArsenalAction('atom', 1);
+                } else if (this.selectedAction === 'energyDrain' && neutrons < drainCost) {
+                    this.setArsenalAction('atom', 1);
+                } else if (this.selectedAction === 'atom') {
+                    const currentCost = this.selectedArsenalAtom === 1 ? 3 : (this.selectedArsenalAtom === 2 ? 6 : 9);
+                    if (neutrons < currentCost) {
+                        if (neutrons >= 6) this.setArsenalAction('atom', 2);
+                        else if (neutrons >= 3) this.setArsenalAction('atom', 1);
+                    }
+                }
             }
         }
 
@@ -1032,7 +1190,9 @@ class AtomicWarsUIController {
                 this.arsenalHintTextEl.innerHTML = '🛡️ <strong>الضربة الافتتاحية:</strong> اختر أي غرفة فارغة لتأسيس قلعتك النووية (ذرة ثلاثية مجانية مع درع 3×3)';
                 this.arsenalHintTextEl.style.color = '#fcd34d';
             } else {
-                this.arsenalHintTextEl.innerHTML = '💡 <strong>قاعدة الانفصال:</strong> تغذية غرفتك تكلف 1 n⁰ • والذرات الخارجية توضع في الغرف الفارغة فقط (أحادية ⚡2، ثنائية ⚡4، ثلاثية ⚡6)';
+                const rodCost = (this.engine.mode && typeof this.engine.mode.getControlRodCost === 'function') ? this.engine.mode.getControlRodCost() : 5;
+                const drainCost = (this.engine.mode && typeof this.engine.mode.getEnergyDrainCost === 'function') ? this.engine.mode.getEnergyDrainCost() : 3;
+                this.arsenalHintTextEl.innerHTML = `💡 <strong>تكتيك المفاعل:</strong> تغذية غرفتك 1 n⁰ • الذرات في الفراغ (⚡3, ⚡6, ⚡9) • الدرع (🛡️ ${rodCost}) يمتص الصدمة • الإخماد (⚡ ${drainCost}) يعيد ذرة الخصم لمستوى 1`;
                 this.arsenalHintTextEl.style.color = '#94a3b8';
             }
         }
@@ -1069,7 +1229,7 @@ class AtomicWarsUIController {
                 }
                 const aiMove = this.engine.computeBestAIMove();
                 if (aiMove) {
-                    await this.processPlayerMove(aiMove.r, aiMove.c, aiMove.atomCount || 1);
+                    await this.processPlayerMove(aiMove.r, aiMove.c, aiMove.atomCount || 1, aiMove.actionType || 'atom');
                 } else {
                     this.isAnimating = false;
                 }

@@ -2,6 +2,7 @@
  * ============================================================================
  * الحرب الذرية (Atomic War) - محاكي المعركة الخلفية الحية (4 روبوتات تتنافس في الخلفية)
  * يعمل تلقائياً على Canvas الشاشة الترحيبية خلف طبقة البلور
+ * مع نظام إقصاء دقيق: الروبوت الذي يُباد تماماً يخرج من المعركة ولا يعود إطلاقاً
  * ============================================================================
  */
 class WelcomeBackgroundSimulation {
@@ -15,16 +16,11 @@ class WelcomeBackgroundSimulation {
 
         this.rows = 7;
         this.cols = 7;
-        this.bots = [
-            { id: 0, name: 'يورانيوم', color: '#10b981', dark: '#064e3b' },
-            { id: 1, name: 'بلوتونيوم', color: '#ef4444', dark: '#7f1d1d' },
-            { id: 2, name: 'كوبالت',   color: '#0284c7', dark: '#0c4a6e' },
-            { id: 3, name: 'سيزيوم',  color: '#f59e0b', dark: '#78350f' }
-        ];
-
+        this.bots = [];
         this.board = [];
         this.currentBot = 0;
         this.turnCount = 0;
+        this.matchEndCountdown = -1;
         this.flyingParticles = [];
 
         this.handleResize = this.resize.bind(this);
@@ -54,6 +50,13 @@ class WelcomeBackgroundSimulation {
     }
 
     initBoard() {
+        this.bots = [
+            { id: 0, name: 'يورانيوم', color: '#10b981', dark: '#064e3b', alive: true, hasPlayed: false, atoms: 0, cells: 0 },
+            { id: 1, name: 'بلوتونيوم', color: '#ef4444', dark: '#7f1d1d', alive: true, hasPlayed: false, atoms: 0, cells: 0 },
+            { id: 2, name: 'كوبالت',   color: '#0284c7', dark: '#0c4a6e', alive: true, hasPlayed: false, atoms: 0, cells: 0 },
+            { id: 3, name: 'سيزيوم',  color: '#f59e0b', dark: '#78350f', alive: true, hasPlayed: false, atoms: 0, cells: 0 }
+        ];
+
         this.board = [];
         for (let r = 0; r < this.rows; r++) {
             const row = [];
@@ -65,8 +68,10 @@ class WelcomeBackgroundSimulation {
             }
             this.board.push(row);
         }
+
         this.turnCount = 0;
         this.currentBot = 0;
+        this.matchEndCountdown = -1;
         this.flyingParticles = [];
     }
 
@@ -80,7 +85,7 @@ class WelcomeBackgroundSimulation {
         if (this.board.length === 0) this.initBoard();
 
         if (this.stepInterval) clearInterval(this.stepInterval);
-        this.stepInterval = setInterval(() => this.step(), 380);
+        this.stepInterval = setInterval(() => this.step(), 360);
 
         const renderLoop = () => {
             if (!this.isRunning) return;
@@ -102,23 +107,99 @@ class WelcomeBackgroundSimulation {
         }
     }
 
-    step() {
-        if (!this.canvas || !this.isRunning) return;
-        const validMoves = [];
+    /**
+     * تحديث إحصائيات الذرات وفحص الإقصاء التام
+     */
+    updateEliminations() {
+        for (const b of this.bots) {
+            b.atoms = 0;
+            b.cells = 0;
+        }
+
         for (let r = 0; r < this.rows; r++) {
             for (let c = 0; c < this.cols; c++) {
                 const cell = this.board[r][c];
-                if (cell.owner === null || cell.owner === this.currentBot) {
-                    validMoves.push({ r, c });
+                if (cell.owner !== null && cell.atoms > 0) {
+                    this.bots[cell.owner].atoms += cell.atoms;
+                    this.bots[cell.owner].cells += 1;
                 }
             }
         }
 
-        if (validMoves.length === 0 || this.turnCount > 90) {
+        // إقصاء أي روبوت لعب ضربته الافتتاحية وفقد جميع ذراته (لا يمكنه العودة إطلاقاً)
+        for (const b of this.bots) {
+            if (b.hasPlayed && b.atoms === 0) {
+                b.alive = false;
+            }
+        }
+    }
+
+    step() {
+        if (!this.canvas || !this.isRunning) return;
+
+        // إذا انتهت المباراة، ننتظر مهلة قصيرة لعرض الانتصار ثم نبدأ مباراة جديدة
+        if (this.matchEndCountdown > 0) {
+            this.matchEndCountdown--;
+            if (this.matchEndCountdown === 0) {
+                this.initBoard();
+            }
+            return;
+        }
+
+        this.updateEliminations();
+
+        const aliveBots = this.bots.filter(b => b.alive);
+        const playedCount = this.bots.filter(b => b.hasPlayed).length;
+
+        // إذا بقي روبوت واحد فقط بعد لعب الجميع للضربة الافتتاحية، تعلن نهاية المباراة
+        if (playedCount >= this.bots.length && aliveBots.length <= 1) {
+            this.matchEndCountdown = 5; // انتظار 5 نبضات ثم إعادة
+            return;
+        }
+
+        // إذا تجاوزت المباراة 120 حركة، إعادة ضبط
+        if (this.turnCount > 120 || aliveBots.length === 0) {
             this.initBoard();
             return;
         }
 
+        // التأكد من أن الروبوت الحالي لا يزال حياً، وإلا الانتقال للحي التالي
+        if (!this.bots[this.currentBot].alive) {
+            this.advanceToNextAliveBot();
+            if (!this.bots[this.currentBot].alive) {
+                this.initBoard();
+                return;
+            }
+        }
+
+        const bot = this.bots[this.currentBot];
+        const isOpening = !bot.hasPlayed;
+        const validMoves = [];
+
+        for (let r = 0; r < this.rows; r++) {
+            for (let c = 0; c < this.cols; c++) {
+                const cell = this.board[r][c];
+                if (isOpening) {
+                    // في الضربة الأولى، يضع في غرفة فارغة فقط
+                    if (cell.owner === null) {
+                        validMoves.push({ r, c });
+                    }
+                } else {
+                    // في الأدوار العادية: يضع حصرياً في غرفه الخاصة (ممنوع وضع ذرات جديدة في أماكن فارغة حتى لا يعود الموتى)
+                    if (cell.owner === this.currentBot) {
+                        validMoves.push({ r, c });
+                    }
+                }
+            }
+        }
+
+        if (validMoves.length === 0) {
+            bot.alive = false;
+            this.advanceToNextAliveBot();
+            return;
+        }
+
+        // اختيار أفضل حركة تكتيكية للروبوت
         let chosen = null;
         for (const m of validMoves) {
             const cell = this.board[m.r][m.c];
@@ -132,18 +213,19 @@ class WelcomeBackgroundSimulation {
         }
 
         const cell = this.board[chosen.r][chosen.c];
-        const isOpening = this.turnCount < 4;
         cell.owner = this.currentBot;
         cell.atoms += isOpening ? 3 : 1;
+        bot.hasPlayed = true;
         this.turnCount++;
 
+        // معالجة الانشطار المتسلسل
         let fissionQueue = [];
         if (cell.atoms >= cell.crit) {
             fissionQueue.push({ r: chosen.r, c: chosen.c });
         }
 
         let safety = 0;
-        while (fissionQueue.length > 0 && safety < 80) {
+        while (fissionQueue.length > 0 && safety < 120) {
             safety++;
             const cur = fissionQueue.shift();
             const cCell = this.board[cur.r][cur.c];
@@ -178,7 +260,17 @@ class WelcomeBackgroundSimulation {
             }
         }
 
-        this.currentBot = (this.currentBot + 1) % this.bots.length;
+        this.updateEliminations();
+        this.advanceToNextAliveBot();
+    }
+
+    advanceToNextAliveBot() {
+        const total = this.bots.length;
+        let attempts = 0;
+        do {
+            this.currentBot = (this.currentBot + 1) % total;
+            attempts++;
+        } while (!this.bots[this.currentBot].alive && attempts <= total);
     }
 
     draw() {

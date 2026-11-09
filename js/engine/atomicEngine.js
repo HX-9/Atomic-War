@@ -33,7 +33,7 @@ class AtomicWarsEngine {
             // كائن احتياطي للوضع
             this.mode = {
                 id: gameMode,
-                name: gameMode === 'advanced' ? 'الوضع المطور' : 'الوضع العادي',
+                name: gameMode === 'advanced' ? 'البطاقات الذرية' : 'الوضع العادي',
                 getOpeningAtoms: () => 3,
                 hasOpeningShield: () => true,
                 isValidMove: (eng, r, c, pid) => {
@@ -89,7 +89,8 @@ class AtomicWarsEngine {
                     criticalMass: criticalMass,         // الكتلة الحرجة التي تؤدي للانشطار (2، 3، 4)
                     hasShield: false,                   // درع طاقة واقٍ في الجولة الأولى
                     shieldPlayer: null,                 // اللاعب صاحب الدرع
-                    shieldZoneOwner: null               // مالك نطاق الحماية 3×3
+                    shieldZoneOwner: null,              // مالك نطاق الحماية 3×3
+                    hasControlRod: false                // قضيب تحكم نووي (مهدئ) يمتص انفجارات الخصم
                 });
             }
             this.board.push(row);
@@ -177,16 +178,25 @@ class AtomicWarsEngine {
     }
 
     /**
-     * التحقق من صلاحية إضافة ذرة في الغرفة (r, c)
+     * التحقق من صلاحية إضافة ذرة أو تثبيت قضيب تحكم في الغرفة (r, c)
      * @param {number} r
      * @param {number} c
      * @param {number} playerId
      * @param {number} atomCount عدد الذرات المراد إلقاؤها (1, 2, 3)
+     * @param {string} actionType نوع الإجراء ('atom' أو 'controlRod')
      */
-    isValidMove(r, c, playerId = this.currentPlayerIndex, atomCount = 1) {
+    isValidMove(r, c, playerId = this.currentPlayerIndex, atomCount = 1, actionType = 'atom') {
         if (this.isGameOver) return false;
         if (r < 0 || r >= this.rows || c < 0 || c >= this.cols) return false;
         const cell = this.board[r][c];
+
+        if (actionType === 'controlRod' || actionType === 'energyDrain') {
+            if (this.mode && typeof this.mode.isValidMove === 'function') {
+                return this.mode.isValidMove(this, r, c, playerId, atomCount, actionType);
+            }
+            return false;
+        }
+
         if (cell.owner !== null && cell.owner !== playerId) return false;
 
         // حظر نهائي لوضع الذرة داخل مربع الحماية 3×3 لأي خصم ما دام درعه نشطاً
@@ -196,7 +206,7 @@ class AtomicWarsEngine {
 
         // تطبيق قاعدة الوضع المخصص (مثل الوضع العادي المقيد أو المطور بنظام النيوترونات)
         if (this.mode && typeof this.mode.isValidMove === 'function') {
-            if (!this.mode.isValidMove(this, r, c, playerId, atomCount)) {
+            if (!this.mode.isValidMove(this, r, c, playerId, atomCount, 'atom')) {
                 return false;
             }
         }
@@ -209,16 +219,71 @@ class AtomicWarsEngine {
      * @param {number} r
      * @param {number} c
      * @param {number} atomCount عدد الذرات المراد إلقاؤها من الترسانة
+     * @param {string} actionType نوع الإجراء ('atom' أو 'controlRod')
      */
-    executeTurn(r, c, atomCount = 1) {
+    executeTurn(r, c, atomCount = 1, actionType = 'atom') {
         const playerId = this.currentPlayerIndex;
-        if (!this.isValidMove(r, c, playerId, atomCount)) {
+        if (!this.isValidMove(r, c, playerId, atomCount, actionType)) {
             return { valid: false };
         }
 
         const cell = this.board[r][c];
         const player = this.players[playerId];
         const isFirstMove = !player.hasPlayed;
+
+        // تنفيذ إجراء تثبيت قضيب التحكم النووي
+        if (actionType === 'controlRod') {
+            const rodCost = (this.mode && typeof this.mode.getControlRodCost === 'function') ? this.mode.getControlRodCost() : 5;
+            player.neutrons = Math.max(0, (player.neutrons || 0) - rodCost);
+            cell.hasControlRod = true;
+
+            this.recalculateStats();
+            this.updateEliminations();
+
+            if (!this.isGameOver) {
+                this.advanceToNextAlivePlayer();
+            }
+
+            return {
+                valid: true,
+                actionType: 'controlRod',
+                placedAt: { row: r, col: c, playerId },
+                waves: [],
+                isGameOver: this.isGameOver,
+                winner: this.winner
+            };
+        }
+
+        // تنفيذ إجراء هجوم إخماد طاقة ذرة معادية
+        if (actionType === 'energyDrain') {
+            const drainCost = (this.mode && typeof this.mode.getEnergyDrainCost === 'function') ? this.mode.getEnergyDrainCost() : 3;
+            player.neutrons = Math.max(0, (player.neutrons || 0) - drainCost);
+
+            let absorbedByRod = false;
+            if (cell.hasControlRod) {
+                cell.hasControlRod = false; // استهلاك درع الخصم الواقي في امتصاص الهجوم
+                absorbedByRod = true;
+            } else {
+                cell.atoms = 1; // إرجاع الذرة المعادية لمستوى طاقتها الأول
+            }
+
+            this.recalculateStats();
+            this.updateEliminations();
+
+            if (!this.isGameOver) {
+                this.advanceToNextAlivePlayer();
+            }
+
+            return {
+                valid: true,
+                actionType: 'energyDrain',
+                placedAt: { row: r, col: c, playerId },
+                absorbedByRod: absorbedByRod,
+                waves: [],
+                isGameOver: this.isGameOver,
+                winner: this.winner
+            };
+        }
 
         // إذا كان هذا هو الدور الثاني أو اللاحق للاعب، تنتهي صلاحية درعه الخاص
         if (!isFirstMove) {
@@ -233,10 +298,10 @@ class AtomicWarsEngine {
             const hasNeutrons = (this.mode && typeof this.mode.hasNeutronSystem === 'function' && this.mode.hasNeutronSystem());
             if (hasNeutrons) {
                 if (cell.owner === null) {
-                    // إلقاء ذرة خارجية في غرفة فارغة (تكلفة المستوى: 2 للأحادية، 4 للثنائية، 6 للثلاثية)
+                    // إلقاء ذرة خارجية في غرفة فارغة (تكلفة المستوى: 3 للأحادية، 6 للثنائية، 9 للثلاثية)
                     const cost = (typeof this.mode.getExternalAtomCost === 'function')
                         ? this.mode.getExternalAtomCost(atomCount)
-                        : (atomCount === 1 ? 2 : (atomCount === 2 ? 4 : 6));
+                        : (atomCount === 1 ? 3 : (atomCount === 2 ? 6 : 9));
                     atomsToAdd = Math.max(1, Math.min(3, atomCount));
                     player.neutrons = Math.max(0, (player.neutrons || 0) - cost);
                 } else {
@@ -331,6 +396,24 @@ class AtomicWarsEngine {
                 // إذا كانت الغرفة الهدف داخل مربع حماية 3×3 لخصم آخر أو محمية بدرع
                 if (this.isInsideOpponentShieldZone(t.toRow, t.toCol, playerId) || (targetCell.hasShield && targetCell.owner !== null && targetCell.owner !== playerId)) {
                     continue;
+                }
+
+                // آلية 2: امتصاص قضيب التحكم النووي (Control Rod Absorber)
+                if (targetCell.hasControlRod && targetCell.owner !== null && targetCell.owner !== playerId) {
+                    targetCell.hasControlRod = false; // استهلاك قضيب التحكم في امتصاص الصدمة
+                    t.absorbedByControlRod = true;
+                    t.dampenedAt = { row: t.toRow, col: t.toCol };
+                    continue; // تم إخماد المقذوف وحماية الغرفة بالكامل!
+                }
+
+                // آلية 3: مقاومة النواة الثلاثية (Triple Atom Resistance)
+                const hasCoreResistance = (this.mode && typeof this.mode.hasFortressCoreResistance === 'function' && this.mode.hasFortressCoreResistance());
+                if (hasCoreResistance && targetCell.owner !== null && targetCell.owner !== playerId && targetCell.atoms >= 3) {
+                    // الذرة الثلاثية فقط من لا تهزم من أول ضربة: تمتص المقذوف وتتحول إلى ذرة أحادية (3 ➔ 1) دون أن تسقط للخصم أو تنفجر!
+                    targetCell.atoms = 1;
+                    t.coreResisted = true;
+                    t.resistedAt = { row: t.toRow, col: t.toCol, remainingAtoms: 1 };
+                    continue; // المقذوف تم امتصاصه واستنفاده
                 }
 
                 targetCell.owner = playerId;
