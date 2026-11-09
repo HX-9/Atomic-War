@@ -1,0 +1,24 @@
+/* ==========================================================================
+   الحرب الذرية (Atomic War) - الوضع العادي (Normal Mode)
+   تنسيقات ومؤثرات الوضع العادي
+   مسار الملف: modes/normal/normalMode.css
+   ========================================================================== */
+
+/* غرفة فارغة مغلقة في الوضع العادي بعد الجولة الأولى */
+.board-cell.cell-locked-normal {
+  background: radial-gradient(
+    circle at center,
+    rgba(15, 23, 42, 0.92) 0%,
+    rgba(9, 13, 22, 0.98) 100%
+  );
+  border-style: dashed;
+  cursor: not-allowed;
+  opacity: 0.85;
+}
+
+/* شارة تفعيل الوضع العادي */
+.active-mode-badge--normal {
+  background: rgba(16, 185, 129, 0.16);
+  color: #6ee7b7;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}

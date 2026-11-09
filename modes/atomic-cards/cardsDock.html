@@ -1,0 +1,80 @@
+<!-- ==========================================================================
+   الحرب الذرية (Atomic War) - وضع البطاقات الذرية
+   شريط الترسانة والبطاقات التكتيكية ورصيد النيوترونات
+   مسار الملف: modes/atomic-cards/cardsDock.html
+   ========================================================================== -->
+
+<div id="neutronArsenalBar" class="neutron-floating-dock hidden">
+    <!-- لوحة رصيد النيوترونات -->
+    <div class="dock-neutron-info">
+        <div class="dock-neutron-header">
+            <span class="dock-neutron-label">
+                <i class="fa-solid fa-atom icon-sky"></i> رصيد النيوترونات
+            </span>
+            <span id="neutronValueDisplay" class="dock-neutron-val">0 / 10</span>
+        </div>
+        <div class="neutron-meter-track" id="neutronMeterTrack">
+            <!-- 10 مؤشرات ضوئية -->
+        </div>
+    </div>
+
+    <div class="dock-divider"></div>
+
+    <!-- خانة البطاقات التكتيكية (مقسمة: بطاقات العناصر وبطاقات المساعدة) -->
+    <div class="dock-cards-container">
+        <!-- 1. قسم بطاقات العناصر -->
+        <div class="dock-card-subgroup dock-card-subgroup--elements">
+            <div class="dock-subgroup-header">
+                <span class="dock-subgroup-title">
+                    <i class="fa-solid fa-atom icon-sky"></i> بطاقات العناصر
+                </span>
+            </div>
+            <div class="dock-subgroup-cards">
+                <button type="button" class="arsenal-btn" data-action="atom" data-atoms="1" data-cost="3" id="btnArsenalSingle" title="إلقاء ذرة أحادية في غرفة فارغة (تكلفة 3 نيوترونات)">
+                    <span class="arsenal-atom-preview preview-1">●</span>
+                    <span class="arsenal-btn-name">أحادية</span>
+                    <span class="arsenal-btn-cost">⚡ 3</span>
+                </button>
+                <button type="button" class="arsenal-btn" data-action="atom" data-atoms="2" data-cost="6" id="btnArsenalDouble" title="إلقاء ذرة ثنائية في غرفة فارغة (تكلفة 6 نيوترونات)">
+                    <span class="arsenal-atom-preview preview-2">●●</span>
+                    <span class="arsenal-btn-name">ثنائية</span>
+                    <span class="arsenal-btn-cost">⚡ 6</span>
+                </button>
+                <button type="button" class="arsenal-btn" data-action="atom" data-atoms="3" data-cost="9" id="btnArsenalTriple" title="إلقاء نواة ثلاثية في غرفة فارغة (تكلفة 9 نيوترونات)">
+                    <span class="arsenal-atom-preview preview-3">●●●</span>
+                    <span class="arsenal-btn-name">ثلاثية</span>
+                    <span class="arsenal-btn-cost">⚡ 9</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- فاصل عمودي أنيق بين الفئتين -->
+        <div class="dock-subgroup-separator"></div>
+
+        <!-- 2. قسم بطاقات المساعدة -->
+        <div class="dock-card-subgroup dock-card-subgroup--support">
+            <div class="dock-subgroup-header">
+                <span class="dock-subgroup-title">
+                    <i class="fa-solid fa-wand-magic-sparkles icon-amber"></i> بطاقات المساعدة
+                </span>
+            </div>
+            <div class="dock-subgroup-cards">
+                <button type="button" class="arsenal-btn arsenal-btn--control-rod" data-action="controlRod" data-cost="5" id="btnArsenalControlRod" title="تثبيت درع نووي واقٍ على إحدى غرفك لامتصاص الانفجارات (تكلفة 5 نيوترونات)">
+                    <i class="fa-solid fa-shield-halved arsenal-rod-icon"></i>
+                    <span class="arsenal-btn-name">درع نووي</span>
+                    <span class="arsenal-btn-cost arsenal-btn-cost--rod">🛡️ 5</span>
+                </button>
+                <button type="button" class="arsenal-btn arsenal-btn--energy-drain" data-action="energyDrain" data-cost="3" id="btnArsenalEnergyDrain" title="إلقاء هجوم على ذرة معادية لإرجاعها إلى المستوى الأول (تكلفة 3 نيوترونات)">
+                    <i class="fa-solid fa-bolt-slash arsenal-drain-icon"></i>
+                    <span class="arsenal-btn-name">إخماد طاقة</span>
+                    <span class="arsenal-btn-cost arsenal-btn-cost--drain">⚡ 3</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- نص إرشادي تكتيكي مدمج -->
+    <div id="arsenalHintText" class="dock-hint-text">
+        💡 تغذية غرفتك 1 n⁰ • الذرات في الفراغ (⚡3, ⚡6, ⚡9) • الدرع (🛡️ 5) يمتص الصدمة • الإخماد (⚡ 3) يعيد ذرة الخصم لمستوى 1
+    </div>
+</div>

@@ -11,3 +11,9 @@
 @import url('css/atoms.css');
 @import url('css/shield.css');
 @import url('css/modals.css');
+
+/* تنسيقات الأنماط المستقلة (Modular Modes Stylesheets) */
+@import url('modes/normal/normalMode.css');
+@import url('modes/atomic-cards/cardsDock.css');
+@import url('modes/mode-2/mode2.css');
+@import url('modes/mode-3/mode3.css');
