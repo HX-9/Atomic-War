@@ -1,0 +1,47 @@
+<!-- ==========================================================================
+   الحرب الذرية (Atomic War) - نافذة النصر والسيطرة النووية المطلقة
+   مسار الملف: html/modal-victory.html
+   ========================================================================== -->
+
+<div id="victoryModal" class="modal-backdrop hidden">
+    <div class="glass-panel modal-card modal-card--victory">
+        <div class="victory-trophy-circle">
+            <i class="fa-solid fa-trophy victory-trophy-icon"></i>
+        </div>
+        <div id="victoryModeBadge" class="victory-mode-badge">الوضع العادي</div>
+        <h2 class="victory-heading">سيطرة نووية مطلقة!</h2>
+        <p class="victory-subtitle">تمت الهيمنة الكاملة على غرف المفاعل الذري</p>
+
+        <div id="winnerBannerBox" class="winner-banner">
+            <span id="winnerColorCircle" class="winner-color-dot"></span>
+            <span id="winnerNameText" class="winner-name">القوة الفائزة</span>
+        </div>
+
+        <div class="victory-stats-grid">
+            <div class="victory-stat-card">
+                <div class="victory-stat-label">إجمالي الجولات</div>
+                <div id="statTotalTurns" class="victory-stat-value">0</div>
+            </div>
+            <div class="victory-stat-card">
+                <div class="victory-stat-label">أطول انشطار</div>
+                <div id="statMaxChain" class="victory-stat-value icon-amber">0</div>
+            </div>
+            <div class="victory-stat-card">
+                <div class="victory-stat-label">الغرف المحتلة</div>
+                <div id="statFinalCells" class="victory-stat-value icon-emerald">0</div>
+            </div>
+        </div>
+
+        <div class="modal-actions">
+            <button id="btnPlayAgainModal" class="modal-btn-primary">
+                <i class="fa-solid fa-play"></i> معركة جديدة
+            </button>
+            <button id="btnBackToWelcomeFromWin" class="modal-btn-secondary" title="العودة لاختيار وضع اللعب">
+                <i class="fa-solid fa-layer-group icon-amber"></i> تغيير الوضع
+            </button>
+            <button id="btnOpenSettingsFromWin" class="modal-btn-secondary" title="إعدادات المفاعل">
+                <i class="fa-solid fa-sliders"></i>
+            </button>
+        </div>
+    </div>
+</div>

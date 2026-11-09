@@ -1,0 +1,60 @@
+<!-- ==========================================================================
+   الحرب الذرية (Atomic War) - شريط القيادة العلوي ومؤشرات الأوضاع
+   مسار الملف: html/header.html
+   ========================================================================== -->
+
+<header class="app-header">
+    <div class="glass-panel header-bar">
+        <!-- شعار الحرب الذرية والوضع الحالي -->
+        <div class="brand-box">
+            <div class="brand-logo">
+                <i class="fa-solid fa-atom brand-logo-icon"></i>
+            </div>
+            <div>
+                <h1 class="brand-title">
+                    الحرب الذرية <span class="brand-subtitle" id="activeModeBadge">(الوضع العادي)</span>
+                </h1>
+                <p class="brand-meta" id="headerBoardInfo">مفاعل 7×7 • 49 غرفة انشطار</p>
+            </div>
+        </div>
+
+        <!-- مؤشر الدور اللوني المدمج الأنيق (بدون عبارات زائدة) -->
+        <div id="turnBanner" class="turn-banner" title="دور القوة الحالية">
+            <span class="turn-dot-wrapper">
+                <span id="turnPing" class="turn-ping"></span>
+                <span id="turnDot" class="turn-dot"></span>
+            </span>
+            <span id="currentPlayerName" class="turn-player-name">اليورانيوم الأخضر</span>
+        </div>
+
+        <!-- أزرار التحكم السريع -->
+        <div class="header-actions">
+            <!-- زر العودة للقائمة الرئيسية -->
+            <button id="btnBackToWelcome" title="العودة للقائمة الرئيسية" class="action-btn">
+                <i class="fa-solid fa-house icon-amber"></i>
+                <span class="action-btn-label">الرئيسية</span>
+            </button>
+            <!-- زر إظهار/إخفاء أرقام الذرات (اختياري) -->
+            <button id="btnToggleNumbers" title="إظهار/إخفاء أعداد الذرات" class="action-btn">
+                <i class="fa-solid fa-hashtag icon-sky"></i>
+                <span class="action-btn-label">الذرات</span>
+            </button>
+            <button id="btnSoundToggle" title="كتم/تشغيل الصوتيات النووية" class="action-btn">
+                <i id="soundIcon" class="fa-solid fa-volume-high icon-emerald"></i>
+                <span class="action-btn-label">الصوت</span>
+            </button>
+            <button id="btnRulesModal" title="قواعد الاشتباك النووي" class="action-btn">
+                <i class="fa-solid fa-radiation icon-amber"></i>
+                <span class="action-btn-label">القواعد</span>
+            </button>
+            <button id="btnSettingsModal" title="تخصيص المفاعل والقوى" class="action-btn">
+                <i class="fa-solid fa-sliders icon-purple"></i>
+                <span class="action-btn-label">تخصيص</span>
+            </button>
+            <button id="btnRestartFast" title="إعادة تشغيل المفاعل" class="action-btn action-btn--primary">
+                <i class="fa-solid fa-rotate-right"></i>
+                <span>مفاعل جديد</span>
+            </button>
+        </div>
+    </div>
+</header>

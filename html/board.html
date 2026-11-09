@@ -1,0 +1,54 @@
+<!-- ==========================================================================
+   الحرب الذرية (Atomic War) - لوحة المفاعل الذري المركزية وشريط الترسانة التكتيكي
+   مسار الملف: html/board.html
+   ========================================================================== -->
+
+<section class="reactor-section">
+    <!-- لوحة المفاعل والشبكة التكتيكية -->
+    <div id="boardWrapper" class="game-board-wrapper">
+        <div id="gameBoard" class="game-board">
+            <!-- يتم توليد غرف المفاعل ديناميكياً بواسطة js/app.js -->
+        </div>
+    </div>
+
+    <!-- شريط الترسانة ورصيد النيوترونات التكتيكي (يظهر في الوضع المطور فقط) -->
+    <div id="neutronArsenalBar" class="neutron-arsenal-bar hidden">
+        <!-- مقياس رصيد النيوترونات -->
+        <div class="neutron-reserve-panel">
+            <div class="neutron-reserve-header">
+                <span class="neutron-reserve-label">
+                    <i class="fa-solid fa-atom icon-sky"></i> رصيد النيوترونات:
+                </span>
+                <span id="neutronValueDisplay" class="neutron-value-text">0 / 10</span>
+            </div>
+            <!-- شريط الشرائح الضوئية الـ 10 للنيوترونات -->
+            <div class="neutron-meter-track" id="neutronMeterTrack">
+                <!-- يتم توليد 10 شرائح ضوئية ديناميكياً بواسطة js/app.js -->
+            </div>
+        </div>
+
+        <!-- أزرار اختيار الذرات الخارجية من الترسانة -->
+        <div class="arsenal-types-group">
+            <button type="button" class="arsenal-btn active" data-atoms="1" data-cost="2" id="btnArsenalSingle" title="إلقاء ذرة أحادية في غرفة فارغة (تكلفة 2 نيوترون)">
+                <span class="arsenal-atom-preview preview-1">●</span>
+                <span class="arsenal-btn-name">ذرة أحادية</span>
+                <span class="arsenal-btn-cost">⚡ 2 n⁰</span>
+            </button>
+            <button type="button" class="arsenal-btn" data-atoms="2" data-cost="4" id="btnArsenalDouble" title="إلقاء ذرة ثنائية في غرفة فارغة (تكلفة 4 نيوترونات)">
+                <span class="arsenal-atom-preview preview-2">●●</span>
+                <span class="arsenal-btn-name">ذرة ثنائية</span>
+                <span class="arsenal-btn-cost">⚡ 4 n⁰</span>
+            </button>
+            <button type="button" class="arsenal-btn" data-atoms="3" data-cost="6" id="btnArsenalTriple" title="إلقاء نواة ثلاثية في غرفة فارغة (تكلفة 6 نيوترونات)">
+                <span class="arsenal-atom-preview preview-3">●●●</span>
+                <span class="arsenal-btn-name">نواة ثلاثية</span>
+                <span class="arsenal-btn-cost">⚡ 6 n⁰</span>
+            </button>
+        </div>
+
+        <!-- إرشاد تكتيكي واضح للقاعدة الفيزيائية -->
+        <div id="arsenalHintText" class="arsenal-hint-text">
+            💡 الذرات الخارجية توضع في الغرف الفارغة فقط • النقر المباشر على غرفتك يغذيها بـ +1 نيوترون (تكلفة 1)
+        </div>
+    </div>
+</section>

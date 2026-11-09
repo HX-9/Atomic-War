@@ -1,0 +1,184 @@
+/* ==========================================================================
+   08. النماذج الذرية والمدارات الإلكترونية (Atomic Nuclei & Orbitals)
+   ========================================================================== */
+.atom-cluster {
+    position: relative;
+    width: 82%;
+    height: 82%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+}
+
+/* النواة الذرية */
+.atomic-nucleus {
+    position: absolute;
+    border-radius: 50%;
+    background: radial-gradient(circle at 32% 32%, #ffffff 0%, var(--atom-color) 50%, var(--atom-dark) 95%);
+    box-shadow: 0 0 12px var(--atom-color), inset 0 0 5px rgba(255, 255, 255, 0.75);
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease;
+    z-index: 2;
+}
+
+/* المدارات الإلكترونية */
+.electron-orbit {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 1px dashed var(--atom-color);
+    opacity: 0.55;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.electron-orbit::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: 50%;
+    width: 4.5px;
+    height: 4.5px;
+    border-radius: 50%;
+    background: #ffffff;
+    box-shadow: 0 0 6px var(--atom-color, #10b981), 0 0 10px #ffffff;
+    transform: translateX(-50%);
+}
+
+.orbit-1 {
+    transform: rotateX(65deg) rotateY(15deg);
+    animation: spinOrbit1 3s linear infinite;
+}
+
+.orbit-2 {
+    transform: rotateX(65deg) rotateY(105deg);
+    animation: spinOrbit2 4s linear infinite reverse;
+}
+
+.orbit-3 {
+    transform: rotateX(65deg) rotateY(195deg);
+    animation: spinOrbit3 3.5s linear infinite;
+}
+
+@keyframes spinOrbit1 {
+    0% { transform: rotateX(65deg) rotateY(15deg) rotateZ(0deg); }
+    100% { transform: rotateX(65deg) rotateY(15deg) rotateZ(360deg); }
+}
+
+@keyframes spinOrbit2 {
+    0% { transform: rotateX(65deg) rotateY(105deg) rotateZ(0deg); }
+    100% { transform: rotateX(65deg) rotateY(105deg) rotateZ(360deg); }
+}
+
+@keyframes spinOrbit3 {
+    0% { transform: rotateX(65deg) rotateY(195deg) rotateZ(0deg); }
+    100% { transform: rotateX(65deg) rotateY(195deg) rotateZ(360deg); }
+}
+
+/* تموضع الأنوية حسب عدد الذرات */
+.atom-count-1 .atomic-nucleus:nth-child(1) {
+    width: 48%;
+    height: 48%;
+    transform: translate(0, 0);
+    box-shadow: 0 0 14px var(--atom-color), inset 0 0 5px rgba(255, 255, 255, 0.85);
+}
+
+.atom-count-2 .atomic-nucleus:nth-child(1) {
+    width: 40%;
+    height: 40%;
+    transform: translate(-30%, -10%);
+}
+.atom-count-2 .atomic-nucleus:nth-child(2) {
+    width: 40%;
+    height: 40%;
+    transform: translate(30%, 10%);
+}
+
+.atom-count-3 .atomic-nucleus:nth-child(1) {
+    width: 36%;
+    height: 36%;
+    transform: translate(0, -32%);
+}
+.atom-count-3 .atomic-nucleus:nth-child(2) {
+    width: 36%;
+    height: 36%;
+    transform: translate(-30%, 24%);
+}
+.atom-count-3 .atomic-nucleus:nth-child(3) {
+    width: 36%;
+    height: 36%;
+    transform: translate(30%, 24%);
+}
+
+.atom-count-many .atomic-nucleus:nth-child(1) { width: 32%; height: 32%; transform: translate(-26%, -26%); }
+.atom-count-many .atomic-nucleus:nth-child(2) { width: 32%; height: 32%; transform: translate(26%, -26%); }
+.atom-count-many .atomic-nucleus:nth-child(3) { width: 32%; height: 32%; transform: translate(-26%, 26%); }
+.atom-count-many .atomic-nucleus:nth-child(4) { width: 32%; height: 32%; transform: translate(26%, 26%); }
+
+/* دوران هادئ للأنوية المستقرة متعددة الذرات */
+.stable-cluster .atom-cluster {
+    animation: gentleOrbital 5s infinite linear;
+}
+
+@keyframes gentleOrbital {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* ==========================================================================
+   09. الكتلة الحرجة والمقذوفات الطائرة (Critical Mass & Flying Orbs)
+   ========================================================================== */
+.critical-ready {
+    box-shadow: inset 0 0 16px rgba(255, 255, 255, 0.28), 0 0 10px rgba(255, 255, 255, 0.2);
+}
+
+.critical-ready .atom-cluster {
+    animation: criticalVibration 0.35s infinite alternate ease-in-out;
+}
+
+.critical-ready::after {
+    content: '☢';
+    position: absolute;
+    top: 2px;
+    left: 4px;
+    font-size: 0.65rem;
+    color: #fbbf24;
+    text-shadow: 0 0 6px #fbbf24;
+    animation: blinkWarning 0.7s infinite alternate;
+    pointer-events: none;
+    z-index: 10;
+}
+
+@keyframes criticalVibration {
+    0% { transform: rotate(-8deg) scale(1.05); }
+    50% { transform: rotate(0deg) scale(1.12); }
+    100% { transform: rotate(8deg) scale(1.05); }
+}
+
+@keyframes blinkWarning {
+    0% { opacity: 0.3; }
+    100% { opacity: 1; }
+}
+
+/* المقذوفات الذرية الطائرة */
+.flying-atom {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 60;
+    background: radial-gradient(circle at 30% 30%, #ffffff 0%, var(--atom-color) 50%, var(--atom-dark) 95%);
+    box-shadow: 0 0 16px var(--atom-color), 0 0 30px var(--atom-color), inset 0 0 6px #ffffff;
+    transition: transform var(--fly-duration, 220ms) cubic-bezier(0.2, 0.85, 0.3, 1);
+}
+
+.flying-atom::after {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: 50%;
+    background: var(--atom-color);
+    filter: blur(4px);
+    opacity: 0.8;
+    z-index: -1;
+}
