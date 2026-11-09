@@ -1,0 +1,68 @@
+<!-- ==========================================================================
+   الحرب الذرية (Atomic War) - لوحة الرصد والإحصائيات الجانبية
+   مسار الملف: html/sidebar.html
+   ========================================================================== -->
+
+<aside class="reactor-sidebar">
+    <!-- قائمة القوى النووية والسيطرة -->
+    <div class="glass-panel sidebar-panel">
+        <div class="panel-header">
+            <h2 class="panel-title">
+                <i class="fa-solid fa-shield-halved icon-emerald"></i>
+                القوى النووية والسيطرة
+            </h2>
+            <span id="turnCounterBadge" class="round-badge">الجولة 1</span>
+        </div>
+
+        <!-- بطاقات القوى النووية الحية -->
+        <div id="playersListContainer" class="players-list">
+            <!-- يتم بناؤها ديناميكياً بواسطة js/app.js -->
+        </div>
+    </div>
+
+    <!-- رادار المفاعل ومقياس الإشعاع النشط -->
+    <div class="glass-panel sidebar-panel">
+        <div class="radar-status-row">
+            <span class="radar-label">حالة قلب المفاعل:</span>
+            <span id="chainWaveStatus" class="reactor-status-badge reactor-status-badge--stable">
+                المفاعل في حالة استقرار
+            </span>
+        </div>
+
+        <!-- مؤشر نشاط غايغر الإشعاعي -->
+        <div>
+            <div class="geiger-header">
+                <span>مستوى الإشعاع النشط (Geiger Activity):</span>
+                <span id="geigerValueText" class="geiger-value">0.14 μSv/h</span>
+            </div>
+            <div class="geiger-meter-bar">
+                <div id="geigerMeterFill" class="geiger-meter-fill"></div>
+            </div>
+        </div>
+
+        <!-- دليل الكتلة الحرجة وغرف الانشطار -->
+        <div class="critical-guide-section">
+            <h3 class="critical-guide-title">
+                <i class="fa-solid fa-triangle-exclamation icon-amber"></i>
+                الكتلة الحرجة للاستقرار:
+            </h3>
+            <div class="critical-guide-grid">
+                <div class="critical-guide-card">
+                    <div class="critical-guide-capacity icon-amber">1 <span class="critical-guide-unit">ذرة</span></div>
+                    <div class="critical-guide-type">غرفة زاوية</div>
+                    <div class="critical-guide-trigger">تنشطر عند 2</div>
+                </div>
+                <div class="critical-guide-card">
+                    <div class="critical-guide-capacity icon-sky">2 <span class="critical-guide-unit">ذرة</span></div>
+                    <div class="critical-guide-type">غرفة طرفية</div>
+                    <div class="critical-guide-trigger">تنشطر عند 3</div>
+                </div>
+                <div class="critical-guide-card">
+                    <div class="critical-guide-capacity icon-emerald">3 <span class="critical-guide-unit">ذرات</span></div>
+                    <div class="critical-guide-type">قلب المفاعل</div>
+                    <div class="critical-guide-trigger">تنشطر عند 4</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</aside>

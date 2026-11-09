@@ -1,0 +1,409 @@
+/* ==========================================================================
+   11. النوافذ المنبثقة: النصر، التخصيص، والقواعد (Modals & Dialogs)
+   ========================================================================== */
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    background: rgba(2, 6, 23, 0.85);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.modal-card {
+    width: 100%;
+    max-width: 32rem;
+    padding: 1.25rem;
+    border: 1px solid #334155;
+    max-height: 92vh;
+    overflow-y: auto;
+}
+
+@media (min-width: 640px) {
+    .modal-card {
+        padding: 1.5rem;
+    }
+}
+
+.modal-card--victory {
+    max-width: 28rem;
+    text-align: center;
+    border: 2px solid rgba(16, 185, 129, 0.4);
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 0.75rem;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid #1e293b;
+}
+
+.modal-title {
+    font-size: 1.125rem;
+    font-weight: 900;
+    color: #ffffff;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.modal-close-btn {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 0.5rem;
+    background: #1e293b;
+    color: var(--text-muted);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.modal-close-btn:hover {
+    background: #334155;
+    color: #ffffff;
+}
+
+/* تفاصيل نافذة النصر */
+.victory-trophy-circle {
+    width: 5rem;
+    height: 5rem;
+    border-radius: 50%;
+    margin: 0 auto 1rem auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(16, 185, 129, 0.2);
+    border: 2px solid #34d399;
+    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.25);
+}
+
+.victory-trophy-icon {
+    font-size: 2.25rem;
+    color: #fbbf24;
+    animation: trophyBounce 1s infinite alternate ease-in-out;
+}
+
+@keyframes trophyBounce {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(-6px); }
+}
+
+.victory-mode-badge {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 800;
+    padding: 0.2rem 0.75rem;
+    border-radius: 9999px;
+    background: rgba(16, 185, 129, 0.16);
+    color: #6ee7b7;
+    border: 1px solid rgba(16, 185, 129, 0.35);
+    margin-bottom: 0.5rem;
+}
+
+.victory-heading {
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: #ffffff;
+    margin: 0 0 0.25rem 0;
+}
+
+.victory-subtitle {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin: 0 0 1rem 0;
+}
+
+.winner-banner {
+    padding: 0.75rem 1rem;
+    border-radius: 0.75rem;
+    margin-bottom: 1.25rem;
+    border: 1px solid #334155;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+}
+
+.winner-color-dot {
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.winner-name {
+    font-size: 1.25rem;
+    font-weight: 900;
+}
+
+.victory-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.victory-stat-card {
+    background: rgba(30, 41, 59, 0.8);
+    padding: 0.625rem;
+    border-radius: 0.75rem;
+    border: 1px solid #334155;
+}
+
+.victory-stat-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.victory-stat-value {
+    font-size: 1.125rem;
+    font-weight: 900;
+    color: #ffffff;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.modal-btn-primary {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    border-radius: 0.75rem;
+    background: linear-gradient(to left, #10b981, #0d9488, #0284c7);
+    color: #ffffff;
+    font-family: inherit;
+    font-size: 0.875rem;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.3);
+    transition: opacity 0.2s ease, transform 0.15s ease;
+}
+
+.modal-btn-primary:hover {
+    opacity: 0.95;
+}
+
+.modal-btn-secondary {
+    padding: 0.75rem 1rem;
+    border-radius: 0.75rem;
+    background: #1e293b;
+    color: #e2e8f0;
+    font-family: inherit;
+    font-size: 0.875rem;
+    font-weight: 700;
+    border: 1px solid #334155;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.modal-btn-secondary:hover {
+    background: #334155;
+}
+
+.modal-btn-block {
+    width: 100%;
+    margin-top: 1.25rem;
+}
+
+/* تفاصيل نافذة التخصيص والإعدادات */
+.settings-group {
+    margin-bottom: 1rem;
+}
+
+.settings-label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.settings-options-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.625rem;
+}
+
+.option-btn {
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.75rem;
+    border: 1px solid #334155;
+    background: rgba(30, 41, 59, 0.7);
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.option-btn:hover {
+    border-color: #64748b;
+}
+
+.option-btn-subtext {
+    display: block;
+    font-size: 0.625rem;
+    color: var(--text-muted);
+    font-weight: 400;
+    margin-top: 0.125rem;
+}
+
+.option-btn--active-purple {
+    border: 2px solid var(--color-purple);
+    background: rgba(168, 85, 247, 0.2);
+    color: #ffffff;
+}
+
+.option-btn--active-purple .option-btn-subtext {
+    color: #d8b4fe;
+}
+
+.option-btn--active-sky {
+    border: 2px solid var(--color-sky);
+    background: rgba(14, 165, 233, 0.2);
+    color: #ffffff;
+}
+
+.option-btn--active-emerald {
+    border: 2px solid var(--color-emerald);
+    background: rgba(16, 185, 129, 0.2);
+    color: #ffffff;
+}
+
+/* صفوف إعداد اللاعبين */
+.player-setup-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.player-setup-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(30, 41, 59, 0.7);
+    padding: 0.625rem;
+    border-radius: 0.75rem;
+    border: 1px solid #334155;
+}
+
+.player-name-input {
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 0.5rem;
+    padding: 0.375rem 0.625rem;
+    font-family: inherit;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #ffffff;
+    width: 7.5rem;
+    outline: none;
+}
+
+.player-name-input:focus {
+    border-color: var(--color-purple);
+}
+
+@media (min-width: 640px) {
+    .player-name-input {
+        width: 9rem;
+    }
+}
+
+.player-swatches-group {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    flex: 1;
+    justify-content: center;
+}
+
+.palette-swatch {
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+    opacity: 0.6;
+    transition: transform 0.15s ease, opacity 0.15s ease, border-color 0.15s ease;
+}
+
+.palette-swatch:hover {
+    opacity: 1;
+}
+
+.palette-swatch--selected {
+    border-color: #ffffff;
+    transform: scale(1.12);
+    opacity: 1;
+}
+
+.player-ai-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+    background: rgba(15, 23, 42, 0.8);
+    padding: 0.375rem 0.625rem;
+    border-radius: 0.5rem;
+    border: 1px solid #334155;
+}
+
+.player-ai-checkbox {
+    accent-color: var(--color-sky);
+    cursor: pointer;
+}
+
+/* تفاصيل نافذة القواعد */
+.rules-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+    line-height: 1.65;
+}
+
+.rule-card {
+    padding: 0.75rem;
+    border-radius: 0.75rem;
+    background: rgba(30, 41, 59, 0.6);
+    border: 1px solid rgba(51, 65, 85, 0.6);
+}
+
+.rule-title {
+    font-weight: 700;
+    font-size: 0.875rem;
+    margin: 0 0 0.25rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.rule-text {
+    margin: 0;
+}
+
+.rule-bullets {
+    margin: 0.375rem 0 0 0;
+    padding-right: 1.25rem;
+}
+
+.rule-bullets li {
+    margin-bottom: 0.25rem;
+}

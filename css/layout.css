@@ -1,0 +1,324 @@
+/* ==========================================================================
+   02. الهيكل العام وشريط القيادة العلوي (App Layout & Top Header)
+   ========================================================================== */
+.battle-screen {
+    width: 100%;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.app-header {
+    width: 100%;
+    max-width: 82rem;
+    margin: 0 auto 0.6rem auto;
+    position: relative;
+    z-index: 20;
+}
+
+@media (min-width: 640px) {
+    .app-header {
+        margin-bottom: 0.85rem;
+    }
+}
+
+.header-bar {
+    width: 100%;
+    padding: 0.55rem 1.15rem;
+    min-height: 3.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.brand-box {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    flex-shrink: 0;
+}
+
+.brand-logo {
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 0.65rem;
+    background: linear-gradient(135deg, var(--color-emerald), var(--color-teal), var(--color-sky));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px -2px rgba(16, 185, 129, 0.35);
+    flex-shrink: 0;
+}
+
+.brand-logo-icon {
+    color: #ffffff;
+    font-size: 1.1rem;
+    animation: slowAtomSpin 8s linear infinite;
+}
+
+@keyframes slowAtomSpin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.brand-title-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.brand-title {
+    font-size: 1.05rem;
+    font-weight: 900;
+    margin: 0;
+    line-height: 1.25;
+    letter-spacing: 0.01em;
+    background: linear-gradient(to left, #ffffff, #f1f5f9, #cbd5e1);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.active-mode-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.68rem;
+    font-weight: 800;
+    padding: 0.15rem 0.6rem;
+    border-radius: 9999px;
+}
+
+.active-mode-badge--normal {
+    background: rgba(16, 185, 129, 0.16);
+    color: #6ee7b7;
+    border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+.active-mode-badge--advanced {
+    background: rgba(168, 85, 247, 0.2);
+    color: #d8b4fe;
+    border: 1px solid rgba(168, 85, 247, 0.4);
+}
+
+@media (min-width: 640px) {
+    .brand-title {
+        font-size: 1.2rem;
+    }
+}
+
+.brand-subtitle {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #34d399;
+    display: none;
+}
+
+@media (min-width: 640px) {
+    .brand-subtitle {
+        display: inline;
+    }
+}
+
+.brand-meta {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin: 0.1rem 0 0 0;
+    line-height: 1.2;
+}
+
+/* ==========================================================================
+   03. مؤشر الدور اللوني المدمج وأزرار التحكم (Turn Banner & Header Actions)
+   ========================================================================== */
+.turn-banner {
+    height: 2.25rem;
+    min-height: 2.25rem;
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0 0.85rem;
+    border-radius: 9999px;
+    background: rgba(15, 23, 42, 0.75);
+    border: 1px solid rgba(51, 65, 85, 0.8);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    transition: all 0.25s ease;
+    flex-shrink: 0;
+}
+
+.turn-dot-wrapper {
+    position: relative;
+    display: flex;
+    width: 0.75rem;
+    height: 0.75rem;
+    flex-shrink: 0;
+}
+
+.turn-ping {
+    position: absolute;
+    display: inline-flex;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background-color: var(--turn-color);
+    opacity: 0.75;
+    animation: pingPulse 1.2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes pingPulse {
+    75%, 100% {
+        transform: scale(2);
+        opacity: 0;
+    }
+}
+
+.turn-dot {
+    position: relative;
+    display: inline-flex;
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 50%;
+    background-color: var(--turn-color);
+    box-shadow: 0 0 8px var(--turn-color);
+}
+
+.turn-player-name {
+    font-size: 0.825rem;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+}
+
+@media (min-width: 640px) {
+    .turn-player-name { font-size: 0.875rem; }
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.action-btn {
+    height: 2.25rem;
+    min-height: 2.25rem;
+    box-sizing: border-box;
+    padding: 0 0.75rem;
+    border-radius: 0.65rem;
+    background: rgba(30, 41, 59, 0.85);
+    color: #e2e8f0;
+    border: 1px solid rgba(51, 65, 85, 0.85);
+    font-family: inherit;
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.action-btn:hover {
+    background: #334155;
+    border-color: #64748b;
+    color: #ffffff;
+    transform: translateY(-1px);
+}
+
+.action-btn:active {
+    transform: translateY(0);
+}
+
+.action-btn--active {
+    background: rgba(14, 165, 233, 0.2) !important;
+    border-color: #38bdf8 !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.3) !important;
+}
+
+.action-btn--primary {
+    padding: 0.42rem 0.85rem;
+    background: linear-gradient(135deg, #059669, #0d9488);
+    color: #ffffff;
+    font-weight: 800;
+    border: none;
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+}
+
+.action-btn--primary:hover {
+    background: linear-gradient(135deg, #10b981, #14b8a6);
+    box-shadow: 0 6px 18px rgba(16, 185, 129, 0.45);
+}
+
+.action-btn-label {
+    display: none;
+}
+
+@media (min-width: 768px) {
+    .action-btn-label {
+        display: inline;
+    }
+}
+
+@media (max-width: 900px) {
+    .header-bar {
+        flex-wrap: wrap;
+        padding: 0.5rem 0.75rem;
+    }
+    .brand-meta {
+        display: none;
+    }
+}
+
+@media (max-width: 640px) {
+    .header-bar {
+        justify-content: space-between;
+    }
+    .brand-title {
+        font-size: 0.95rem;
+    }
+    .action-btn {
+        padding: 0.38rem 0.55rem;
+    }
+}
+
+.icon-sky { color: #38bdf8; }
+.icon-emerald { color: #34d399; }
+.icon-amber { color: #fbbf24; }
+.icon-purple { color: #c084fc; }
+.icon-rose { color: #fb7185; }
+
+/* ==========================================================================
+   12. التذييل وشريط التمرير (Footer & Scrollbars)
+   ========================================================================== */
+.app-footer {
+    width: 100%;
+    max-width: 82rem;
+    margin: 0.75rem auto 0 auto;
+    text-align: center;
+    font-size: 0.75rem;
+    color: #64748b;
+    padding: 0.25rem 0;
+    position: relative;
+    z-index: 10;
+}
+
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: #0f172a;
+}
+::-webkit-scrollbar-thumb {
+    background: #334155;
+    border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #475569;
+}

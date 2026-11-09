@@ -1,0 +1,158 @@
+/* ==========================================================================
+   10. الدرع النووي ومربع الحماية 3×3 والانهيار (Forcefield & 3x3 Shield)
+   ========================================================================== */
+.cell-shield-zone {
+    border-color: var(--shield-color) !important;
+    box-shadow: inset 0 0 14px var(--shield-glow) !important;
+    background: radial-gradient(circle at center, var(--shield-glow) 0%, rgba(30, 41, 59, 0.9) 100%) !important;
+    transition: all 0.3s ease;
+}
+
+.cell-shield-zone::after {
+    content: '';
+    position: absolute;
+    inset: 1px;
+    border-radius: 12px;
+    border: 1px dashed var(--shield-color);
+    background: radial-gradient(circle at center, var(--shield-glow) 0%, transparent 75%);
+    pointer-events: none;
+    opacity: 0.45;
+}
+
+.cell-shielded {
+    box-shadow: 0 0 24px var(--shield-color), inset 0 0 16px var(--shield-color) !important;
+    border-color: var(--shield-color) !important;
+}
+
+.cell-shielded::before {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 16px;
+    border: 2px dashed var(--shield-color);
+    background: radial-gradient(circle at center, var(--shield-glow) 0%, transparent 75%);
+    box-shadow: 0 0 14px var(--shield-glow), inset 0 0 8px var(--shield-glow);
+    pointer-events: none;
+    z-index: 12;
+    animation: shieldSpinPulse 4s linear infinite;
+}
+
+.shield-badge {
+    position: absolute;
+    top: 3px;
+    left: 4px;
+    font-size: 0.78rem;
+    color: var(--shield-color);
+    text-shadow: 0 0 8px var(--shield-color), 0 0 14px var(--shield-glow);
+    pointer-events: none;
+    z-index: 15;
+    animation: shieldGlow 1.5s infinite alternate ease-in-out;
+}
+
+@keyframes shieldSpinPulse {
+    0% { transform: rotate(0deg) scale(0.98); opacity: 0.8; }
+    50% { transform: rotate(180deg) scale(1.04); opacity: 1; }
+    100% { transform: rotate(360deg) scale(0.98); opacity: 0.8; }
+}
+
+@keyframes shieldGlow {
+    0% { opacity: 0.75; transform: scale(0.95); }
+    100% { opacity: 1; transform: scale(1.12); }
+}
+
+/* أنيميشن انهيار الدرع */
+.shield-collapsing {
+    animation: shieldCollapseCore 0.48s cubic-bezier(0.2, 0.85, 0.25, 1) forwards !important;
+    z-index: 30;
+}
+
+@keyframes shieldCollapseCore {
+    0% {
+        transform: scale(1);
+        filter: brightness(1.7);
+        box-shadow: 0 0 35px var(--shield-color), inset 0 0 20px #ffffff;
+        border-color: #ffffff !important;
+    }
+    35% {
+        transform: scale(1.12);
+        filter: brightness(2);
+        box-shadow: 0 0 45px var(--shield-color), 0 0 60px var(--shield-glow);
+    }
+    70% {
+        transform: scale(0.96);
+        filter: brightness(1.1);
+        box-shadow: 0 0 15px var(--shield-color);
+    }
+    100% {
+        transform: scale(1);
+        filter: brightness(1);
+        box-shadow: none;
+        border-color: var(--atom-color, rgba(148, 163, 184, 0.3)) !important;
+    }
+}
+
+.zone-collapsing {
+    animation: shieldCollapseZone 0.48s ease-out forwards !important;
+}
+
+@keyframes shieldCollapseZone {
+    0% {
+        filter: brightness(1.6);
+        box-shadow: inset 0 0 16px var(--shield-glow);
+    }
+    50% {
+        filter: brightness(1.2);
+        box-shadow: inset 0 0 8px var(--shield-glow);
+    }
+    100% {
+        filter: brightness(1);
+        box-shadow: none;
+        border-color: rgba(148, 163, 184, 0.16) !important;
+    }
+}
+
+/* شظايا طاقة متطايرة عند انهيار الدرع */
+.shield-collapse-particle {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #ffffff;
+    box-shadow: 0 0 10px var(--shield-color), 0 0 16px var(--shield-glow);
+    pointer-events: none;
+    z-index: 50;
+    transform: translate(-50%, -50%);
+    animation: particleScatter 0.48s cubic-bezier(0.1, 0.85, 0.25, 1) forwards;
+}
+
+@keyframes particleScatter {
+    0% {
+        transform: translate(-50%, -50%) scale(1.6);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.15);
+        opacity: 0;
+    }
+}
+
+/* وميض صد واعتراض المقذوفات بواسطة الدرع */
+.shield-deflect-flash {
+    animation: shieldDeflectPulse 0.35s ease-out forwards;
+    z-index: 25;
+}
+
+@keyframes shieldDeflectPulse {
+    0% {
+        transform: scale(1.08);
+        box-shadow: 0 0 25px var(--shield-color), inset 0 0 15px #ffffff !important;
+        border-color: #ffffff !important;
+    }
+    50% {
+        transform: scale(1.04);
+        box-shadow: 0 0 18px var(--shield-color) !important;
+    }
+    100% {
+        transform: scale(1);
+    }
+}

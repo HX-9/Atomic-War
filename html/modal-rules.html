@@ -1,0 +1,57 @@
+<!-- ==========================================================================
+   الحرب الذرية (Atomic War) - نافذة قواعد الاشتباك النووي
+   مسار الملف: html/modal-rules.html
+   ========================================================================== -->
+
+<div id="rulesModal" class="modal-backdrop hidden">
+    <div class="glass-panel modal-card">
+        <div class="modal-header">
+            <h2 class="modal-title">
+                <i class="fa-solid fa-radiation icon-amber"></i>
+                قواعد الحرب الذرية (Nuclear Chain Reaction)
+            </h2>
+            <button id="btnCloseRules" class="modal-close-btn">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <div class="rules-list">
+            <div class="rule-card">
+                <h3 class="rule-title icon-emerald">
+                    <i class="fa-solid fa-bullseye"></i> 1. الهدف الاستراتيجي
+                </h3>
+                <p class="rule-text">تتنافس القوى النووية للسيطرة الكاملة على غرف المفاعل الذري. الهدف النهائي هو القضاء على جميع ذرات الخصوم وإخضاع المفاعل بالكامل عبر إشعال تفاعلات انشطارية متسلسلة محسوبة.</p>
+            </div>
+
+            <div class="rule-card">
+                <h3 class="rule-title icon-sky">
+                    <i class="fa-solid fa-shield-halved icon-emerald"></i> 2. آلية التلقيم والتمركز ومربع الحماية 3×3
+                </h3>
+                <p id="rulePlacementDesc" class="rule-text">يبدأ كل لاعب دورته الأولى بوضع <strong>ذرة ثلاثية (3 ذرات مشعة)</strong> في أي غرفة فارغة لتأسيس قلعته النووية، ويُحاط المربع تلقائياً <strong>بنطاق حماية كامل 3×3 بدرع طاقة واقٍ</strong> طوال الجولة الأولى يمنع أي خصم من محاصرته أو التمركز بجواره أو اختراقه بانشطارات نووية. وعند عودة اللعب على اللاعب ينهار درعه وتشتعل المعركة الشاملة.</p>
+            </div>
+
+            <div class="rule-card">
+                <h3 class="rule-title icon-amber">
+                    <i class="fa-solid fa-atom"></i> 3. نظام الكتلة الحرجة والانشطار
+                </h3>
+                <p class="rule-text">لكل غرفة حد أقصى للاستقرار (الكتلة الحرجة) يعتمد على عدد جيرانها الملاصقين:</p>
+                <ul class="rule-bullets">
+                    <li><strong>غرف الزوايا:</strong> تتحمل ذرة واحدة فقط، وتنشطر عند إضافة الذرة <strong>الثانية</strong>.</li>
+                    <li><strong>غرف الأطراف:</strong> تتحمل ذرتين، وتنشطر عند إضافة الذرة <strong>الثالثة</strong>.</li>
+                    <li><strong>غرف قلب المفاعل الداخلية:</strong> تتحمل 3 ذرات، وتنشطر عند إضافة الذرة <strong>الرابعة</strong>.</li>
+                </ul>
+            </div>
+
+            <div class="rule-card">
+                <h3 class="rule-title icon-rose">
+                    <i class="fa-solid fa-explosion"></i> 4. التفاعل المتسلسل والاستيلاء النووي
+                </h3>
+                <p class="rule-text">عندما تبلغ الغرفة كتلتها الحرجة، تنشطر نواة الغرفة وتنطلق مقذوفات البلازما الذرية في الاتجاهات الأربعة، محوّلةً جميع الغرف المجاورة فوراً إلى سيطرة القوة المهاجمة! وإذا امتلأت أي غرفة مجاورة فإنها تنشطر بدورها لتطلق سلسلة موجات انشطارية جارفة.</p>
+            </div>
+        </div>
+
+        <button id="btnGotItRules" class="modal-btn-secondary modal-btn-block">
+            علم، لنبدأ التلقيم والسيطرة!
+        </button>
+    </div>
+</div>

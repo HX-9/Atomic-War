@@ -1,0 +1,315 @@
+/* ==========================================================================
+   04. منطقة اللعب واللوحة الجانبية (Main Workspace & Sidebar Panels)
+   ========================================================================== */
+.main-workspace {
+    width: 100%;
+    max-width: 82rem;
+    margin: auto;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+    padding: 0.5rem 0;
+    position: relative;
+    z-index: 10;
+}
+
+@media (min-width: 1024px) {
+    .main-workspace {
+        flex-direction: row;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 2rem;
+    }
+}
+
+.reactor-sidebar {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    order: 2;
+}
+
+@media (min-width: 1024px) {
+    .reactor-sidebar {
+        width: 26rem;
+        flex-shrink: 0;
+        order: 1;
+    }
+}
+
+.sidebar-panel {
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.875rem;
+}
+
+.panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #1e293b;
+}
+
+.panel-title {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #e2e8f0;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.round-badge {
+    font-size: 0.75rem;
+    padding: 0.125rem 0.625rem;
+    border-radius: 9999px;
+    background: #1e293b;
+    color: var(--text-muted);
+    border: 1px solid #334155;
+}
+
+/* ==========================================================================
+   05. بطاقات القوى النووية واللاعبين (Players Scoreboard Cards)
+   ========================================================================== */
+.players-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.625rem;
+}
+
+@media (min-width: 1024px) {
+    .players-list {
+        grid-template-columns: 1fr;
+    }
+}
+
+.player-card {
+    padding: 0.75rem;
+    border-radius: 0.75rem;
+    background: rgba(30, 41, 59, 0.5);
+    border: 1px solid rgba(51, 65, 85, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: all 0.3s ease;
+}
+
+.player-card--active {
+    background: rgba(30, 41, 59, 0.95);
+    border-width: 2px;
+    transform: scale(1.02);
+}
+
+.player-card--eliminated {
+    background: rgba(15, 23, 42, 0.4);
+    border-color: #1e293b;
+    opacity: 0.5;
+    filter: grayscale(1);
+}
+
+.player-card-info {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    min-width: 0;
+}
+
+.player-color-dot {
+    width: 1rem;
+    height: 1rem;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.player-meta-box {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.player-name-row {
+    font-weight: 700;
+    font-size: 0.8125rem;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+}
+
+.player-status-tag {
+    display: inline-block;
+    font-size: 0.625rem;
+    padding: 0.125rem 0.5rem;
+    border-radius: 0.25rem;
+    font-weight: 700;
+    margin-top: 0.125rem;
+}
+
+.player-status-tag--turn {
+    background: rgba(16, 185, 129, 0.2);
+    color: #6ee7b7;
+    animation: statusPulse 1.5s infinite alternate;
+}
+
+.player-status-tag--waiting {
+    background: #1e293b;
+    color: rgba(252, 211, 77, 0.85);
+    border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+.player-status-tag--eliminated {
+    background: rgba(244, 63, 94, 0.2);
+    color: #fda4af;
+}
+
+@keyframes statusPulse {
+    0% { opacity: 0.7; }
+    100% { opacity: 1; }
+}
+
+.player-stats-group {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-shrink: 0;
+}
+
+.player-stat-box {
+    text-align: center;
+}
+
+.player-stat-label {
+    font-size: 0.625rem;
+    color: var(--text-muted);
+}
+
+.player-stat-value {
+    font-size: 0.8125rem;
+    font-weight: 900;
+    color: #e2e8f0;
+}
+
+/* ==========================================================================
+   06. رادار المفاعل ومقياس غايغر ودليل الاستقرار (Radar, Geiger & Guide)
+   ========================================================================== */
+.radar-status-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.radar-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-muted);
+}
+
+.reactor-status-badge {
+    font-size: 0.75rem;
+    font-weight: 800;
+    padding: 0.15rem 0.65rem;
+    border-radius: 9999px;
+}
+
+.reactor-status-badge--stable {
+    background: rgba(16, 185, 129, 0.12);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.reactor-status-badge--active {
+    background: rgba(245, 158, 11, 0.2);
+    color: #fcd34d;
+    border: 1px solid rgba(245, 158, 11, 0.4);
+    animation: statusPulse 0.8s infinite alternate;
+}
+
+.geiger-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.6875rem;
+    color: var(--text-muted);
+    margin-bottom: 0.25rem;
+    font-weight: 600;
+}
+
+.geiger-value {
+    color: #34d399;
+    font-family: monospace;
+    font-weight: 700;
+}
+
+.geiger-meter-bar {
+    height: 6px;
+    background: rgba(30, 41, 59, 0.8);
+    border-radius: 3px;
+    overflow: hidden;
+    position: relative;
+}
+
+.geiger-meter-fill {
+    height: 100%;
+    width: 15%;
+    background: linear-gradient(90deg, #10b981, #eab308, #ef4444);
+    border-radius: 3px;
+    transition: width 0.3s ease;
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.6);
+}
+
+.critical-guide-section {
+    border-top: 1px solid rgba(30, 41, 59, 0.8);
+    padding-top: 0.75rem;
+}
+
+.critical-guide-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    margin: 0 0 0.5rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+}
+
+.critical-guide-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.5rem;
+    text-align: center;
+}
+
+.critical-guide-card {
+    background: rgba(30, 41, 59, 0.6);
+    border: 1px solid rgba(51, 65, 85, 0.6);
+    border-radius: 0.75rem;
+    padding: 0.5rem;
+}
+
+.critical-guide-capacity {
+    font-weight: 900;
+    font-size: 0.875rem;
+}
+
+.critical-guide-unit {
+    font-size: 0.625rem;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.critical-guide-type {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: #e2e8f0;
+}
+
+.critical-guide-trigger {
+    font-size: 0.625rem;
+    color: #fb7185;
+}

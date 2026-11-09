@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>الحرب الذرية - التفاعل الانشطاري المتسلسل (Atomic Wars)</title>
+    <title>الحرب الذرية (Atomic War) - الإصدار 0.1 بيتا</title>
     <!-- Google Fonts: Cairo -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <!-- Font Awesome Icons -->
@@ -13,37 +13,94 @@
 </head>
 <body class="app-body">
 
-    <!-- ================= 00. الشاشة الترحيبية واختيار الوضع ================= -->
+    <!-- ================= 00. الشاشة الترحيبية واختيار الوضع (html/welcome.html) ================= -->
     <section id="welcomeScreen" class="welcome-screen">
-        <div class="glass-panel welcome-card">
-            <div class="welcome-logo">
-                <i class="fa-solid fa-atom welcome-logo-icon"></i>
+        <!-- كانفاس محاكاة المعركة الحية في الخلفية (4 روبوتات) -->
+        <canvas id="welcomeBgCanvas" class="welcome-bg-canvas"></canvas>
+        
+        <!-- طبقة البلور بنسبة 30% والشبكة التكتيكية -->
+        <div class="welcome-blur-overlay"></div>
+
+        <!-- 01. الهيدر العلوي في الشاشة الترحيبية -->
+        <header class="welcome-top-header">
+            <div class="glass-panel welcome-header-bar">
+                <div class="brand-box">
+                    <div class="brand-logo">
+                        <i class="fa-solid fa-atom brand-logo-icon"></i>
+                    </div>
+                    <div>
+                        <div class="welcome-brand-row">
+                            <h1 class="brand-title">الحرب الذرية</h1>
+                            <span class="version-badge">الإصدار 0.1 بيتا</span>
+                        </div>
+                        <p class="brand-meta">التفاعل الانشطاري المتسلسل (Atomic War)</p>
+                    </div>
+                </div>
+
+                <div class="welcome-header-actions">
+                    <button type="button" id="btnWelcomeSoundToggle" title="كتم/تشغيل الصوتيات" class="action-btn">
+                        <i id="welcomeSoundIcon" class="fa-solid fa-volume-high icon-emerald"></i>
+                        <span class="action-btn-label">الصوتيات</span>
+                    </button>
+                    <button type="button" id="btnWelcomeRulesModal" title="قواعد اللعبة" class="action-btn">
+                        <i class="fa-solid fa-radiation icon-amber"></i>
+                        <span class="action-btn-label">القواعد</span>
+                    </button>
+                    <button type="button" id="btnWelcomeSettingsModal" title="تخصيص المفاعل" class="action-btn">
+                        <i class="fa-solid fa-sliders icon-purple"></i>
+                        <span class="action-btn-label">تخصيص</span>
+                    </button>
+                </div>
             </div>
+        </header>
 
-            <h1 class="welcome-title">الحرب الذرية</h1>
-            <p class="welcome-subtitle">التفاعل الانشطاري المتسلسل (Atomic War)</p>
+        <!-- 02. الأزرار العائمة مباشرة على الخلفية -->
+        <div class="welcome-floating-content">
+            <div class="welcome-floating-modes">
+                <!-- الصف الأول: يمين (الوضع المطور)، منتصف (الوضع العادي)، يسار (وضع 2 مغلق) -->
+                <div class="welcome-modes-row">
+                    <!-- اليمين: الوضع المطور -->
+                    <button type="button" id="btnStartAdvancedMode" class="rect-mode-btn rect-mode-btn--advanced">
+                        <i class="fa-solid fa-atom rect-mode-icon"></i>
+                        <span class="rect-mode-label">الوضع المطور</span>
+                    </button>
 
-            <div class="welcome-modes-actions">
-                <button type="button" id="btnStartNormalMode" class="welcome-mode-btn welcome-mode-btn--normal">
-                    <i class="fa-solid fa-crosshairs"></i>
-                    <span>الوضع العادي</span>
-                </button>
+                    <!-- المنتصف: الوضع العادي -->
+                    <button type="button" id="btnStartNormalMode" class="rect-mode-btn rect-mode-btn--normal">
+                        <i class="fa-solid fa-crosshairs rect-mode-icon"></i>
+                        <span class="rect-mode-label">الوضع العادي</span>
+                    </button>
 
-                <button type="button" id="btnStartAdvancedMode" class="welcome-mode-btn welcome-mode-btn--advanced">
-                    <i class="fa-solid fa-atom"></i>
-                    <span>الوضع المطور</span>
-                </button>
+                    <!-- اليسار: وضع 2 (مغلق) -->
+                    <button type="button" id="btnMode2" class="rect-mode-btn rect-mode-btn--locked" title="وضع 2 مغلق">
+                        <i class="fa-solid fa-lock rect-mode-icon"></i>
+                        <span class="rect-mode-label">وضع 2</span>
+                        <span class="rect-mode-badge">مغلق</span>
+                    </button>
+                </div>
+
+                <!-- الصف الثاني أسفله: وضع 3 (مغلق) -->
+                <div class="welcome-modes-subrow">
+                    <button type="button" id="btnMode3" class="rect-mode-btn rect-mode-btn--locked" title="وضع 3 مغلق">
+                        <i class="fa-solid fa-lock rect-mode-icon"></i>
+                        <span class="rect-mode-label">وضع 3</span>
+                        <span class="rect-mode-badge">مغلق</span>
+                    </button>
+                </div>
             </div>
         </div>
+
+        <!-- رسالة التنبيه المنبثقة للأوضاع المغلقة (Toast) -->
+        <div id="welcomeToast" class="welcome-toast hidden"></div>
     </section>
 
     <!-- ================= حاوية شاشة المعركة الرئيسية ================= -->
     <div id="battleScreen" class="battle-screen hidden">
 
-    <!-- ================= 01. شريط القيادة العلوي ومؤشرات المفاعل ================= -->
+    <!-- ================= 01. شريط القيادة العلوي ومؤشرات المفاعل (html/header.html) ================= -->
     <header class="app-header">
         <div class="glass-panel header-bar">
-            <!-- شعار الحرب الذرية -->
+            <!-- شعار الحرب الذرية والوضع الحالي -->
             <div class="brand-box">
                 <div class="brand-logo">
                     <i class="fa-solid fa-atom brand-logo-icon"></i>
@@ -56,28 +113,30 @@
                 </div>
             </div>
 
-            <!-- مؤشر الدور والقوة النووية الفاعلة -->
-            <div id="turnBanner" class="turn-banner">
+            <!-- مؤشر الدور اللوني المدمج الأنيق (بدون عبارات زائدة) -->
+            <div id="turnBanner" class="turn-banner" title="دور القوة الحالية">
                 <span class="turn-dot-wrapper">
                     <span id="turnPing" class="turn-ping"></span>
                     <span id="turnDot" class="turn-dot"></span>
                 </span>
-                <span class="turn-label">القوة الفاعلة:</span>
                 <span id="currentPlayerName" class="turn-player-name">اليورانيوم الأخضر</span>
             </div>
 
             <!-- أزرار التحكم السريع -->
             <div class="header-actions">
-                <button id="btnBackToWelcome" title="العودة لشاشة اختيار الوضع" class="action-btn">
+                <!-- زر العودة للقائمة الرئيسية -->
+                <button id="btnBackToWelcome" title="العودة للقائمة الرئيسية" class="action-btn">
                     <i class="fa-solid fa-house icon-amber"></i>
-                    <span class="action-btn-label">الأوضاع</span>
+                    <span class="action-btn-label">الرئيسية</span>
                 </button>
+                <!-- زر إظهار/إخفاء أرقام الذرات (اختياري) -->
                 <button id="btnToggleNumbers" title="إظهار/إخفاء أعداد الذرات" class="action-btn">
                     <i class="fa-solid fa-hashtag icon-sky"></i>
                     <span class="action-btn-label">الذرات</span>
                 </button>
                 <button id="btnSoundToggle" title="كتم/تشغيل الصوتيات النووية" class="action-btn">
                     <i id="soundIcon" class="fa-solid fa-volume-high icon-emerald"></i>
+                    <span class="action-btn-label">الصوت</span>
                 </button>
                 <button id="btnRulesModal" title="قواعد الاشتباك النووي" class="action-btn">
                     <i class="fa-solid fa-radiation icon-amber"></i>
@@ -98,7 +157,7 @@
     <!-- ================= 02. منطقة اللعب الرئيسية ================= -->
     <main class="main-workspace">
 
-        <!-- لوحة الرصد والإحصائيات الجانبية -->
+        <!-- لوحة الرصد والإحصائيات الجانبية (html/sidebar.html) -->
         <aside class="reactor-sidebar">
             <!-- قائمة القوى النووية والسيطرة -->
             <div class="glass-panel sidebar-panel">
@@ -112,7 +171,7 @@
 
                 <!-- بطاقات القوى النووية الحية -->
                 <div id="playersListContainer" class="players-list">
-                    <!-- يتم بناؤها ديناميكياً بواسطة Script.js -->
+                    <!-- يتم بناؤها ديناميكياً بواسطة js/app.js -->
                 </div>
             </div>
 
@@ -163,27 +222,68 @@
             </div>
         </aside>
 
-        <!-- لوحة المفاعل الذري المركزية -->
+        <!-- لوحة المفاعل الذري المركزية وشريط الترسانة (html/board.html) -->
         <section class="reactor-section">
             <div id="boardWrapper" class="game-board-wrapper">
                 <div id="gameBoard" class="game-board">
-                    <!-- يتم توليد غرف المفاعل ديناميكياً بواسطة Script.js -->
+                    <!-- يتم توليد غرف المفاعل ديناميكياً بواسطة js/app.js -->
+                </div>
+            </div>
+
+            <!-- شريط الترسانة ورصيد النيوترونات التكتيكي (يظهر في الوضع المطور فقط) -->
+            <div id="neutronArsenalBar" class="neutron-arsenal-bar hidden">
+                <!-- مقياس رصيد النيوترونات -->
+                <div class="neutron-reserve-panel">
+                    <div class="neutron-reserve-header">
+                        <span class="neutron-reserve-label">
+                            <i class="fa-solid fa-atom icon-sky"></i> رصيد النيوترونات:
+                        </span>
+                        <span id="neutronValueDisplay" class="neutron-value-text">0 / 10</span>
+                    </div>
+                    <!-- شريط الشرائح الضوئية الـ 10 للنيوترونات -->
+                    <div class="neutron-meter-track" id="neutronMeterTrack">
+                        <!-- يتم توليد 10 شرائح ضوئية ديناميكياً بواسطة js/app.js -->
+                    </div>
+                </div>
+
+                <!-- أزرار اختيار الذرات الخارجية من الترسانة -->
+                <div class="arsenal-types-group">
+                    <button type="button" class="arsenal-btn active" data-atoms="1" data-cost="2" id="btnArsenalSingle" title="إلقاء ذرة أحادية في غرفة فارغة (تكلفة 2 نيوترون)">
+                        <span class="arsenal-atom-preview preview-1">●</span>
+                        <span class="arsenal-btn-name">ذرة أحادية</span>
+                        <span class="arsenal-btn-cost">⚡ 2 n⁰</span>
+                    </button>
+                    <button type="button" class="arsenal-btn" data-atoms="2" data-cost="4" id="btnArsenalDouble" title="إلقاء ذرة ثنائية في غرفة فارغة (تكلفة 4 نيوترونات)">
+                        <span class="arsenal-atom-preview preview-2">●●</span>
+                        <span class="arsenal-btn-name">ذرة ثنائية</span>
+                        <span class="arsenal-btn-cost">⚡ 4 n⁰</span>
+                    </button>
+                    <button type="button" class="arsenal-btn" data-atoms="3" data-cost="6" id="btnArsenalTriple" title="إلقاء نواة ثلاثية في غرفة فارغة (تكلفة 6 نيوترونات)">
+                        <span class="arsenal-atom-preview preview-3">●●●</span>
+                        <span class="arsenal-btn-name">نواة ثلاثية</span>
+                        <span class="arsenal-btn-cost">⚡ 6 n⁰</span>
+                    </button>
+                </div>
+
+                <!-- إرشاد تكتيكي واضح للقاعدة الفيزيائية -->
+                <div id="arsenalHintText" class="arsenal-hint-text">
+                    💡 الذرات الخارجية توضع في الغرف الفارغة فقط • النقر المباشر على غرفتك يغذيها بـ +1 نيوترون (تكلفة 1)
                 </div>
             </div>
         </section>
 
     </main>
 
-    <!-- ================= 03. شريط التذييل ================= -->
+    <!-- ================= 03. شريط التذييل (html/footer.html) ================= -->
     <footer class="app-footer">
-        الحرب الذرية (Atomic War) • محاكي الانشطار النووي والتفاعل المتسلسل
+        الحرب الذرية (Atomic War) • الإصدار 0.1 بيتا • محاكي الانشطار النووي والتفاعل المتسلسل
     </footer>
 
     </div><!-- نهاية حاوية شاشة المعركة #battleScreen -->
 
     <!-- ================= 04. النوافذ المنبثقة (Modals) ================= -->
 
-    <!-- 1. نافذة النصر والسيطرة النووية المطلقة -->
+    <!-- 1. نافذة النصر والسيطرة النووية المطلقة (html/modal-victory.html) -->
     <div id="victoryModal" class="modal-backdrop hidden">
         <div class="glass-panel modal-card modal-card--victory">
             <div class="victory-trophy-circle">
@@ -227,7 +327,7 @@
         </div>
     </div>
 
-    <!-- 2. نافذة تخصيص المفاعل والقوى النووية -->
+    <!-- 2. نافذة تخصيص المفاعل والقوى النووية (html/modal-settings.html) -->
     <div id="settingsModal" class="modal-backdrop hidden">
         <div class="glass-panel modal-card">
             <div class="modal-header">
@@ -292,7 +392,7 @@
             <div class="settings-group">
                 <label class="settings-label">تخصيص القوى (الاسم، النظير المشع، أو آلي AI):</label>
                 <div id="playerSetupRows" class="player-setup-list">
-                    <!-- يتم توليدها ديناميكياً بواسطة Script.js -->
+                    <!-- يتم توليدها ديناميكياً بواسطة js/app.js -->
                 </div>
             </div>
 
@@ -304,7 +404,7 @@
         </div>
     </div>
 
-    <!-- 3. نافذة قواعد الاشتباك النووي -->
+    <!-- 3. نافذة قواعد الاشتباك النووي (html/modal-rules.html) -->
     <div id="rulesModal" class="modal-backdrop hidden">
         <div class="glass-panel modal-card">
             <div class="modal-header">
@@ -358,7 +458,21 @@
         </div>
     </div>
 
-    <!-- Script Application -->
-    <script src="Script.js?v=4.1"></script>
+    <!-- ================= 05. ملفات الجافا سكريبت المعمارية المقسمة ================= -->
+    <!-- 1. محاكي الصوتيات -->
+    <script src="js/audio/soundManager.js"></script>
+    <!-- 2. أوضاع اللعب المنفصلة -->
+    <script src="js/modes/baseMode.js"></script>
+    <script src="js/modes/normalMode.js"></script>
+    <script src="js/modes/advancedMode.js"></script>
+    <script src="js/modes/mode2.js"></script>
+    <script src="js/modes/mode3.js"></script>
+    <!-- 3. المحرك النووي والذكاء الاصطناعي -->
+    <script src="js/engine/aiBot.js"></script>
+    <script src="js/engine/atomicEngine.js"></script>
+    <!-- 4. محاكاة المعركة الخلفية -->
+    <script src="js/simulation/welcomeSim.js"></script>
+    <!-- 5. مدير الواجهة والتطبيق -->
+    <script src="js/app.js"></script>
 </body>
 </html>

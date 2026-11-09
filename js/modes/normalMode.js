@@ -1,0 +1,54 @@
+/**
+ * ============================================================================
+ * الحرب الذرية (Atomic War) - الوضع العادي (NormalGameMode)
+ * القواعد:
+ * 1. ضربة افتتاحية بـ 3 ذرات لتأسيس قلعة نووية محمية بدرع 3×3.
+ * 2. بعد الجولة الأولى، لا يمكن وضع ذرات في غرف فارغة؛ التوسع يتم بالانشطار فقط.
+ * ============================================================================
+ */
+class NormalGameMode extends (typeof BaseGameMode !== 'undefined' ? BaseGameMode : Object) {
+    constructor() {
+        super('normal', 'الوضع العادي', false);
+    }
+
+    getOpeningAtoms() {
+        return 3;
+    }
+
+    hasOpeningShield() {
+        return true;
+    }
+
+    getRuleDescription() {
+        return 'يبدأ كل لاعب دورته الأولى بوضع <strong>ذرة ثلاثية (3 ذرات مشعة)</strong> في أي غرفة فارغة لتأسيس قلعته النووية، ويُحاط المربع تلقائياً <strong>بنطاق حماية كامل 3×3 بدرع طاقة واقٍ</strong> طوال الجولة الأولى. وبعد الجولة الأولى في <strong>الوضع العادي</strong> لا يمكنك وضع أي ذرة خارج غرف ذراتك الخاصة، ويتم التوسع عبر الانشطار المتسلسل فقط.';
+    }
+
+    isValidMove(engine, r, c, playerId) {
+        const player = engine.players[playerId];
+        const cell = engine.board[r][c];
+        // بعد أن يلعب اللاعب دورته الأولى، يُحظر عليه وضع الذرة في غير غرفه الخاصة
+        if (player && player.hasPlayed) {
+            if (cell.owner !== playerId) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    getAiExpansionBonus() {
+        return 9;
+    }
+}
+
+const normalModeInstance = new NormalGameMode();
+if (typeof registerGameMode === 'function') {
+    registerGameMode(normalModeInstance);
+}
+
+if (typeof window !== 'undefined') {
+    window.NormalGameMode = NormalGameMode;
+    window.normalModeInstance = normalModeInstance;
+}
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { NormalGameMode, normalModeInstance };
+}

@@ -1,0 +1,84 @@
+<!-- ==========================================================================
+   الحرب الذرية (Atomic War) - مكون الشاشة الترحيبية واختيار الأوضاع
+   مسار الملف: html/welcome.html
+   ========================================================================== -->
+
+<section id="welcomeScreen" class="welcome-screen">
+    <!-- كانفاس محاكاة المعركة الحية في الخلفية (4 روبوتات) -->
+    <canvas id="welcomeBgCanvas" class="welcome-bg-canvas"></canvas>
+    
+    <!-- طبقة البلور بنسبة 30% والشبكة التكتيكية -->
+    <div class="welcome-blur-overlay"></div>
+
+    <!-- 01. الهيدر العلوي في الشاشة الترحيبية -->
+    <header class="welcome-top-header">
+        <div class="glass-panel welcome-header-bar">
+            <div class="brand-box">
+                <div class="brand-logo">
+                    <i class="fa-solid fa-atom brand-logo-icon"></i>
+                </div>
+                <div>
+                    <div class="welcome-brand-row">
+                        <h1 class="brand-title">الحرب الذرية</h1>
+                        <span class="version-badge">الإصدار 0.1 بيتا</span>
+                    </div>
+                    <p class="brand-meta">التفاعل الانشطاري المتسلسل (Atomic War)</p>
+                </div>
+            </div>
+
+            <div class="welcome-header-actions">
+                <button type="button" id="btnWelcomeSoundToggle" title="كتم/تشغيل الصوتيات" class="action-btn">
+                    <i id="welcomeSoundIcon" class="fa-solid fa-volume-high icon-emerald"></i>
+                    <span class="action-btn-label">الصوتيات</span>
+                </button>
+                <button type="button" id="btnWelcomeRulesModal" title="قواعد اللعبة" class="action-btn">
+                    <i class="fa-solid fa-radiation icon-amber"></i>
+                    <span class="action-btn-label">القواعد</span>
+                </button>
+                <button type="button" id="btnWelcomeSettingsModal" title="تخصيص المفاعل" class="action-btn">
+                    <i class="fa-solid fa-sliders icon-purple"></i>
+                    <span class="action-btn-label">تخصيص</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 02. الأزرار العائمة مباشرة على الخلفية -->
+    <div class="welcome-floating-content">
+        <div class="welcome-floating-modes">
+            <!-- الصف الأول: يمين (الوضع المطور)، منتصف (الوضع العادي)، يسار (وضع 2 مغلق) -->
+            <div class="welcome-modes-row">
+                <!-- اليمين: الوضع المطور -->
+                <button type="button" id="btnStartAdvancedMode" class="rect-mode-btn rect-mode-btn--advanced">
+                    <i class="fa-solid fa-atom rect-mode-icon"></i>
+                    <span class="rect-mode-label">الوضع المطور</span>
+                </button>
+
+                <!-- المنتصف: الوضع العادي -->
+                <button type="button" id="btnStartNormalMode" class="rect-mode-btn rect-mode-btn--normal">
+                    <i class="fa-solid fa-crosshairs rect-mode-icon"></i>
+                    <span class="rect-mode-label">الوضع العادي</span>
+                </button>
+
+                <!-- اليسار: وضع 2 (مغلق) -->
+                <button type="button" id="btnMode2" class="rect-mode-btn rect-mode-btn--locked" title="وضع 2 مغلق">
+                    <i class="fa-solid fa-lock rect-mode-icon"></i>
+                    <span class="rect-mode-label">وضع 2</span>
+                    <span class="rect-mode-badge">مغلق</span>
+                </button>
+            </div>
+
+            <!-- الصف الثاني أسفله: وضع 3 (مغلق) -->
+            <div class="welcome-modes-subrow">
+                <button type="button" id="btnMode3" class="rect-mode-btn rect-mode-btn--locked" title="وضع 3 مغلق">
+                    <i class="fa-solid fa-lock rect-mode-icon"></i>
+                    <span class="rect-mode-label">وضع 3</span>
+                    <span class="rect-mode-badge">مغلق</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- رسالة التنبيه المنبثقة للأوضاع المغلقة (Toast) -->
+    <div id="welcomeToast" class="welcome-toast hidden"></div>
+</section>

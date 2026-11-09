@@ -1,0 +1,80 @@
+<!-- ==========================================================================
+   الحرب الذرية (Atomic War) - نافذة تخصيص المفاعل والقوى النووية
+   مسار الملف: html/modal-settings.html
+   ========================================================================== -->
+
+<div id="settingsModal" class="modal-backdrop hidden">
+    <div class="glass-panel modal-card">
+        <div class="modal-header">
+            <h2 class="modal-title">
+                <i class="fa-solid fa-sliders icon-emerald"></i>
+                تخصيص المفاعل الذري والقوى
+            </h2>
+            <button id="btnCloseSettings" class="modal-close-btn">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <!-- أبعاد المفاعل -->
+        <div class="settings-group">
+            <label class="settings-label">أبعاد شبكة المفاعل:</label>
+            <div class="settings-options-grid" id="gridSizeButtons">
+                <button type="button" data-size="5" class="option-btn size-option">
+                    5 × 5 <span class="option-btn-subtext">مفاعل تكتيكي (25)</span>
+                </button>
+                <button type="button" data-size="7" class="option-btn size-option option-btn--active-purple">
+                    7 × 7 <span class="option-btn-subtext">المفاعل القياسي (49)</span>
+                </button>
+                <button type="button" data-size="9" class="option-btn size-option">
+                    9 × 9 <span class="option-btn-subtext">المفاعل الملحمي (81)</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- سرعة انتشار الانشطار -->
+        <div class="settings-group">
+            <label class="settings-label">سرعة الانشطار المتسلسل:</label>
+            <div class="settings-options-grid" id="speedButtons">
+                <button type="button" data-speed="300" class="option-btn speed-option">
+                    هادئة
+                </button>
+                <button type="button" data-speed="210" class="option-btn speed-option option-btn--active-sky">
+                    متوسطة (مثالية)
+                </button>
+                <button type="button" data-speed="120" class="option-btn speed-option">
+                    فائقة السرعة
+                </button>
+            </div>
+        </div>
+
+        <!-- عدد القوى المشاركة -->
+        <div class="settings-group">
+            <label class="settings-label">عدد القوى المتنافسة (2 إلى 4):</label>
+            <div class="settings-options-grid" id="playerCountButtons">
+                <button type="button" data-count="2" class="option-btn pcount-option option-btn--active-emerald">
+                    قوتان (2)
+                </button>
+                <button type="button" data-count="3" class="option-btn pcount-option">
+                    3 قوى
+                </button>
+                <button type="button" data-count="4" class="option-btn pcount-option">
+                    4 قوى
+                </button>
+            </div>
+        </div>
+
+        <!-- تخصيص كل قوة نووية -->
+        <div class="settings-group">
+            <label class="settings-label">تخصيص القوى (الاسم، النظير المشع، أو آلي AI):</label>
+            <div id="playerSetupRows" class="player-setup-list">
+                <!-- يتم توليدها ديناميكياً بواسطة js/app.js -->
+            </div>
+        </div>
+
+        <div class="modal-actions">
+            <button id="btnApplySettings" class="modal-btn-primary">
+                حفظ وتنشيط المفاعل الجديد
+            </button>
+        </div>
+    </div>
+</div>
