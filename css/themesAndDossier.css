@@ -1,0 +1,301 @@
+/* ==========================================================================
+   الحرب الذرية (Atomic War) - ملف الثيمات الجرافيكية وملف القائد والأنواط
+   مسار الملف: css/themesAndDossier.css
+   ========================================================================== */
+
+/* 1. ثيم السايبربانك (Cyberpunk Neon Matrix) */
+body.theme-cyberpunk {
+  --color-bg-primary: #0a0118;
+  --color-bg-surface: rgba(22, 6, 48, 0.85);
+  --color-border: rgba(244, 63, 94, 0.4);
+  --color-accent: #f43f5e;
+  --color-accent-glow: rgba(244, 63, 94, 0.6);
+  --color-neon-cyan: #00f0ff;
+}
+
+body.theme-cyberpunk .app-header,
+body.theme-cyberpunk .welcome-top-header {
+  border-bottom-color: rgba(244, 63, 94, 0.45);
+  box-shadow: 0 4px 20px rgba(244, 63, 94, 0.2);
+}
+
+body.theme-cyberpunk .reactor-cell {
+  border-color: rgba(168, 85, 247, 0.35);
+  background: rgba(20, 8, 42, 0.65);
+}
+
+body.theme-cyberpunk .reactor-cell:hover {
+  border-color: #00f0ff;
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
+}
+
+body.theme-cyberpunk .neutron-floating-dock {
+  background: rgba(18, 5, 40, 0.95);
+  border-color: rgba(244, 63, 94, 0.5);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7), 0 0 25px rgba(244, 63, 94, 0.25);
+}
+
+/* 2. ثيم تيرمينال الرادار الكلاسيكي (Retro CRT Terminal) */
+body.theme-retro {
+  --color-bg-primary: #021208;
+  --color-bg-surface: rgba(4, 26, 12, 0.9);
+  --color-border: rgba(34, 197, 94, 0.45);
+  --color-accent: #22c55e;
+  --color-accent-glow: rgba(34, 197, 94, 0.55);
+}
+
+body.theme-retro::after {
+  content: " ";
+  display: block;
+  position: fixed;
+  top: 0; left: 0; bottom: 0; right: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+  z-index: 99999;
+  background-size: 100% 3px, 3px 100%;
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+body.theme-retro .reactor-cell {
+  border-color: rgba(34, 197, 94, 0.3);
+  background: rgba(2, 20, 9, 0.7);
+}
+
+body.theme-retro .reactor-cell:hover {
+  border-color: #4ade80;
+  box-shadow: 0 0 16px rgba(74, 222, 128, 0.45);
+}
+
+/* 3. ثيم قلب المفاعل الجليدي (Deep Core Sci-Fi) */
+body.theme-deepcore {
+  --color-bg-primary: #030d1a;
+  --color-bg-surface: rgba(8, 28, 52, 0.88);
+  --color-border: rgba(56, 189, 248, 0.45);
+  --color-accent: #38bdf8;
+  --color-accent-glow: rgba(56, 189, 248, 0.5);
+}
+
+body.theme-deepcore .reactor-cell {
+  border-color: rgba(125, 211, 252, 0.25);
+  background: rgba(8, 24, 46, 0.65);
+}
+
+body.theme-deepcore .reactor-cell:hover {
+  border-color: #bae6fd;
+  box-shadow: 0 0 20px rgba(186, 230, 253, 0.45);
+}
+
+/* ==========================================================================
+   تنسيقات نافذة ملف القائد والأنواط النووية (Commander Dossier Modal)
+   ========================================================================== */
+.modal-card--dossier {
+  max-width: 680px;
+  width: 95%;
+  max-height: 88vh;
+  overflow-y: auto;
+}
+
+.dossier-hero-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.95));
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 14px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.2rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.dossier-profile-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.dossier-avatar-badge {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: rgba(14, 165, 233, 0.15);
+  border: 2px solid #38bdf8;
+  color: #38bdf8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  box-shadow: 0 0 15px rgba(56, 189, 248, 0.3);
+}
+
+.dossier-name {
+  font-size: 1.2rem;
+  font-weight: 900;
+  color: #f8fafc;
+  margin: 0;
+}
+
+.dossier-rank-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.2rem;
+}
+
+.dossier-stars {
+  color: #facc15;
+  font-size: 0.75rem;
+}
+
+.dossier-winrate-badge {
+  text-align: center;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 10px;
+  padding: 0.5rem 0.8rem;
+}
+
+.dossier-winrate-val {
+  font-size: 1.3rem;
+  font-weight: 900;
+  color: #4ade80;
+  font-family: monospace;
+}
+
+.dossier-winrate-label {
+  font-size: 0.7rem;
+  color: #94a3b8;
+  font-weight: 700;
+}
+
+/* شبكة الإحصائيات الحيوية */
+.dossier-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 0.65rem;
+  margin-bottom: 1.2rem;
+}
+
+.dossier-stat-tile {
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-radius: 10px;
+  padding: 0.6rem 0.8rem;
+  text-align: center;
+}
+
+.dossier-stat-icon {
+  font-size: 1.1rem;
+  margin-bottom: 0.25rem;
+}
+
+.dossier-stat-number {
+  font-size: 1.2rem;
+  font-weight: 900;
+  color: #f1f5f9;
+  font-family: monospace;
+}
+
+.dossier-stat-caption {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #94a3b8;
+}
+
+/* معرض الأنواط النووية الشرفية */
+.medals-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.medals-section-title {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.medals-count-badge {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.medals-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 0.75rem;
+}
+
+.medal-card {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 12px;
+  padding: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  transition: all 0.25s ease;
+}
+
+.medal-card--locked {
+  opacity: 0.45;
+  filter: grayscale(0.85);
+}
+
+.medal-card--unlocked {
+  border-color: var(--medal-color, #f59e0b);
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.9));
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.18);
+}
+
+.medal-card--unlocked:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 18px var(--medal-color, #f59e0b);
+}
+
+.medal-icon-circle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  flex-shrink: 0;
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+.medal-card--unlocked .medal-icon-circle {
+  border-color: var(--medal-color, #f59e0b);
+  color: var(--medal-color, #f59e0b);
+  background: rgba(245, 158, 11, 0.12);
+}
+
+.medal-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.medal-title {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #f8fafc;
+}
+
+.medal-desc {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  line-height: 1.3;
+}

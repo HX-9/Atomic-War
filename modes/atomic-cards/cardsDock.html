@@ -1,80 +1,78 @@
 <!-- ==========================================================================
-   الحرب الذرية (Atomic War) - وضع البطاقات الذرية
-   شريط الترسانة والبطاقات التكتيكية ورصيد النيوترونات
+   الحرب الذرية (Atomic War) - منصة أوراق البطاقات التكتيكية السفلية
    مسار الملف: modes/atomic-cards/cardsDock.html
+   ملاحظة: يتم اختيار الطور الفرعي في صفحة التجهيز (#setupScreen) قبل المعركة ويُقفل أثناء اللعب
    ========================================================================== -->
 
 <div id="neutronArsenalBar" class="neutron-floating-dock hidden">
-    <!-- لوحة رصيد النيوترونات -->
-    <div class="dock-neutron-info">
-        <div class="dock-neutron-header">
-            <span class="dock-neutron-label">
-                <i class="fa-solid fa-atom icon-sky"></i> رصيد النيوترونات
-            </span>
-            <span id="neutronValueDisplay" class="dock-neutron-val">0 / 10</span>
+    <!-- الشريط العلوي للمنصة: طاقة النيوترونات + الإرشاد التكتيكي -->
+    <div class="dock-energy-bar">
+        <div class="dock-neutron-info">
+            <div class="dock-neutron-header">
+                <span class="dock-neutron-label">
+                    <i class="fa-solid fa-bolt icon-sky"></i> طاقة النيوترونات
+                </span>
+                <span id="neutronValueDisplay" class="dock-neutron-val">0 / 10</span>
+            </div>
+            <div class="neutron-meter-track" id="neutronMeterTrack">
+                <!-- شرائح الطاقة النيوترونية -->
+            </div>
         </div>
-        <div class="neutron-meter-track" id="neutronMeterTrack">
-            <!-- 10 مؤشرات ضوئية -->
+        <div id="arsenalHintText" class="dock-hint-text">
+            💡 انقر على ذرتك لتغذيتها (1⚡) • أو اسحب بطاقة تكتيكية من يدك أدناه
         </div>
     </div>
 
-    <div class="dock-divider"></div>
-
-    <!-- خانة البطاقات التكتيكية (مقسمة: بطاقات العناصر وبطاقات المساعدة) -->
-    <div class="dock-cards-container">
-        <!-- 1. قسم بطاقات العناصر -->
-        <div class="dock-card-subgroup dock-card-subgroup--elements">
-            <div class="dock-subgroup-header">
-                <span class="dock-subgroup-title">
-                    <i class="fa-solid fa-atom icon-sky"></i> بطاقات العناصر
-                </span>
+    <!-- يد البطاقات التكتيكية الخمس (Sci-Fi Tactical Hand) -->
+    <div class="tactical-cards-hand">
+        <!-- بطاقة 1: ذرة أحادية -->
+        <button type="button" class="arsenal-btn tactical-card tactical-card--element" data-action="atom" data-atoms="1" data-cost="3" id="btnArsenalSingle" title="إلقاء ذرة أحادية في غرفة فارغة">
+            <div class="tactical-card-cost" id="costBadgeSingle">⚡ 3</div>
+            <div class="tactical-card-visual">
+                <span class="arsenal-atom-preview preview-1">●</span>
             </div>
-            <div class="dock-subgroup-cards">
-                <button type="button" class="arsenal-btn" data-action="atom" data-atoms="1" data-cost="3" id="btnArsenalSingle" title="إلقاء ذرة أحادية في غرفة فارغة (تكلفة 3 نيوترونات)">
-                    <span class="arsenal-atom-preview preview-1">●</span>
-                    <span class="arsenal-btn-name">أحادية</span>
-                    <span class="arsenal-btn-cost">⚡ 3</span>
-                </button>
-                <button type="button" class="arsenal-btn" data-action="atom" data-atoms="2" data-cost="6" id="btnArsenalDouble" title="إلقاء ذرة ثنائية في غرفة فارغة (تكلفة 6 نيوترونات)">
-                    <span class="arsenal-atom-preview preview-2">●●</span>
-                    <span class="arsenal-btn-name">ثنائية</span>
-                    <span class="arsenal-btn-cost">⚡ 6</span>
-                </button>
-                <button type="button" class="arsenal-btn" data-action="atom" data-atoms="3" data-cost="9" id="btnArsenalTriple" title="إلقاء نواة ثلاثية في غرفة فارغة (تكلفة 9 نيوترونات)">
-                    <span class="arsenal-atom-preview preview-3">●●●</span>
-                    <span class="arsenal-btn-name">ثلاثية</span>
-                    <span class="arsenal-btn-cost">⚡ 9</span>
-                </button>
-            </div>
-        </div>
+            <div class="arsenal-btn-name">ذرة أحادية</div>
+            <div class="tactical-card-type">توسع • فراغ</div>
+        </button>
 
-        <!-- فاصل عمودي أنيق بين الفئتين -->
-        <div class="dock-subgroup-separator"></div>
-
-        <!-- 2. قسم بطاقات المساعدة -->
-        <div class="dock-card-subgroup dock-card-subgroup--support">
-            <div class="dock-subgroup-header">
-                <span class="dock-subgroup-title">
-                    <i class="fa-solid fa-wand-magic-sparkles icon-amber"></i> بطاقات المساعدة
-                </span>
+        <!-- بطاقة 2: ذرة ثنائية -->
+        <button type="button" class="arsenal-btn tactical-card tactical-card--element" data-action="atom" data-atoms="2" data-cost="6" id="btnArsenalDouble" title="إلقاء ذرة ثنائية في غرفة فارغة">
+            <div class="tactical-card-cost" id="costBadgeDouble">⚡ 6</div>
+            <div class="tactical-card-visual">
+                <span class="arsenal-atom-preview preview-2">●●</span>
             </div>
-            <div class="dock-subgroup-cards">
-                <button type="button" class="arsenal-btn arsenal-btn--control-rod" data-action="controlRod" data-cost="5" id="btnArsenalControlRod" title="تثبيت درع نووي واقٍ على إحدى غرفك لامتصاص الانفجارات (تكلفة 5 نيوترونات)">
-                    <i class="fa-solid fa-shield-halved arsenal-rod-icon"></i>
-                    <span class="arsenal-btn-name">درع نووي</span>
-                    <span class="arsenal-btn-cost arsenal-btn-cost--rod">🛡️ 5</span>
-                </button>
-                <button type="button" class="arsenal-btn arsenal-btn--energy-drain" data-action="energyDrain" data-cost="3" id="btnArsenalEnergyDrain" title="إلقاء هجوم على ذرة معادية لإرجاعها إلى المستوى الأول (تكلفة 3 نيوترونات)">
-                    <i class="fa-solid fa-bolt-slash arsenal-drain-icon"></i>
-                    <span class="arsenal-btn-name">إخماد طاقة</span>
-                    <span class="arsenal-btn-cost arsenal-btn-cost--drain">⚡ 3</span>
-                </button>
-            </div>
-        </div>
-    </div>
+            <div class="arsenal-btn-name">ثنائي النظائر</div>
+            <div class="tactical-card-type">شحن • فراغ</div>
+        </button>
 
-    <!-- نص إرشادي تكتيكي مدمج -->
-    <div id="arsenalHintText" class="dock-hint-text">
-        💡 تغذية غرفتك 1 n⁰ • الذرات في الفراغ (⚡3, ⚡6, ⚡9) • الدرع (🛡️ 5) يمتص الصدمة • الإخماد (⚡ 3) يعيد ذرة الخصم لمستوى 1
+        <!-- بطاقة 3: ذرة ثلاثية -->
+        <button type="button" class="arsenal-btn tactical-card tactical-card--element" data-action="atom" data-atoms="3" data-cost="9" id="btnArsenalTriple" title="إلقاء نواة ثلاثية مقاومة في غرفة فارغة">
+            <div class="tactical-card-cost" id="costBadgeTriple">⚡ 9</div>
+            <div class="tactical-card-visual">
+                <span class="arsenal-atom-preview preview-3">●●●</span>
+            </div>
+            <div class="arsenal-btn-name">النواة الثلاثية</div>
+            <div class="tactical-card-type">قلعة • فراغ</div>
+        </button>
+
+        <!-- بطاقة 4: درع نووي واقٍ -->
+        <button type="button" class="arsenal-btn arsenal-btn--control-rod tactical-card tactical-card--defense" data-action="controlRod" data-cost="5" id="btnArsenalControlRod" title="تثبيت درع نووي واقٍ على إحدى غرفك لامتصاص الانفجارات">
+            <div class="tactical-card-cost arsenal-btn-cost--rod" id="costBadgeControlRod">🛡️ 5</div>
+            <div class="tactical-card-visual">
+                <i class="fa-solid fa-shield-halved arsenal-rod-icon"></i>
+            </div>
+            <div class="arsenal-btn-name">درع التحكم</div>
+            <div class="tactical-card-type">تحصين غرفتك</div>
+        </button>
+
+        <!-- بطاقة 5: إخماد طاقة -->
+        <button type="button" class="arsenal-btn arsenal-btn--energy-drain tactical-card tactical-card--offense" data-action="energyDrain" data-cost="3" id="btnArsenalEnergyDrain" title="إلقاء هجوم إخماد طاقة على ذرة معادية لإرجاعها للمستوى الأول">
+            <div class="tactical-card-cost arsenal-btn-cost--drain" id="costBadgeEnergyDrain">⚡ 3</div>
+            <div class="tactical-card-visual">
+                <i class="fa-solid fa-bolt-slash arsenal-drain-icon"></i>
+            </div>
+            <div class="arsenal-btn-name">إخماد طاقة</div>
+            <div class="tactical-card-type">إضعاف العدو</div>
+        </button>
     </div>
 </div>

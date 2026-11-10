@@ -1,20 +1,21 @@
 /**
  * ============================================================================
- * الحرب الذرية (Atomic War) - وضع البطاقات الذرية (CardsGameMode)
+ * الحرب الذرية (Atomic War) - وضع البطاقات الذرية المطور (CardsGameMode)
  * مسار الملف: modes/atomic-cards/cardsMode.js
- * القواعد والميزات الاستراتيجية المتقدمة:
- * 1. نظام "رصيد النيوترونات (Neutron Reserve)":
- *    - البداية من 0، والضربة الافتتاحية مجانية (ذرة ثلاثية مع درع 3×3).
- *    - تجدد +2 نيوترون في بداية كل دور (حد أقصى 10).
- * 2. تكاليف الذرات والتغذية:
- *    - تغذية ذرة قائمة: 1 نيوترون (+1 ذرة).
- *    - إلقاء ذرة خارجية في غرفة فارغة: (المستوى 1: ⚡3، المستوى 2: ⚡6، المستوى 3: ⚡9).
- *    - قاعدة الانفصال: الذرات الخارجية توضع في الأماكن الفارغة فقط، ولا تدمج في أي ذرة قائمة.
+ * ============================================================================
+ * القواعد والميزات الاستراتيجية:
+ * 1. نظام رصيد النيوترونات التكتيكي المتجدد كل دور + مكافأة السلاسل الانشطارية.
+ * 2. بطاقات العناصر (أحادية ⚡3، ثنائية ⚡6، ثلاثية ⚡9 في الفراغ فقط).
  * 3. بطاقات المساعدة:
- *    - درع الطاقة النووي الواقي (Control Rod / Shield): تكلفة 🛡️ 5 نيوترونات على غرفة حليفة.
- *    - إخماد طاقة ذرة معادية (Energy Drain): تكلفة ⚡ 3 نيوترونات لإرجاع ذرة الخصم لمستواها الأول (1).
- * 4. مقاومة النواة الثلاثية (Fortress Core Resistance):
- *    - الذرة الثلاثية فقط تقاوم مقذوف الخصم الفردي وتمتصه فتتحول إلى أحادية (3 ➔ 1).
+ *    - درع نووي واقٍ (Control Rod) يمتص الانفجارات والهجمات المعادية.
+ *    - إخماد طاقة ذرة معادية (Energy Drain) لإرجاعها للمستوى الأول (1 ذرة).
+ *    - مقاومة النواة الثلاثية (3 ➔ 1 عند تلقي انشطار معادٍ).
+ * 4. الأطوار التكتيكية الخمسة (تُختار في صفحة تجهيز المعركة قبل البدء وتُقفل أثناء اللعب):
+ *    - 🎯 القياسي التكتيكي (standard): القواعد المتوازنة لنظام البطاقات والنيوترونات.
+ *    - ⚡ الصاعقة الذرية (blitz): مؤقت 6 ثوانٍ لكل دور + شحن نيوترونات سريع (+3⚡).
+ *    - 🌋 انصهار القلب (meltdown): بؤر حرجة تسخن في المفاعل وتنفجر تلقائياً بموجات بيئية.
+ *    - 🔀 المصفوفة القطرية (diagonal): انشطار ثماني الاتجاهات (أفقي ورأسي وقطري).
+ *    - 🏰 حصار المفاعل (siege): تمركز بالأطراف للسيطرة على قلعة المركز (+2⚡ كل دور) وخصم تكلفة الدروع والإخماد.
  * ============================================================================
  */
 class CardsGameMode extends (typeof BaseGameMode !== 'undefined' ? BaseGameMode : Object) {
@@ -23,6 +24,96 @@ class CardsGameMode extends (typeof BaseGameMode !== 'undefined' ? BaseGameMode 
         this.id = 'advanced';
         this.name = 'البطاقات الذرية';
         this.isLocked = false;
+
+        // الطور التكتيكي الفرعي المختار (يُحدد في صفحة التجهيز قبل بدء المعركة)
+        // 'standard' | 'blitz' | 'meltdown' | 'diagonal' | 'siege'
+        this.subMode = 'standard';
+
+        // قائمة الأطوار المتاحة داخل وضع البطاقات الذرية
+        this.availableSubModes = [
+            {
+                id: 'standard',
+                name: 'القياسي التكتيكي',
+                shortName: 'قياسي',
+                icon: 'fa-layer-group',
+                badgeColor: '#38bdf8',
+                desc: 'النمط الاستراتيجي المتوازن: +2⚡ نيوترون كل دور، 5 بطاقات تكتيكية، ومقاومة القلاع الثلاثية.',
+                specs: ['+2⚡ كل دور (حد أقصى 10)', 'انشطار رباعي الاتجاهات', 'جميع البطاقات بالتكلفة القياسية']
+            },
+            {
+                id: 'blitz',
+                name: 'الصاعقة الذرية',
+                shortName: 'صاعقة ⚡',
+                icon: 'fa-bolt',
+                badgeColor: '#f59e0b',
+                desc: 'معركة فائقة السرعة: مؤقت صارم 6 ثوانٍ لكل دور مع تدفق طاقة نيوترونية معزز (+3⚡ كل دور).',
+                specs: ['مؤقت 6 ثوانٍ لكل حركة', '+3⚡ كل دور (حد أقصى 12)', 'حركة تلقائية ذكية عند انتهاء الوقت']
+            },
+            {
+                id: 'meltdown',
+                name: 'انصهار القلب',
+                shortName: 'انصهار 🌋',
+                icon: 'fa-fire-flame-curved',
+                badgeColor: '#f43f5e',
+                desc: 'مفاعل غير مستقر: تظهر بؤر انصهار حرارية كل جولتين وتنفجر تلقائياً مسببة تفاعلات متسلسلة!',
+                specs: ['إنذار انصهار قبل الانفجار بدورين', 'انفجار بيئي مستقل لا يستهلك دورك', '+2⚡ كل دور مع مكافأة السلاسل']
+            },
+            {
+                id: 'diagonal',
+                name: 'المصفوفة القطرية',
+                shortName: 'قطري 🔀',
+                icon: 'fa-arrows-split-up-and-left',
+                badgeColor: '#a855f7',
+                desc: 'هندسة انشطار ثمانية الاتجاهات: تنطلق الشظايا الذرية أفقياً ورأسياً وقطرياً عبر الزوايا!',
+                specs: ['انشطار في 8 اتجاهات كاملة', 'الكتلة الحرجة: 3 زوايا، 4 حواف، 5 وسط', 'سلاسل انشطارية قطرية جارفة']
+            },
+            {
+                id: 'siege',
+                name: 'حصار المفاعل',
+                shortName: 'حصار 🏰',
+                icon: 'fa-chess-rook',
+                badgeColor: '#10b981',
+                desc: 'معركة السيطرة على القلب: ابدأ من أطراف المفاعل وتقدم للسيطرة على قلعة المركز المحصنة بالدروع!',
+                specs: ['قلعة المركز تمنح +2⚡ إضافية كل دور', 'درع نووي بـ 3⚡ وإخماد طاقة بـ 2⚡', 'الضربة الافتتاحية على المحيط الخارجي']
+            }
+        ];
+    }
+
+    setSubMode(subId) {
+        if (this.availableSubModes.some(m => m.id === subId)) {
+            this.subMode = subId;
+            return true;
+        }
+        this.subMode = 'standard';
+        return false;
+    }
+
+    getSubMode() {
+        return this.subMode;
+    }
+
+    getSubModeInfo(subId = this.subMode) {
+        return this.availableSubModes.find(m => m.id === subId) || this.availableSubModes[0];
+    }
+
+    isBlitz() {
+        return this.subMode === 'blitz';
+    }
+
+    isMeltdown() {
+        return this.subMode === 'meltdown';
+    }
+
+    isDiagonal() {
+        return this.subMode === 'diagonal';
+    }
+
+    isSiege() {
+        return this.subMode === 'siege';
+    }
+
+    hasDiagonalFission() {
+        return this.subMode === 'diagonal';
     }
 
     hasNeutronSystem() {
@@ -33,16 +124,26 @@ class CardsGameMode extends (typeof BaseGameMode !== 'undefined' ? BaseGameMode 
         return 3;
     }
 
+    getStartingNeutrons() {
+        if (this.isBlitz()) return 3;
+        if (this.isSiege()) return 4;
+        return 2;
+    }
+
     hasOpeningShield() {
         return true;
     }
 
     getNeutronPerTurn() {
-        return 2;
+        return this.isBlitz() ? 3 : 2;
     }
 
     getMaxNeutrons() {
-        return 10;
+        return this.isBlitz() ? 12 : 10;
+    }
+
+    getCitadelBonusNeutrons() {
+        return this.isSiege() ? 2 : 0;
     }
 
     hasControlRodSystem() {
@@ -61,34 +162,39 @@ class CardsGameMode extends (typeof BaseGameMode !== 'undefined' ? BaseGameMode 
     }
 
     getControlRodCost() {
-        return 5;
+        return this.isSiege() ? 3 : 5;
     }
 
     getEnergyDrainCost() {
-        return 3;
+        return this.isSiege() ? 2 : 3;
+    }
+
+    getBlitzTurnDurationSeconds() {
+        return 6;
     }
 
     getRuleDescription() {
-        return 'يبدأ كل لاعب بوضع <strong>ذرة ثلاثية مجانية</strong> في غرفة فارغة محمية بدرع 3×3 طوال الجولة الأولى. بعدها يتفعل <strong>نظام رصيد النيوترونات</strong> (+2 نيوترون كل دور، حد أقصى 10): تغذية غرفتك تكلف 1 نيوترون، وإلقاء الذرات الخارجية من الترسانة في الغرف الفارغة يكلف (3 للأحادية، 6 للثنائية، و9 للثلاثية). وتتضمن <strong>بطاقات المساعدة</strong>: تثبيت <strong>درع نووي واقٍ</strong> بـ 5 نيوترونات، أو شن هجوم <strong>إخماد طاقة</strong> بـ 3 نيوترونات لإرجاع ذرة الخصم لمستواها الأول، وتتمتع <strong>الذرات الثلاثية فقط</strong> بمقاومة دفاعية ضد السقوط من أول ضربة (تتحول إلى أحادية 3 ➔ 1).';
+        const info = this.getSubModeInfo();
+        const rodCost = this.getControlRodCost();
+        const drainCost = this.getEnergyDrainCost();
+
+        return `<strong>الطور النشط [${info.name}]:</strong> ${info.desc}<br>` +
+            `• <strong>الضربة الافتتاحية:</strong> ذرة ثلاثية مجانية محمية بدرع 3×3 للجولة الأولى${this.isSiege() ? ' (توضع على الأطراف والمحيط في طور الحصار)' : ''}.<br>` +
+            `• <strong>اقتصاد النيوترونات:</strong> يتجدد الرصيد بمقدار (+${this.getNeutronPerTurn()}⚡) كل دور، وتغذية غرفتك تكلف (1⚡).<br>` +
+            `• <strong>البطاقات التكتيكية:</strong> إلقاء الذرات في الفراغ (⚡3، ⚡6، ⚡9)، تثبيت <strong>درع نووي واقٍ (🛡️ ${rodCost}⚡)</strong>، وهجوم <strong>إخماد طاقة (⚡ ${drainCost}⚡)</strong>.`;
     }
 
     /**
-     * التحقق من حركة وضع البطاقات الذرية بناءً على نوع الخلية والذرات أو بطاقات المساعدة
-     * @param {AtomicWarsEngine} engine 
-     * @param {number} r 
-     * @param {number} c 
-     * @param {number} playerId 
-     * @param {number} atomCount عدد الذرات المراد إلقاؤها (1, 2, 3)
-     * @param {string} actionType نوع الإجراء ('atom', 'controlRod', 'energyDrain', 'feed')
+     * التحقق من صلاحية الحركة في وضع البطاقات الذرية وأطواره الفرعية
      */
     isValidMove(engine, r, c, playerId, atomCount = 1, actionType = 'atom') {
         const player = engine.players[playerId];
         const cell = engine.board[r][c];
+        if (!player || !cell) return false;
 
         // 1. إجراء تثبيت الدرع النووي (بطاقة مساعدة)
         if (actionType === 'controlRod') {
             if (!player.hasPlayed) return false;
-            // يمكن وضعه فقط على غرفة مملوكة للاعب وليست محمية بدرع مسبقاً
             if (cell.owner !== playerId || cell.hasControlRod) return false;
             return (player.neutrons || 0) >= this.getControlRodCost();
         }
@@ -96,20 +202,28 @@ class CardsGameMode extends (typeof BaseGameMode !== 'undefined' ? BaseGameMode 
         // 2. إجراء هجوم إخماد طاقة ذرة معادية (بطاقة مساعدة)
         if (actionType === 'energyDrain') {
             if (!player.hasPlayed) return false;
-            // يجب أن تكون الخلية مملوكة لخصم وبها أكثر من ذرة واحدة (لإرجاعها إلى المستوى الأول)
             if (cell.owner === null || cell.owner === playerId) return false;
             if (cell.atoms <= 1) return false;
             if (engine.isInsideOpponentShieldZone(r, c, playerId) || cell.hasShield) return false;
             return (player.neutrons || 0) >= this.getEnergyDrainCost();
         }
 
-        // 3. الضربة الافتتاحية: ذرة ثلاثية في أي غرفة فارغة
+        // 3. الضربة الافتتاحية: ذرة ثلاثية في غرفة فارغة
         if (!player.hasPlayed) {
-            return cell.owner === null;
+            if (cell.owner !== null) return false;
+            // في طور الحصار (Siege): يجب أن تكون الضربة الافتتاحية خارج منطقة القلب المركزية (على المحيط أو الأطراف)
+            if (this.isSiege()) {
+                const centerR = Math.floor(engine.rows / 2);
+                const centerC = Math.floor(engine.cols / 2);
+                const distFromCenter = Math.max(Math.abs(r - centerR), Math.abs(c - centerC));
+                if (distFromCenter <= 1) {
+                    return false; // منطقة قلب المفاعل محظورة في الضربة الافتتاحية لطور الحصار
+                }
+            }
+            return true;
         }
 
-        // 4. إذا كانت هناك بطاقة عناصر محددة (actionType === 'atom'):
-        // قاعدة صارمة: بطاقات العناصر توضع في الأماكن الفارغة فقط، ولا يمكن دمجها أو إلقاؤها فوق ذرة قائمة (حليفة أو معادية).
+        // 4. بطاقات العناصر (actionType === 'atom') في الأماكن الفارغة فقط
         if (actionType === 'atom') {
             if (cell.owner === null) {
                 const cost = this.getExternalAtomCost(atomCount);
@@ -118,8 +232,7 @@ class CardsGameMode extends (typeof BaseGameMode !== 'undefined' ? BaseGameMode 
             return false;
         }
 
-        // 5. إذا لم يكن هناك بطاقة محددة (actionType === null أو 'feed'):
-        // قاعدة: "إضافة ذرة داخل ذرة حليفة يتم فقط إذا لم يكن اللاعب محدد بطاقات"
+        // 5. تغذية ذرة حليفة قائمة (actionType === null || actionType === 'feed')
         if (actionType === null || actionType === 'feed') {
             if (cell.owner === playerId) {
                 return (player.neutrons || 0) >= 1;
@@ -131,6 +244,8 @@ class CardsGameMode extends (typeof BaseGameMode !== 'undefined' ? BaseGameMode 
     }
 
     getAiExpansionBonus() {
+        if (this.isBlitz()) return 8;
+        if (this.isDiagonal()) return 7;
         return 5;
     }
 }
@@ -140,7 +255,6 @@ if (typeof registerGameMode === 'function') {
     registerGameMode(cardsModeInstance);
 }
 
-// التوافقية العكسية مع المسميات القديمة
 if (typeof window !== 'undefined') {
     window.CardsGameMode = CardsGameMode;
     window.AdvancedGameMode = CardsGameMode;

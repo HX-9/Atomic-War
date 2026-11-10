@@ -123,6 +123,10 @@ class AtomicAIBot {
                 }
             }
 
+            if (cell.isCitadel) {
+                score += 28 * attackMultiplier; // أولوية عالية للسيطرة على قلعة المركز في طور الحصار
+            }
+
             if (isFirstMove) {
                 if (personality === 'defensive') {
                     if (cell.criticalMass === 2) score += 28 * cornerBonusMultiplier; // حب الزوايا للدفاع

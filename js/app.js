@@ -38,6 +38,14 @@ class AtomicWarsUIController {
         this.onlineSelectedGridSize = 7;
         this.onlineSelectedPlayerCount = 4;
 
+        // مدراء الميزات التكتيكية (ملف القائد والأنواط، الاهتزاز اللمسي، الثيمات المتقدمة)
+        this.haptic = (typeof HapticFeedbackManager !== 'undefined') ? new HapticFeedbackManager() : null;
+        this.themeMgr = (typeof ThemeManager !== 'undefined') ? new ThemeManager() : null;
+        this.dossier = (typeof CommanderDossier !== 'undefined') ? new CommanderDossier() : null;
+        this.blitzInterval = null;
+        this.blitzSecondsLeft = 6;
+        this.hazardCell = null;
+
         this.cacheDOM();
         this.setupNetworkCallbacks();
         this.bindEvents();
@@ -52,12 +60,25 @@ class AtomicWarsUIController {
     }
 
     cacheDOM() {
-        // شاشات العرض الرئيسية
+        // شاشات العرض الرئيسية الثلاث
         this.welcomeScreenEl = document.getElementById('welcomeScreen');
+        this.setupScreenEl = document.getElementById('setupScreen');
         this.battleScreenEl = document.getElementById('battleScreen');
         this.welcomePlayersPreviewEl = document.getElementById('welcomePlayersPreview');
         this.welcomeToastEl = document.getElementById('welcomeToast');
         this.welcomeSoundIconEl = document.getElementById('welcomeSoundIcon');
+
+        // عناصر صفحة تجهيز وإعداد المعركة (#setupScreen)
+        this.btnBackFromSetupToWelcome = document.getElementById('btnBackFromSetupToWelcome');
+        this.setupMainModeAdvanced = document.getElementById('setupMainModeAdvanced');
+        this.setupMainModeNormal = document.getElementById('setupMainModeNormal');
+        this.setupCardsSubmodesSection = document.getElementById('setupCardsSubmodesSection');
+        this.setupNormalInfoSection = document.getElementById('setupNormalInfoSection');
+        this.setupSubmodeCards = document.querySelectorAll('.setup-submode-card');
+        this.setupSummaryModeBadge = document.getElementById('setupSummaryModeBadge');
+        this.setupSummaryMetaText = document.getElementById('setupSummaryMetaText');
+        this.btnLaunchBattleFromSetup = document.getElementById('btnLaunchBattleFromSetup');
+        this.btnBackToSetup = document.getElementById('btnBackToSetup');
 
         // عناصر شاشة المعركة واللوحة
         this.boardEl = document.getElementById('gameBoard');
@@ -137,6 +158,29 @@ class AtomicWarsUIController {
         this.currentPings = {};
         this.tacticalHintTimer = null;
 
+        // عناصر ملف القائد والأنواط
+        this.btnWelcomeDossier = document.getElementById('btnWelcomeDossier');
+        this.btnBattleDossier = document.getElementById('btnBattleDossier');
+        this.dossierModal = document.getElementById('dossierModal');
+        this.btnCloseDossier = document.getElementById('btnCloseDossier');
+
+        // عناصر الثيمات الجرافيكية المتقدمة
+        this.btnWelcomeTheme = document.getElementById('btnWelcomeTheme');
+        this.btnBattleTheme = document.getElementById('btnBattleTheme');
+        this.themeOptionButtons = document.querySelectorAll('.theme-option');
+
+        // عناصر الاهتزاز اللمسي
+        this.btnWelcomeHaptic = document.getElementById('btnWelcomeHaptic');
+        this.btnBattleHaptic = document.getElementById('btnBattleHaptic');
+        this.welcomeHapticIcon = document.getElementById('welcomeHapticIcon');
+        this.battleHapticIcon = document.getElementById('battleHapticIcon');
+        this.checkHapticSetting = document.getElementById('checkHapticSetting');
+        this.hapticSettingLabel = document.getElementById('hapticSettingLabel');
+
+        // عناصر مؤقت الصاعقة الذرية (Blitz)
+        this.blitzTimerBadge = document.getElementById('blitzTimerBadge');
+        this.blitzSecondsVal = document.getElementById('blitzSecondsVal');
+
         // شريط الترسانة ورصيد النيوترونات التكتيكي
         this.neutronArsenalBarEl = document.getElementById('neutronArsenalBar');
         this.neutronValueDisplayEl = document.getElementById('neutronValueDisplay');
@@ -148,15 +192,52 @@ class AtomicWarsUIController {
     }
 
     bindEvents() {
-        // أزرار الشاشة الترحيبية واختيار وضع اللعب
+        // زر الوضع العادي: يبدأ المعركة مباشرة بدون شاشة إعداد
         const btnStartNormal = document.getElementById('btnStartNormalMode');
         if (btnStartNormal) {
             btnStartNormal.addEventListener('click', () => this.launchMode('normal'));
         }
 
+        // زر وضع البطاقات الذرية: يفتح شاشة الإعداد الحصرية لوضع البطاقات (#setupScreen)
         const btnStartAdvanced = document.getElementById('btnStartAdvancedMode');
         if (btnStartAdvanced) {
-            btnStartAdvanced.addEventListener('click', () => this.launchMode('advanced'));
+            btnStartAdvanced.addEventListener('click', () => this.openSetupScreen());
+        }
+
+        // أزرار صفحة تجهيز وإعداد المعركة الخاصة بوضع البطاقات (#setupScreen)
+        if (this.btnBackFromSetupToWelcome) {
+            this.btnBackFromSetupToWelcome.addEventListener('click', () => {
+                this.savePlayerSetupFromDOM();
+                this.showWelcomeScreen();
+            });
+        }
+
+        if (this.setupSubmodeCards) {
+            this.setupSubmodeCards.forEach(card => {
+                card.addEventListener('click', () => {
+                    const subId = card.dataset.submode;
+                    this.selectCardsSubMode(subId);
+                });
+            });
+        }
+
+        if (this.btnLaunchBattleFromSetup) {
+            this.btnLaunchBattleFromSetup.addEventListener('click', () => {
+                this.savePlayerSetupFromDOM();
+                this.config.gameMode = 'advanced';
+                this.launchBattleFromSetup();
+            });
+        }
+
+        if (this.btnBackToSetup) {
+            this.btnBackToSetup.addEventListener('click', () => {
+                if (this.isOnlineMatch || this.config.gameMode !== 'advanced') {
+                    this.populateSettingsModal();
+                    this.toggleModal(this.settingsModal, true);
+                    return;
+                }
+                this.openSetupScreen();
+            });
         }
 
         // زر فتح نافذة الردهة الأونلاين
@@ -312,7 +393,65 @@ class AtomicWarsUIController {
             });
         }
 
-        // الأزرار المغلقة (وضع 2 ووضع 3)
+        // أزرار ملف القائد والأنواط
+        const openDossier = () => {
+            this.renderDossierModal();
+            this.toggleModal(this.dossierModal, true);
+        };
+        if (this.btnWelcomeDossier) this.btnWelcomeDossier.addEventListener('click', openDossier);
+        if (this.btnBattleDossier) this.btnBattleDossier.addEventListener('click', openDossier);
+        if (this.btnCloseDossier) this.btnCloseDossier.addEventListener('click', () => this.toggleModal(this.dossierModal, false));
+
+        // أزرار الاهتزاز اللمسي (تفعيل/إلغاء التفعيل)
+        const toggleHapticHandler = () => {
+            const newState = this.toggleHaptic();
+            this.showWelcomeToast(newState ? 'تم تفعيل الاهتزاز اللمسي 📳' : 'تم إلغاء الاهتزاز اللمسي 📴');
+        };
+        if (this.btnWelcomeHaptic) this.btnWelcomeHaptic.addEventListener('click', toggleHapticHandler);
+        if (this.btnBattleHaptic) this.btnBattleHaptic.addEventListener('click', toggleHapticHandler);
+        if (this.checkHapticSetting) {
+            this.checkHapticSetting.addEventListener('change', () => {
+                this.toggleHaptic(this.checkHapticSetting.checked);
+            });
+        }
+
+        // أزرار تبديل الثيمات المتقدمة المطبقة على الثيم الحالي
+        const cycleThemeHandler = () => {
+            if (this.themeMgr) {
+                const nextT = this.themeMgr.cycleTheme();
+                this.syncThemeOptions();
+                this.showWelcomeToast(`المظهر: ${nextT.name}`);
+                if (this.haptic) this.haptic.onAtomPlaced();
+            }
+        };
+        if (this.btnWelcomeTheme) this.btnWelcomeTheme.addEventListener('click', cycleThemeHandler);
+        if (this.btnBattleTheme) this.btnBattleTheme.addEventListener('click', cycleThemeHandler);
+        if (this.themeOptionButtons) {
+            this.themeOptionButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const tid = btn.dataset.theme;
+                    if (this.themeMgr) {
+                        this.themeMgr.setTheme(tid);
+                        this.syncThemeOptions();
+                        const tObj = this.themeMgr.getCurrentThemeObj();
+                        this.showWelcomeToast(`المظهر: ${tObj.name}`);
+                    }
+                });
+            });
+        }
+
+        // أزرار الأطوار التكتيكية لطور البطاقات
+        if (this.cardsSubmodePills) {
+            this.cardsSubmodePills.forEach(pill => {
+                pill.addEventListener('click', () => {
+                    const subId = pill.dataset.submode;
+                    this.selectCardsSubMode(subId);
+                });
+            });
+        }
+
+        this.syncHapticUI();
+        this.syncThemeOptions();
         const btnMode2 = document.getElementById('btnMode2');
         if (btnMode2) {
             btnMode2.addEventListener('click', () => {
@@ -416,11 +555,14 @@ class AtomicWarsUIController {
         document.getElementById('btnCloseRules').addEventListener('click', () => this.toggleModal(this.rulesModal, false));
         document.getElementById('btnGotItRules').addEventListener('click', () => this.toggleModal(this.rulesModal, false));
 
-        // نافذة الإعدادات
-        document.getElementById('btnSettingsModal').addEventListener('click', () => {
-            this.populateSettingsModal();
-            this.toggleModal(this.settingsModal, true);
-        });
+        // نافذة الضبط السريع
+        const btnSettingsModalEl = document.getElementById('btnSettingsModal');
+        if (btnSettingsModalEl) {
+            btnSettingsModalEl.addEventListener('click', () => {
+                this.populateSettingsModal();
+                this.toggleModal(this.settingsModal, true);
+            });
+        }
         document.getElementById('btnCloseSettings').addEventListener('click', () => this.toggleModal(this.settingsModal, false));
 
         // أزرار نافذة النصر
@@ -436,15 +578,21 @@ class AtomicWarsUIController {
         });
         document.getElementById('btnOpenSettingsFromWin').addEventListener('click', () => {
             this.toggleModal(this.victoryModal, false);
-            this.populateSettingsModal();
-            this.toggleModal(this.settingsModal, true);
+            if (this.config.gameMode === 'advanced' && !this.isOnlineMatch) {
+                this.openSetupScreen();
+            } else {
+                this.populateSettingsModal();
+                this.toggleModal(this.settingsModal, true);
+            }
         });
 
         // خيارات حجم المفاعل
         document.querySelectorAll('.size-option').forEach(btn => {
             btn.addEventListener('click', () => {
+                if (this.inBattle) return; // حجم المفاعل مقفل أثناء المعركة
                 this.config.gridSize = parseInt(btn.dataset.size, 10);
                 this.syncOptionHighlights();
+                this.updateSetupSummaryUI();
             });
         });
 
@@ -452,37 +600,31 @@ class AtomicWarsUIController {
         document.querySelectorAll('.speed-option').forEach(btn => {
             btn.addEventListener('click', () => {
                 this.config.waveSpeedMs = parseInt(btn.dataset.speed, 10);
+                document.documentElement.style.setProperty('--fly-duration', `${this.config.waveSpeedMs}ms`);
                 this.syncOptionHighlights();
+                this.updateSetupSummaryUI();
             });
         });
 
         // خيارات عدد القوى النووية
         document.querySelectorAll('.pcount-option').forEach(btn => {
             btn.addEventListener('click', () => {
+                if (this.inBattle) return; // عدد القوى مقفل أثناء المعركة
                 this.savePlayerSetupFromDOM();
                 this.config.playerCount = parseInt(btn.dataset.count, 10);
                 this.syncOptionHighlights();
                 this.renderPlayerSetupRows();
                 this.renderWelcomePreview();
+                this.updateSetupSummaryUI();
             });
         });
 
-        // تطبيق الإعدادات وبدء اللقاء
+        // حفظ الضبط السريع للسرعة
         document.getElementById('btnApplySettings').addEventListener('click', () => {
-            if (this.isOnlineMatch) {
-                // في المعركة الأونلاين: نطبق سرعة الانشطار فقط ولا نُعيد تشغيل اللعبة أو نغير الحجم
-                document.documentElement.style.setProperty('--fly-duration', `${this.config.waveSpeedMs}ms`);
-                this.toggleModal(this.settingsModal, false);
-                this.setWaveStatus(`تم ضبط سرعة موجات الانشطار إلى ${this.config.waveSpeedMs}ms`, 'sky');
-                return;
-            }
-
-            this.savePlayerSetupFromDOM();
-            this.syncOptionHighlights();
-            this.renderWelcomePreview();
+            document.documentElement.style.setProperty('--fly-duration', `${this.config.waveSpeedMs}ms`);
             this.toggleModal(this.settingsModal, false);
             if (this.inBattle) {
-                this.startNewGame();
+                this.setWaveStatus(`تم ضبط سرعة موجات الانشطار إلى ${this.config.waveSpeedMs}ms`, 'sky');
             }
         });
 
@@ -570,19 +712,22 @@ class AtomicWarsUIController {
     }
 
     /**
-     * تحديث عنوان الوضع وقواعد طريقة اللعب حسب الوضع المختار
+     * تحديث شارة الوضع المقفلة وقواعد طريقة اللعب حسب الوضع والطور المختار
      */
     updateModeUI() {
         const mode = (typeof GAME_MODES !== 'undefined' && GAME_MODES[this.config.gameMode]) || null;
-        const modeName = mode ? mode.name : (this.config.gameMode === 'normal' ? 'الوضع العادي' : 'البطاقات الذرية');
+        let modeBadgeText = this.config.gameMode === 'normal' ? 'الوضع العادي الكلاسيكي' : 'البطاقات الذرية';
+        if (this.config.gameMode === 'advanced' && typeof cardsModeInstance !== 'undefined' && cardsModeInstance) {
+            const subInfo = cardsModeInstance.getSubModeInfo();
+            modeBadgeText = `البطاقات • ${subInfo.shortName || subInfo.name}`;
+        }
+
         const modeDesc = mode && typeof mode.getRuleDescription === 'function' 
             ? mode.getRuleDescription() 
-            : (this.config.gameMode === 'normal' 
-                ? 'يبدأ كل لاعب دورته الأولى بوضع <strong>ذرة ثلاثية (3 ذرات مشعة)</strong> في أي غرفة فارغة لتأسيس قلعته النووية، ويُحاط المربع تلقائياً <strong>بنطاق حماية كامل 3×3 بدرع طاقة واقٍ</strong> طوال الجولة الأولى. وبعد الجولة الأولى في <strong>الوضع العادي</strong> لا يمكنك وضع أي ذرة خارج غرف ذراتك الخاصة، ويتم التوسع عبر الانشطار المتسلسل فقط.'
-                : 'يبدأ كل لاعب دورته الأولى بوضع <strong>ذرة ثلاثية (3 ذرات مشعة)</strong> في أي غرفة فارغة لتأسيس قلعته النووية، ويُحاط المربع تلقائياً <strong>بنطاق حماية كامل 3×3 بدرع طاقة واقٍ</strong> طوال الجولة الأولى يمنع أي خصم من محاصرته أو اختراقه. وعند عودة اللعب على اللاعب ينهار درعه ويمكنه وضع ذراته في غرفه أو في أي غرفة فارغة.');
+            : 'يبدأ كل لاعب دورته الأولى بوضع <strong>ذرة ثلاثية (3 ذرات مشعة)</strong> في أي غرفة فارغة لتأسيس قلعته النووية، ويُحاط المربع تلقائياً <strong>بنطاق حماية كامل 3×3 بدرع طاقة واقٍ</strong> طوال الجولة الأولى.';
 
         if (this.activeModeBadgeEl) {
-            this.activeModeBadgeEl.textContent = `(${modeName})`;
+            this.activeModeBadgeEl.innerHTML = `<i class="fa-solid fa-lock"></i> ${modeBadgeText}`;
         }
 
         if (this.rulePlacementDescEl) {
@@ -590,47 +735,20 @@ class AtomicWarsUIController {
         }
 
         if (this.victoryModeBadgeEl) {
-            this.victoryModeBadgeEl.textContent = modeName;
+            this.victoryModeBadgeEl.textContent = modeBadgeText;
         }
 
-        if (this.criticalGuideGridEl) {
-            if (this.config.gameMode === 'normal') {
-                this.criticalGuideGridEl.innerHTML = `
-                    <div class="critical-guide-card">
-                        <div class="critical-guide-capacity icon-amber">3 <span class="critical-guide-unit">ذرات</span></div>
-                        <div class="critical-guide-type">غرفة زاوية</div>
-                        <div class="critical-guide-trigger">تنشطر عند 4 (تضيع 2 بالحواف)</div>
-                    </div>
-                    <div class="critical-guide-card">
-                        <div class="critical-guide-capacity icon-sky">3 <span class="critical-guide-unit">ذرات</span></div>
-                        <div class="critical-guide-type">غرفة طرفية</div>
-                        <div class="critical-guide-trigger">تنشطر عند 4 (تضيع 1 بالحافة)</div>
-                    </div>
-                    <div class="critical-guide-card">
-                        <div class="critical-guide-capacity icon-emerald">3 <span class="critical-guide-unit">ذرات</span></div>
-                        <div class="critical-guide-type">قلب المفاعل</div>
-                        <div class="critical-guide-trigger">تنشطر عند 4 (تنتقل الـ 4)</div>
-                    </div>
-                `;
-            } else {
-                this.criticalGuideGridEl.innerHTML = `
-                    <div class="critical-guide-card">
-                        <div class="critical-guide-capacity icon-amber">1 <span class="critical-guide-unit">ذرة</span></div>
-                        <div class="critical-guide-type">غرفة زاوية</div>
-                        <div class="critical-guide-trigger">تنشطر عند 2</div>
-                    </div>
-                    <div class="critical-guide-card">
-                        <div class="critical-guide-capacity icon-sky">2 <span class="critical-guide-unit">ذرة</span></div>
-                        <div class="critical-guide-type">غرفة طرفية</div>
-                        <div class="critical-guide-trigger">تنشطر عند 3</div>
-                    </div>
-                    <div class="critical-guide-card">
-                        <div class="critical-guide-capacity icon-emerald">3 <span class="critical-guide-unit">ذرات</span></div>
-                        <div class="critical-guide-type">قلب المفاعل</div>
-                        <div class="critical-guide-trigger">تنشطر عند 4</div>
-                    </div>
-                `;
-            }
+        // إظهار زر غرفة التجهيز في وضع البطاقات الذرية فقط، وإخفاؤه في الوضع العادي
+        const isCardsLocal = (this.config.gameMode === 'advanced' && !this.isOnlineMatch);
+        if (this.btnBackToSetup) {
+            this.btnBackToSetup.classList.toggle('hidden', !isCardsLocal);
+        }
+        if (this.btnOpenSettingsFromWin) {
+            this.btnOpenSettingsFromWin.classList.toggle('hidden', !isCardsLocal);
+        }
+        const btnSettingsModalEl = document.getElementById('btnSettingsModal');
+        if (btnSettingsModalEl) {
+            btnSettingsModalEl.classList.toggle('hidden', isCardsLocal);
         }
     }
 
@@ -660,22 +778,88 @@ class AtomicWarsUIController {
     }
 
     /**
-     * الانتقال من الشاشة الترحيبية إلى ساحة المعركة بالوضع المختار
+     * فتح صفحة تجهيز وإعداد المعركة الحصرية لوضع البطاقات الذرية (#setupScreen)
      */
-    launchMode(mode) {
-        this.config.gameMode = mode;
-        this.inBattle = true;
-        this.updateModeUI();
+    openSetupScreen() {
+        this.inBattle = false;
+        this.isAnimating = false;
+        if (this.aiTimer) {
+            clearTimeout(this.aiTimer);
+            this.aiTimer = null;
+        }
+        this.stopBlitzTimer();
+        this.hazardCell = null;
+
+        this.config.gameMode = 'advanced';
 
         if (this.welcomeSim) {
             this.welcomeSim.stop();
         }
 
         if (this.welcomeScreenEl) this.welcomeScreenEl.classList.add('hidden');
+        if (this.battleScreenEl) this.battleScreenEl.classList.add('hidden');
+        document.body.classList.remove('has-arsenal-dock');
+
+        if (this.setupScreenEl) {
+            this.setupScreenEl.classList.remove('hidden');
+        }
+
+        this.populateSetupScreen();
+        this.sound.playPlaceAtom(false);
+    }
+
+    /**
+     * تحديث عناصر صفحة التجهيز الخاصة بوضع البطاقات الذرية
+     */
+    populateSetupScreen() {
+        this.config.gameMode = 'advanced';
+        this.syncOptionHighlights();
+        this.syncThemeOptions();
+        this.syncCardsSubModeUI();
+        this.renderPlayerSetupRows();
+        this.updateSetupSummaryUI();
+    }
+
+    /**
+     * تحديث ملخص الإعدادات في الشريط السفلي لصفحة تجهيز وضع البطاقات
+     */
+    updateSetupSummaryUI() {
+        if (this.setupSummaryModeBadge) {
+            if (typeof cardsModeInstance !== 'undefined' && cardsModeInstance) {
+                const subInfo = cardsModeInstance.getSubModeInfo();
+                this.setupSummaryModeBadge.textContent = `وضع البطاقات الذرية • ${subInfo.name}`;
+            } else {
+                this.setupSummaryModeBadge.textContent = 'وضع البطاقات الذرية';
+            }
+        }
+        if (this.setupSummaryMetaText) {
+            const sz = this.config.gridSize;
+            const pc = this.config.playerCount;
+            this.setupSummaryMetaText.textContent = `مفاعل ${sz}×${sz} (${sz * sz} غرفة) • ${pc === 2 ? 'قوتان' : pc + ' قوى'} • يُقفل الطور عند بدء الاشتباك`;
+        }
+    }
+
+    /**
+     * قفل الإعدادات والانتقال من صفحة التجهيز (#setupScreen) إلى ساحة المعركة (#battleScreen)
+     */
+    launchBattleFromSetup() {
+        this.inBattle = true;
+        this.updateModeUI();
+
+        if (this.welcomeScreenEl) this.welcomeScreenEl.classList.add('hidden');
+        if (this.setupScreenEl) this.setupScreenEl.classList.add('hidden');
         if (this.battleScreenEl) this.battleScreenEl.classList.remove('hidden');
 
         this.sound.playPlaceAtom(false);
         this.startNewGame();
+    }
+
+    /**
+     * الانتقال المباشر إلى المعركة (للتوافق البرمجي)
+     */
+    launchMode(mode) {
+        this.config.gameMode = mode;
+        this.launchBattleFromSetup();
     }
 
     /**
@@ -709,12 +893,20 @@ class AtomicWarsUIController {
             this.btnRestartFast.classList.remove('hidden');
         }
 
+        this.stopBlitzTimer();
+        if (this.hazardCell) {
+            document.querySelectorAll('.cell-hazard-meltdown').forEach(el => el.classList.remove('cell-hazard-meltdown'));
+            this.hazardCell = null;
+        }
+
         this.toggleModal(this.victoryModal, false);
         this.toggleModal(this.settingsModal, false);
         this.toggleModal(this.rulesModal, false);
+        if (this.dossierModal) this.toggleModal(this.dossierModal, false);
         if (this.onlineLobbyModal) this.toggleModal(this.onlineLobbyModal, false);
 
         if (this.battleScreenEl) this.battleScreenEl.classList.add('hidden');
+        if (this.setupScreenEl) this.setupScreenEl.classList.add('hidden');
         document.body.classList.remove('has-arsenal-dock');
         if (this.welcomeScreenEl) {
             this.welcomeScreenEl.classList.remove('hidden');
@@ -728,6 +920,7 @@ class AtomicWarsUIController {
     }
 
     toggleModal(modalEl, show) {
+        if (!modalEl) return;
         if (show) {
             modalEl.classList.remove('hidden');
         } else {
@@ -744,6 +937,8 @@ class AtomicWarsUIController {
             clearTimeout(this.aiTimer);
             this.aiTimer = null;
         }
+        this.stopBlitzTimer();
+        this.hazardCell = null;
 
         const size = this.config.gridSize;
         const activePlayers = this.config.playersSetup.slice(0, this.config.playerCount).map(setup => {
@@ -762,6 +957,7 @@ class AtomicWarsUIController {
         this.selectedAction = null;
         this.selectedArsenalAtom = null;
         this.updateModeUI();
+        this.syncCardsSubModeUI();
 
         document.documentElement.style.setProperty('--grid-cols', size);
         document.documentElement.style.setProperty('--fly-duration', `${this.config.waveSpeedMs}ms`);
@@ -776,6 +972,8 @@ class AtomicWarsUIController {
         this.updateGeigerMeter(0);
 
         if (this.inBattle) {
+            const firstPlayer = this.engine.getCurrentPlayer();
+            this.handleTurnTransition(firstPlayer);
             this.checkAndTriggerAITurn();
         }
     }
@@ -806,6 +1004,8 @@ class AtomicWarsUIController {
                     <div class="capacity-indicator" title="أقصى استقرار: ${cellData.maxStableCapacity} ذرات">${capSlotsHtml}</div>
                     <span class="shield-badge hidden" title="درع نووي واقٍ ضد المحاصرة والاختراق (الجولة الأولى)"><i class="fa-solid fa-shield-halved"></i></span>
                     <span class="cell-control-rod-badge hidden" title="درع نووي واقٍ يمتص الانفجارات المعادية"><i class="fa-solid fa-shield-halved"></i></span>
+                    <span class="cell-citadel-badge hidden" title="قلعة قلب المفاعل: تمنح +2⚡ نيوترون إضافي كل دور للمسيطر عليها">🏰 +2⚡</span>
+                    <span class="cell-meltdown-badge hidden" title="بؤرة انصهار حراري وشيكة الانفجار!">🌋 2</span>
                     <div class="atom-cluster"></div>
                     <span class="cell-badge hidden">0</span>
                 `;
@@ -1011,11 +1211,17 @@ class AtomicWarsUIController {
         if (actionType === 'controlRod') {
             this.sound.playControlRodDeploy();
             this.setWaveStatus(`تم تثبيت درع نووي واقٍ في الغرفة [${r+1}, ${c+1}] بنجاح!`, 'sky');
+            if (this.dossier) this.dossier.recordControlRod();
+            if (this.haptic) this.haptic.onAtomPlaced();
         } else if (actionType === 'energyDrain') {
             this.sound.playEnergyDrain();
             this.setWaveStatus(`إطلاق هجوم إخماد الطاقة على الغرفة [${r+1}, ${c+1}]...`, 'amber');
+            if (this.dossier) this.dossier.recordEnergyDrain();
+            if (this.haptic) this.haptic.onAtomPlaced();
         } else {
             this.sound.playPlaceAtom(isFirstMove);
+            if (this.dossier) this.dossier.recordAtomPlacement();
+            if (this.haptic) this.haptic.onAtomPlaced();
         }
 
         const result = this.engine.executeTurn(r, c, atomsToPlace, actionType);
@@ -1051,8 +1257,11 @@ class AtomicWarsUIController {
             this.renderScoreboard(this.engine.players);
             await new Promise(res => setTimeout(res, 400));
         } else if (result.waves.length > 0) {
+            if (this.haptic) this.haptic.onExplosion();
+            let totalFissions = 0;
             for (let i = 0; i < result.waves.length; i++) {
                 const wave = result.waves[i];
+                totalFissions += (wave.explodedCells ? wave.explodedCells.length : 1);
                 this.setWaveStatus(`انشطار متسلسل • موجة ${wave.waveIndex}`, 'amber');
                 this.updateGeigerMeter(Math.min(wave.waveIndex * 18, 100));
                 this.sound.playFissionWave(wave.waveIndex);
@@ -1060,6 +1269,14 @@ class AtomicWarsUIController {
                 await this.animateExplosionWave(wave, actingPlayer);
                 this.renderBoardState(wave.boardSnapshot);
                 this.renderScoreboard(wave.playersSnapshot);
+            }
+            if (this.haptic) this.haptic.onChainReaction(totalFissions);
+            if (this.dossier) this.dossier.recordChainReaction(totalFissions);
+            if (totalFissions >= 3 && this.boardWrapperEl) {
+                this.boardWrapperEl.classList.add('screen-shake-effect');
+                setTimeout(() => {
+                    if (this.boardWrapperEl) this.boardWrapperEl.classList.remove('screen-shake-effect');
+                }, 320);
             }
         } else {
             this.renderBoardState(this.engine.board);
@@ -1087,10 +1304,24 @@ class AtomicWarsUIController {
         // إزالة تحديد البطاقات بعد كل إلقاء ليعود إلى وضع عدم التحديد الافتراضي
         this.setArsenalAction(null);
 
+        // فحص وتطبيق حدث انصهار القلب (Meltdown) البيئي المستقل دون استهلاك دور اللاعب
+        if (this.config.gameMode === 'advanced' && typeof cardsModeInstance !== 'undefined' && cardsModeInstance.isMeltdown()) {
+            await this.checkMeltdownHazard();
+            if (this.engine.isGameOver && this.engine.winner) {
+                this.updateTurnIndicator();
+                this.sound.playVictory();
+                setTimeout(() => this.showVictoryModal(this.engine.winner), 350);
+                this.isAnimating = false;
+                return;
+            }
+        }
+
         this.updateTurnIndicator();
         this.renderBoardState(this.engine.board);
+        this.renderScoreboard(this.engine.players);
         this.isAnimating = false;
 
+        this.handleTurnTransition(nextPlayer);
         this.checkAndTriggerAITurn();
     }
 
@@ -1316,6 +1547,8 @@ class AtomicWarsUIController {
                 const slotEls = cellEl.querySelectorAll('.capacity-slot');
                 const shieldBadgeEl = cellEl.querySelector('.shield-badge');
                 const rodBadgeEl = cellEl.querySelector('.cell-control-rod-badge');
+                const citadelBadgeEl = cellEl.querySelector('.cell-citadel-badge');
+                const meltdownBadgeEl = cellEl.querySelector('.cell-meltdown-badge');
 
                 const atomsForCheck = (this.selectedAction === 'controlRod' || this.selectedAction === 'energyDrain') ? 1 : (this.selectedArsenalAtom || 1);
                 const actionForCheck = this.selectedAction; // null عند عدم تحديد أي بطاقة (لوضع تغذية الذرات الحليفة)
@@ -1362,6 +1595,30 @@ class AtomicWarsUIController {
                         rodBadgeEl.classList.remove('hidden');
                     } else {
                         rodBadgeEl.classList.add('hidden');
+                    }
+                }
+
+                // شارة قلعة قلب المفاعل في طور الحصار (Siege Citadel)
+                if (citadelBadgeEl) {
+                    if (cell.isCitadel) {
+                        cellEl.classList.add('cell-citadel-core');
+                        citadelBadgeEl.classList.remove('hidden');
+                    } else {
+                        cellEl.classList.remove('cell-citadel-core');
+                        citadelBadgeEl.classList.add('hidden');
+                    }
+                }
+
+                // شارة الانصهار الحراري في طور انصهار القلب (Meltdown Hazard)
+                if (meltdownBadgeEl) {
+                    const isHazard = this.hazardCell && this.hazardCell.r === r && this.hazardCell.c === c;
+                    if (isHazard && this.hazardCell.turnsLeft > 0) {
+                        cellEl.classList.add('cell-hazard-meltdown');
+                        meltdownBadgeEl.textContent = `🌋 ${this.hazardCell.turnsLeft}`;
+                        meltdownBadgeEl.classList.remove('hidden');
+                    } else {
+                        cellEl.classList.remove('cell-hazard-meltdown');
+                        meltdownBadgeEl.classList.add('hidden');
                     }
                 }
 
@@ -1439,11 +1696,12 @@ class AtomicWarsUIController {
     }
 
     /**
-     * تحديث لوحة النقاط وقائمة القوى النووية
+     * تحديث شريط كبسولات القوى النووية أعلى المفاعل
      */
     renderScoreboard(playersList) {
         this.playersListEl.innerHTML = '';
         const currentId = this.engine.currentPlayerIndex;
+        const hasNeutrons = this.engine && this.engine.mode && typeof this.engine.mode.hasNeutronSystem === 'function' && this.engine.mode.hasNeutronSystem();
 
         playersList.forEach(p => {
             const isTurn = !this.engine.isGameOver && p.id === currentId;
@@ -1462,12 +1720,19 @@ class AtomicWarsUIController {
             }
 
             const statusLabel = !p.alive
-                ? '<span class="player-status-tag player-status-tag--eliminated">مُدمّر بالكامل</span>'
+                ? '<span class="player-status-tag player-status-tag--eliminated">مُدمّر</span>'
                 : isTurn
-                    ? `<span class="player-status-tag player-status-tag--turn">${!p.hasPlayed ? 'بداية ثلاثية ×3' : 'إطلاق نووي'}</span>`
+                    ? `<span class="player-status-tag player-status-tag--turn">${!p.hasPlayed ? 'ضربة افتتاحية ×3' : 'الدور النشط'}</span>`
                     : !p.hasPlayed
-                        ? '<span class="player-status-tag player-status-tag--waiting">بانتظار الضربة ×3</span>'
+                        ? '<span class="player-status-tag player-status-tag--waiting">بانتظار البداية</span>'
                         : '';
+
+            const neutronStatHtml = hasNeutrons ? `
+                <div class="player-stat-box">
+                    <div class="player-stat-label">طاقة ⚡</div>
+                    <div class="player-stat-value" style="color: #38bdf8">${p.neutrons || 0}</div>
+                </div>
+            ` : '';
 
             card.innerHTML = `
                 <div class="player-card-info">
@@ -1491,6 +1756,7 @@ class AtomicWarsUIController {
                         <div class="player-stat-label">الذرات</div>
                         <div class="player-stat-value" style="color: ${p.color}">${p.atomCount}</div>
                     </div>
+                    ${neutronStatHtml}
                 </div>
             `;
 
@@ -1584,20 +1850,35 @@ class AtomicWarsUIController {
         const currentPlayer = this.engine.getCurrentPlayer();
         const isFirstMove = !currentPlayer.hasPlayed;
         const neutrons = currentPlayer.neutrons || 0;
+        const maxN = (typeof this.engine.mode.getMaxNeutrons === 'function') ? this.engine.mode.getMaxNeutrons() : 10;
+        const rodCost = (typeof this.engine.mode.getControlRodCost === 'function') ? this.engine.mode.getControlRodCost() : 5;
+        const drainCost = (typeof this.engine.mode.getEnergyDrainCost === 'function') ? this.engine.mode.getEnergyDrainCost() : 3;
+
+        // تحديث شارات تكلفة البطاقات بحسب الطور (مثل تخفيض تكلفة الدرع والإخماد في طور الحصار)
+        const btnRod = document.getElementById('btnArsenalControlRod');
+        const badgeRod = document.getElementById('costBadgeControlRod');
+        if (btnRod) btnRod.dataset.cost = rodCost;
+        if (badgeRod) badgeRod.textContent = `🛡️ ${rodCost}`;
+
+        const btnDrain = document.getElementById('btnArsenalEnergyDrain');
+        const badgeDrain = document.getElementById('costBadgeEnergyDrain');
+        if (btnDrain) btnDrain.dataset.cost = drainCost;
+        if (badgeDrain) badgeDrain.textContent = `⚡ ${drainCost}`;
 
         // تحديث النص العددي
         if (this.neutronValueDisplayEl) {
             if (isFirstMove) {
-                this.neutronValueDisplayEl.textContent = '0 / 10 (افتتاحية)';
+                this.neutronValueDisplayEl.textContent = `0 / ${maxN} (افتتاحية)`;
             } else {
-                this.neutronValueDisplayEl.textContent = `${neutrons} / 10`;
+                this.neutronValueDisplayEl.textContent = `${neutrons} / ${maxN}`;
             }
         }
 
-        // تحديث شرائح المقياس الـ 10
+        // تحديث شرائح مقياس النيوترونات
         if (this.neutronMeterTrackEl) {
+            this.neutronMeterTrackEl.style.setProperty('--max-neutrons', maxN);
             this.neutronMeterTrackEl.innerHTML = '';
-            for (let i = 0; i < 10; i++) {
+            for (let i = 0; i < maxN; i++) {
                 const pip = document.createElement('div');
                 pip.className = 'neutron-pip';
                 if (!isFirstMove && i < neutrons) {
@@ -1622,8 +1903,6 @@ class AtomicWarsUIController {
             });
 
             // إذا كان الزر المختار غير متاح بسبب نقص النيوترونات، إلغاء التحديد والعودة للوضع الافتراضي
-            const rodCost = (this.engine.mode && typeof this.engine.mode.getControlRodCost === 'function') ? this.engine.mode.getControlRodCost() : 5;
-            const drainCost = (this.engine.mode && typeof this.engine.mode.getEnergyDrainCost === 'function') ? this.engine.mode.getEnergyDrainCost() : 3;
             if (!isFirstMove && this.selectedAction) {
                 if (this.selectedAction === 'controlRod' && neutrons < rodCost) {
                     this.setArsenalAction(null);
@@ -1639,24 +1918,27 @@ class AtomicWarsUIController {
         }
 
         // تحديث نص الإرشاد التكتيكي
+        const isSiege = (typeof this.engine.mode.isSiege === 'function' && this.engine.mode.isSiege());
         if (this.arsenalHintTextEl) {
             if (isFirstMove) {
-                this.arsenalHintTextEl.innerHTML = '🛡️ <strong>الضربة الافتتاحية:</strong> اختر أي غرفة فارغة لتأسيس قلعتك النووية (ذرة ثلاثية مجانية مع درع 3×3)';
+                this.arsenalHintTextEl.innerHTML = isSiege
+                    ? '🏰 <strong>الضربة الافتتاحية (طور الحصار):</strong> تمركز في أي غرفة على المحيط الخارجي لبدء الزحف نحو قلعة المركز!'
+                    : '🛡️ <strong>الضربة الافتتاحية:</strong> اختر أي غرفة فارغة لتأسيس قلعتك النووية (ذرة ثلاثية مجانية مع درع 3×3)';
                 this.arsenalHintTextEl.style.color = '#fcd34d';
             } else if (!this.selectedAction) {
-                this.arsenalHintTextEl.innerHTML = '💡 <strong>الوضع الافتراضي:</strong> انقر على أي ذرة حليفة لتغذيتها (+1 n⁰) • أو حدد بطاقة لإلقائها في المفاعل';
-                this.arsenalHintTextEl.style.color = '#94a3b8';
+                this.arsenalHintTextEl.innerHTML = '💡 <strong>وضع التغذية:</strong> انقر على أي ذرة حليفة لشحنها (1⚡) • أو اختر بطاقة تكتيكية من يدك أدناه';
+                this.arsenalHintTextEl.style.color = '#cbd5e1';
             } else if (this.selectedAction === 'atom') {
                 const count = this.selectedArsenalAtom || 1;
                 const cost = count === 1 ? 3 : (count === 2 ? 6 : 9);
-                this.arsenalHintTextEl.innerHTML = `⚡ <strong>بطاقة ذرة ${count === 1 ? 'أحادية' : (count === 2 ? 'ثنائية' : 'ثلاثية')}:</strong> انقر على أي غرفة فارغة لإلقائها (${cost} n⁰) • انقر البطاقة مجدداً لإلغاء التحديد`;
+                this.arsenalHintTextEl.innerHTML = `⚡ <strong>بطاقة ${count === 1 ? 'ذرة أحادية' : (count === 2 ? 'ثنائي النظائر' : 'النواة الثلاثية')}:</strong> انقر على أي غرفة فارغة لإلقائها (${cost}⚡) • انقر البطاقة مجدداً للإلغاء`;
                 this.arsenalHintTextEl.style.color = '#38bdf8';
             } else if (this.selectedAction === 'controlRod') {
-                this.arsenalHintTextEl.innerHTML = '🛡️ <strong>بطاقة درع نووي:</strong> انقر على إحدى غرفك لتثبيت درع واقٍ (5 n⁰) • انقر البطاقة مجدداً لإلغاء التحديد';
+                this.arsenalHintTextEl.innerHTML = `🛡️ <strong>بطاقة درع التحكم:</strong> انقر على إحدى غرفك لتثبيت درع واقٍ (${rodCost}⚡) • انقر البطاقة مجدداً للإلغاء`;
                 this.arsenalHintTextEl.style.color = '#34d399';
             } else if (this.selectedAction === 'energyDrain') {
-                this.arsenalHintTextEl.innerHTML = '⚡ <strong>بطاقة إخماد طاقة:</strong> انقر على ذرة معادية لإرجاعها لمستوى 1 (3 n⁰) • انقر البطاقة مجدداً لإلغاء التحديد';
-                this.arsenalHintTextEl.style.color = '#f59e0b';
+                this.arsenalHintTextEl.innerHTML = `⚡ <strong>بطاقة إخماد الطاقة:</strong> انقر على ذرة معادية لإرجاعها لمستوى 1 (${drainCost}⚡) • انقر البطاقة مجدداً للإلغاء`;
+                this.arsenalHintTextEl.style.color = '#fbbf24';
             }
         }
     }
@@ -1720,6 +2002,24 @@ class AtomicWarsUIController {
         document.getElementById('statTotalTurns').textContent = this.engine.turnNumber;
         document.getElementById('statMaxChain').textContent = `${this.engine.longestChain} موجات`;
         document.getElementById('statFinalCells').textContent = winner.cellCount;
+
+        // إيقاف مؤقت الصاعقة عند انتهاء المباراة
+        this.stopBlitzTimer();
+
+        // اهتزاز النصر وتسجيل إحصائيات القائد والأنواط المفتوحة
+        if (this.haptic) this.haptic.onVictory();
+        if (this.dossier) {
+            const isLocalWinner = (!this.isOnlineMatch && winner.id === 0) || (this.isOnlineMatch && winner.id === this.localPlayerId);
+            const currentSubMode = (this.engine && this.engine.mode && typeof this.engine.mode.getSubMode === 'function')
+                ? this.engine.mode.getSubMode()
+                : 'standard';
+            const newlyUnlocked = this.dossier.recordBattleOutcome(isLocalWinner, this.config.gameMode, currentSubMode);
+            if (newlyUnlocked && newlyUnlocked.length > 0) {
+                newlyUnlocked.forEach(m => {
+                    this.showWelcomeToast(`🎖️ وسام نووي جديد: ${m.title}!`);
+                });
+            }
+        }
 
         if (this.isOnlineMatch) {
             if (this.btnOpenSettingsFromWin) {
@@ -2293,7 +2593,9 @@ class AtomicWarsUIController {
         }
         document.querySelectorAll('.cell-tactical-hint').forEach(el => el.classList.remove('cell-tactical-hint'));
 
-        const cellEl = document.querySelector(`.reactor-cell[data-row="${hint.r}"][data-col="${hint.c}"]`);
+        const cellEl = (this.cellElements[hint.r] && this.cellElements[hint.r][hint.c])
+            ? this.cellElements[hint.r][hint.c]
+            : document.querySelector(`.board-cell[data-row="${hint.r}"][data-col="${hint.c}"]`);
         if (cellEl) {
             cellEl.classList.add('cell-tactical-hint');
         }
@@ -2373,6 +2675,257 @@ class AtomicWarsUIController {
 
         const cls = this.getPingClass(ms);
         return `<span class="ping-indicator ${cls}" title="زمن الاستجابة: ${ms}ms"><span class="ping-dot"></span>${ms}ms</span>`;
+    }
+
+    /* ==========================================================================
+       ميزات الاهتزاز اللمسي، الثيمات، ملف القائد، وأطوار البطاقات التكتيكية
+       ========================================================================== */
+
+    toggleHaptic(state = null) {
+        if (!this.haptic) return false;
+        const res = this.haptic.toggle(state);
+        this.syncHapticUI();
+        return res;
+    }
+
+    syncHapticUI() {
+        const isEnabled = this.haptic ? this.haptic.enabled : false;
+        const iconCls = isEnabled ? 'fa-mobile-screen icon-emerald' : 'fa-mobile-screen-button icon-rose';
+        if (this.welcomeHapticIcon) this.welcomeHapticIcon.className = `fa-solid ${iconCls}`;
+        if (this.battleHapticIcon) this.battleHapticIcon.className = `fa-solid ${iconCls}`;
+        if (this.checkHapticSetting) this.checkHapticSetting.checked = isEnabled;
+        if (this.hapticSettingLabel) {
+            this.hapticSettingLabel.textContent = isEnabled ? 'مفعّل' : 'معطّل';
+            this.hapticSettingLabel.style.color = isEnabled ? '#38bdf8' : '#f87171';
+        }
+    }
+
+    syncThemeOptions() {
+        if (!this.themeMgr) return;
+        const cur = this.themeMgr.currentTheme;
+        if (this.themeOptionButtons) {
+            this.themeOptionButtons.forEach(btn => {
+                const isSelected = btn.dataset.theme === cur;
+                btn.className = `option-btn theme-option ${isSelected ? 'option-btn--active-emerald' : ''}`;
+            });
+        }
+    }
+
+    renderDossierModal() {
+        if (!this.dossier) return;
+        const d = this.dossier.data;
+        const rank = this.dossier.getRank();
+        const pName = this.getPersistentPlayerName();
+
+        const nameEl = document.getElementById('dossierCommanderName');
+        const rankTitleEl = document.getElementById('dossierRankTitle');
+        const rankStarsEl = document.getElementById('dossierRankStars');
+        const winrateEl = document.getElementById('dossierWinrateVal');
+        const battlesEl = document.getElementById('statTotalBattles');
+        const winsEl = document.getElementById('statTotalWins');
+        const atomsEl = document.getElementById('statTotalAtoms');
+        const maxChainEl = document.getElementById('statMaxChain');
+        const countBadge = document.getElementById('medalsUnlockedCount');
+        const grid = document.getElementById('medalsGridContainer');
+
+        if (nameEl) nameEl.textContent = pName;
+        if (rankTitleEl) {
+            rankTitleEl.textContent = rank.title;
+            rankTitleEl.style.color = rank.color;
+        }
+        if (rankStarsEl) {
+            rankStarsEl.textContent = '★'.repeat(rank.stars);
+            rankStarsEl.style.color = rank.color;
+        }
+        if (winrateEl) winrateEl.textContent = this.dossier.getWinRate();
+        if (battlesEl) battlesEl.textContent = d.totalBattles;
+        if (winsEl) winsEl.textContent = d.wins;
+        if (atomsEl) atomsEl.textContent = d.totalAtomsPlaced;
+        if (maxChainEl) maxChainEl.textContent = `${d.maxChainReaction} موجات`;
+        if (countBadge) countBadge.textContent = `${d.unlockedMedals.length} / ${this.dossier.medalsDefinition.length} مفتوح`;
+
+        if (grid) {
+            grid.innerHTML = '';
+            this.dossier.medalsDefinition.forEach(m => {
+                const isUnlocked = d.unlockedMedals.includes(m.id);
+                const card = document.createElement('div');
+                card.className = `medal-card ${isUnlocked ? 'medal-card--unlocked' : 'medal-card--locked'}`;
+                card.style.setProperty('--medal-color', m.color);
+
+                card.innerHTML = `
+                    <div class="medal-icon-circle">
+                        <i class="fa-solid ${isUnlocked ? m.icon : 'fa-lock'}"></i>
+                    </div>
+                    <div class="medal-info">
+                        <span class="medal-title">${m.title} ${isUnlocked ? '✓' : ''}</span>
+                        <span class="medal-desc">${m.desc}</span>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+    }
+
+    selectCardsSubMode(subId) {
+        if (this.inBattle) {
+            this.setWaveStatus('🔒 النمط التكتيكي مقفل أثناء المعركة! لتغيير الطور عد إلى غرفة العمليات التكتيكية.', 'amber');
+            return;
+        }
+        if (typeof cardsModeInstance !== 'undefined' && cardsModeInstance) {
+            cardsModeInstance.setSubMode(subId);
+            this.syncCardsSubModeUI();
+            this.updateSetupSummaryUI();
+            this.updateModeUI();
+
+            const subObj = cardsModeInstance.availableSubModes.find(m => m.id === subId);
+            const subTitle = subObj ? subObj.name : subId;
+            if (this.haptic) this.haptic.onAtomPlaced();
+            this.sound.playShieldDeploy();
+            this.showWelcomeToast(`تم اختيار: ${subTitle}`);
+        }
+    }
+
+    syncCardsSubModeUI() {
+        const curSub = (typeof cardsModeInstance !== 'undefined' && cardsModeInstance)
+            ? cardsModeInstance.getSubMode()
+            : 'standard';
+
+        if (this.setupSubmodeCards) {
+            this.setupSubmodeCards.forEach(card => {
+                card.classList.toggle('setup-submode-card--active', card.dataset.submode === curSub);
+            });
+        }
+
+        if (this.blitzTimerBadge) {
+            if (curSub === 'blitz' && this.inBattle) {
+                this.blitzTimerBadge.classList.remove('hidden');
+            } else {
+                this.blitzTimerBadge.classList.add('hidden');
+            }
+        }
+    }
+
+    handleTurnTransition(nextPlayer) {
+        const isCards = (this.config.gameMode === 'advanced');
+        const isBlitz = isCards && typeof cardsModeInstance !== 'undefined' && cardsModeInstance.isBlitz();
+
+        this.stopBlitzTimer();
+
+        if (isBlitz && this.inBattle && this.engine && !this.engine.isGameOver && nextPlayer) {
+            const isLocal = (!this.isOnlineMatch && !nextPlayer.isAI) || (this.isOnlineMatch && nextPlayer.id === this.localPlayerId);
+            if (isLocal) {
+                this.startBlitzTimer();
+            }
+        }
+    }
+
+    startBlitzTimer() {
+        this.stopBlitzTimer();
+        this.blitzSecondsLeft = 6;
+        if (this.blitzTimerBadge) {
+            this.blitzTimerBadge.classList.remove('hidden', 'blitz-timer-badge--critical');
+        }
+        if (this.blitzSecondsVal) {
+            this.blitzSecondsVal.textContent = this.blitzSecondsLeft;
+        }
+
+        this.blitzInterval = setInterval(() => {
+            if (!this.inBattle || this.isAnimating || (this.engine && this.engine.isGameOver)) {
+                this.stopBlitzTimer();
+                return;
+            }
+
+            this.blitzSecondsLeft--;
+            if (this.blitzSecondsVal) {
+                this.blitzSecondsVal.textContent = Math.max(0, this.blitzSecondsLeft);
+            }
+
+            if (this.blitzSecondsLeft <= 2) {
+                if (this.blitzTimerBadge) this.blitzTimerBadge.classList.add('blitz-timer-badge--critical');
+                if (this.haptic) this.haptic.vibrate(20);
+            }
+
+            if (this.blitzSecondsLeft <= 0) {
+                this.stopBlitzTimer();
+                this.triggerBlitzAutoMove();
+            }
+        }, 1000);
+    }
+
+    stopBlitzTimer() {
+        if (this.blitzInterval) {
+            clearInterval(this.blitzInterval);
+            this.blitzInterval = null;
+        }
+        if (this.blitzTimerBadge) {
+            this.blitzTimerBadge.classList.remove('blitz-timer-badge--critical');
+            if (typeof cardsModeInstance !== 'undefined' && !cardsModeInstance.isBlitz()) {
+                this.blitzTimerBadge.classList.add('hidden');
+            }
+        }
+    }
+
+    triggerBlitzAutoMove() {
+        if (!this.inBattle || this.isAnimating || !this.engine || this.engine.isGameOver) return;
+        this.setWaveStatus('⚡ نفاد وقت الصاعقة (6 ثوانٍ)! تنفيذ انتشار نووي اضطراري سريع...', 'rose');
+
+        const aiMove = this.engine.computeBestAIMove();
+        if (aiMove) {
+            this.processPlayerMove(aiMove.r, aiMove.c, aiMove.atomCount || 1, aiMove.actionType || 'atom', false);
+        } else {
+            const nextP = this.engine.skipTurnSafely();
+            this.updateTurnIndicator();
+            this.renderBoardState(this.engine.board);
+            this.renderScoreboard(this.engine.players);
+            this.handleTurnTransition(nextP);
+            this.checkAndTriggerAITurn();
+        }
+    }
+
+    async checkMeltdownHazard() {
+        if (!this.engine || !this.inBattle || this.engine.isGameOver) return;
+
+        if (this.hazardCell) {
+            this.hazardCell.turnsLeft--;
+            if (this.hazardCell.turnsLeft <= 0) {
+                const targetR = this.hazardCell.r;
+                const targetC = this.hazardCell.c;
+                this.hazardCell = null;
+
+                this.setWaveStatus(`🌋 انفجار بؤرة الانصهار النووي في الإحداثيات [${targetR + 1}, ${targetC + 1}]!`, 'rose');
+                this.sound.playFissionWave(2);
+                if (this.haptic) this.haptic.onExplosion();
+
+                const meltRes = this.engine.triggerMeltdownAt(targetR, targetC);
+                if (meltRes && meltRes.triggered) {
+                    if (meltRes.waves && meltRes.waves.length > 0) {
+                        for (let i = 0; i < meltRes.waves.length; i++) {
+                            const wave = meltRes.waves[i];
+                            await this.animateExplosionWave(wave, meltRes.player);
+                            this.renderBoardState(wave.boardSnapshot);
+                            this.renderScoreboard(wave.playersSnapshot);
+                        }
+                    } else {
+                        this.renderBoardState(this.engine.board);
+                        this.renderScoreboard(this.engine.players);
+                    }
+                }
+                return;
+            } else {
+                this.renderBoardState(this.engine.board);
+                return;
+            }
+        }
+
+        if (!this.hazardCell && this.engine.turnNumber >= 2 && (this.engine.turnNumber % 2 === 0 || Math.random() < 0.45)) {
+            const cand = this.engine.pickMeltdownCandidate();
+            if (cand) {
+                this.hazardCell = { r: cand.r, c: cand.c, turnsLeft: 2 };
+                this.renderBoardState(this.engine.board);
+                this.setWaveStatus(`⚠️ إنذار انصهار: بؤرة حرارية حرجة في [${cand.r + 1}, ${cand.c + 1}] ستنفجر بعد دورتين!`, 'amber');
+                this.sound.playControlRodAbsorb();
+            }
+        }
     }
 }
 

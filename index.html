@@ -38,6 +38,18 @@
                 </div>
 
                 <div class="welcome-header-actions">
+                    <button type="button" id="btnWelcomeDossier" title="ملف القائد والأنواط النووية" class="action-btn">
+                        <i class="fa-solid fa-id-card-clip icon-sky"></i>
+                        <span class="action-btn-label">ملف القائد</span>
+                    </button>
+                    <button type="button" id="btnWelcomeTheme" title="تبديل المظهر والثيم" class="action-btn">
+                        <i class="fa-solid fa-palette icon-rose"></i>
+                        <span class="action-btn-label">المظهر</span>
+                    </button>
+                    <button type="button" id="btnWelcomeHaptic" title="كتم/تشغيل الاهتزاز اللمسي" class="action-btn">
+                        <i id="welcomeHapticIcon" class="fa-solid fa-mobile-screen icon-emerald"></i>
+                        <span class="action-btn-label">الاهتزاز</span>
+                    </button>
                     <button type="button" id="btnWelcomeSoundToggle" title="كتم/تشغيل الصوتيات" class="action-btn">
                         <i id="welcomeSoundIcon" class="fa-solid fa-volume-high icon-emerald"></i>
                         <span class="action-btn-label">الصوتيات</span>
@@ -98,250 +110,402 @@
         <div id="welcomeToast" class="welcome-toast hidden"></div>
     </section>
 
-    <!-- ================= حاوية شاشة المعركة الرئيسية ================= -->
-    <div id="battleScreen" class="battle-screen hidden">
-
-    <!-- ================= 01. شريط القيادة العلوي ومؤشرات المفاعل (html/header.html) ================= -->
-    <header class="app-header">
-        <div class="glass-panel header-bar">
-            <!-- شعار الحرب الذرية والوضع الحالي -->
-            <div class="brand-box">
-                <div class="brand-logo">
-                    <i class="fa-solid fa-atom brand-logo-icon"></i>
-                </div>
-                <div>
-                    <h1 class="brand-title">
-                        الحرب الذرية <span class="brand-subtitle" id="activeModeBadge">(الوضع العادي)</span>
-                    </h1>
-                    <p class="brand-meta" id="headerBoardInfo">مفاعل 7×7 • 49 غرفة انشطار</p>
-                </div>
-            </div>
-
-            <!-- مؤشر الدور اللوني المدمج الأنيق (بدون عبارات زائدة) -->
-            <div id="turnBanner" class="turn-banner" title="دور القوة الحالية">
-                <span class="turn-dot-wrapper">
-                    <span id="turnPing" class="turn-ping"></span>
-                    <span id="turnDot" class="turn-dot"></span>
-                </span>
-                <span id="currentPlayerName" class="turn-player-name">اليورانيوم الأخضر</span>
-            </div>
-
-            <!-- أزرار التحكم السريع -->
-            <div class="header-actions">
-                <!-- زر العودة للقائمة الرئيسية -->
-                <button id="btnBackToWelcome" title="العودة للقائمة الرئيسية" class="action-btn">
-                    <i class="fa-solid fa-house icon-amber"></i>
-                    <span class="action-btn-label">الرئيسية</span>
-                </button>
-                <!-- زر إظهار/إخفاء أرقام الذرات (اختياري) -->
-                <button id="btnToggleNumbers" title="إظهار/إخفاء أعداد الذرات" class="action-btn">
-                    <i class="fa-solid fa-hashtag icon-sky"></i>
-                    <span class="action-btn-label">الذرات</span>
-                </button>
-                <button id="btnSoundToggle" title="كتم/تشغيل الصوتيات النووية" class="action-btn">
-                    <i id="soundIcon" class="fa-solid fa-volume-high icon-emerald"></i>
-                    <span class="action-btn-label">الصوت</span>
-                </button>
-                <!-- زر المساعد التوجيهي التكتيكي -->
-                <button id="btnTacticalAdvisor" title="طلب توجيه تكتيكي ذكي للحركة القادمة" class="action-btn action-btn--advisor">
-                    <i class="fa-solid fa-lightbulb icon-amber"></i>
-                    <span class="action-btn-label">توجيه</span>
-                </button>
-                <button id="btnRulesModal" title="قواعد الاشتباك النووي" class="action-btn">
-                    <i class="fa-solid fa-radiation icon-amber"></i>
-                    <span class="action-btn-label">القواعد</span>
-                </button>
-                <button id="btnSettingsModal" title="تخصيص المفاعل والقوى" class="action-btn">
-                    <i class="fa-solid fa-sliders icon-purple"></i>
-                    <span class="action-btn-label">تخصيص</span>
-                </button>
-                <button id="btnRestartFast" title="إعادة تشغيل المفاعل" class="action-btn action-btn--primary">
-                    <i class="fa-solid fa-rotate-right"></i>
-                    <span>مفاعل جديد</span>
-                </button>
-            </div>
-        </div>
-    </header>
-
-    <!-- ================= 02. منطقة اللعب الرئيسية ================= -->
-    <main class="main-workspace">
-
-        <!-- لوحة الرصد والإحصائيات الجانبية (html/sidebar.html) -->
-        <aside class="reactor-sidebar">
-            <!-- قائمة القوى النووية والسيطرة -->
-            <div class="glass-panel sidebar-panel">
-                <div class="panel-header">
-                    <h2 class="panel-title">
-                        <i class="fa-solid fa-shield-halved icon-emerald"></i>
-                        القوى النووية والسيطرة
-                    </h2>
-                    <span id="turnCounterBadge" class="round-badge">الجولة 1</span>
+    <!-- ================= 01. صفحة تجهيز وإعداد المعركة (خاصة بوضع البطاقات الذرية فقط) ================= -->
+    <section id="setupScreen" class="setup-screen hidden">
+        <header class="setup-header">
+            <div class="glass-panel setup-header-bar">
+                <div class="setup-header-right">
+                    <button type="button" id="btnBackFromSetupToWelcome" class="action-btn" title="العودة للشاشة الرئيسية">
+                        <i class="fa-solid fa-arrow-right icon-amber"></i>
+                        <span>الرئيسية</span>
+                    </button>
+                    <div class="setup-title-box">
+                        <h2 class="setup-main-title">
+                            <i class="fa-solid fa-layer-group icon-purple"></i>
+                            غرفة التجهيز التكتيكية • وضع البطاقات الذرية
+                        </h2>
+                        <p class="setup-subtitle">اختر الطور التكتيكي وأبعاد المفاعل وتشكيل القادة لوضع البطاقات قبل قفل الإعدادات وإطلاق المعركة</p>
+                    </div>
                 </div>
 
-                <!-- بطاقات القوى النووية الحية -->
-                <div id="playersListContainer" class="players-list">
-                    <!-- يتم بناؤها ديناميكياً بواسطة js/app.js -->
-                </div>
-            </div>
-
-            <!-- رادار المفاعل ومقياس الإشعاع النشط -->
-            <div class="glass-panel sidebar-panel">
-                <div class="radar-status-row">
-                    <span class="radar-label">حالة قلب المفاعل:</span>
-                    <span id="chainWaveStatus" class="reactor-status-badge reactor-status-badge--stable">
-                        المفاعل في حالة استقرار
+                <!-- شارة حصرية وضع البطاقات الذرية -->
+                <div class="setup-mode-switcher">
+                    <span class="setup-mode-tab setup-mode-tab--active" style="cursor: default;">
+                        <i class="fa-solid fa-atom icon-purple"></i> إعدادات وضع البطاقات الذرية
                     </span>
                 </div>
+            </div>
+        </header>
 
-                <!-- مؤشر نشاط غايغر الإشعاعي -->
-                <div>
-                    <div class="geiger-header">
-                        <span>مستوى الإشعاع النشط (Geiger Activity):</span>
+        <div class="setup-body-grid">
+            <!-- العمود الأيمن: اختيار الطور التكتيكي لوضع البطاقات الذرية -->
+            <div class="glass-panel setup-column setup-column--modes">
+                <div id="setupCardsSubmodesSection">
+                    <div class="setup-section-header">
+                        <h3 class="setup-section-title">
+                            <i class="fa-solid fa-wand-magic-sparkles icon-purple"></i>
+                            اختر الطور التكتيكي لوضع البطاقات
+                        </h3>
+                        <span class="setup-lock-note"><i class="fa-solid fa-lock"></i> يُقفل الطور تلقائياً بعد بدء المعركة</span>
+                    </div>
+
+                    <div class="setup-submodes-grid" id="setupSubmodesGrid">
+                        <!-- 1. الطور القياسي -->
+                        <div class="setup-submode-card setup-submode-card--active" data-submode="standard">
+                            <div class="setup-submode-icon-box" style="--sub-color: #38bdf8;">
+                                <i class="fa-solid fa-layer-group"></i>
+                            </div>
+                            <div class="setup-submode-content">
+                                <div class="setup-submode-top">
+                                    <span class="setup-submode-name">القياسي التكتيكي</span>
+                                    <span class="setup-submode-tag" style="--sub-color: #38bdf8;">الموصى به</span>
+                                </div>
+                                <p class="setup-submode-desc">التوازن الاستراتيجي الكامل لنظام النيوترونات (+2⚡ كل دور) والبطاقات التكتيكية الخمس ومقاومة النواة الثلاثية.</p>
+                            </div>
+                        </div>
+
+                        <!-- 2. طور الصاعقة الذرية -->
+                        <div class="setup-submode-card" data-submode="blitz">
+                            <div class="setup-submode-icon-box" style="--sub-color: #f59e0b;">
+                                <i class="fa-solid fa-bolt"></i>
+                            </div>
+                            <div class="setup-submode-content">
+                                <div class="setup-submode-top">
+                                    <span class="setup-submode-name">الصاعقة الذرية (Blitz)</span>
+                                    <span class="setup-submode-tag" style="--sub-color: #f59e0b;">6 ثوانٍ / +3⚡</span>
+                                </div>
+                                <p class="setup-submode-desc">مؤقت خاطف 6 ثوانٍ لكل حركة مع شحن نيوترونات فائق السرعة (+3⚡ كل دور) وإطلاق ذكي عند انتهاء الوقت.</p>
+                            </div>
+                        </div>
+
+                        <!-- 3. طور انصهار القلب -->
+                        <div class="setup-submode-card" data-submode="meltdown">
+                            <div class="setup-submode-icon-box" style="--sub-color: #f43f5e;">
+                                <i class="fa-solid fa-fire-flame-curved"></i>
+                            </div>
+                            <div class="setup-submode-content">
+                                <div class="setup-submode-top">
+                                    <span class="setup-submode-name">انصهار القلب (Meltdown)</span>
+                                    <span class="setup-submode-tag" style="--sub-color: #f43f5e;">انفجارات بيئية 🌋</span>
+                                </div>
+                                <p class="setup-submode-desc">بؤر حرجة تسخن في قلب المفاعل وتنذر بالخطر قبل أن تنفجر تلقائياً في موجات انشطار بيئية تقلب الموازين!</p>
+                            </div>
+                        </div>
+
+                        <!-- 4. طور المصفوفة القطرية -->
+                        <div class="setup-submode-card" data-submode="diagonal">
+                            <div class="setup-submode-icon-box" style="--sub-color: #a855f7;">
+                                <i class="fa-solid fa-arrows-split-up-and-left"></i>
+                            </div>
+                            <div class="setup-submode-content">
+                                <div class="setup-submode-top">
+                                    <span class="setup-submode-name">المصفوفة القطرية (8-Way)</span>
+                                    <span class="setup-submode-tag" style="--sub-color: #a855f7;">8 اتجاهات 🔀</span>
+                                </div>
+                                <p class="setup-submode-desc">انشطار ثماني الاتجاهات يقذف الذرات أفقياً ورأسياً وقطرياً عبر الزوايا ليصنع عواصف انشطارية كاسحة!</p>
+                            </div>
+                        </div>
+
+                        <!-- 5. طور حصار المفاعل -->
+                        <div class="setup-submode-card" data-submode="siege">
+                            <div class="setup-submode-icon-box" style="--sub-color: #10b981;">
+                                <i class="fa-solid fa-chess-rook"></i>
+                            </div>
+                            <div class="setup-submode-content">
+                                <div class="setup-submode-top">
+                                    <span class="setup-submode-name">حصار المفاعل (Siege)</span>
+                                    <span class="setup-submode-tag" style="--sub-color: #10b981;">قلعة المركز 🏰</span>
+                                </div>
+                                <p class="setup-submode-desc">تبدأ القوى على أطراف المفاعل للزحف نحو قلعة المركز المحصنة (+2⚡ كل دور للمسيطر) مع تخفيض تكلفة الدروع والإخماد!</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- العمود الأيسر: هندسة المفاعل وتشكيل القادة والروبوتات -->
+            <div class="glass-panel setup-column setup-column--config">
+                <!-- أبعاد المفاعل وسرعة التفاعل -->
+                <div class="setup-config-row">
+                    <div class="settings-group" id="settingsGroupGridSize">
+                        <label class="settings-label"><i class="fa-solid fa-table-cells icon-purple"></i> أبعاد شبكة المفاعل:</label>
+                        <div class="settings-options-grid" id="gridSizeButtons">
+                            <button type="button" data-size="5" class="option-btn size-option">
+                                5 × 5 <span class="option-btn-subtext">تكتيكي (25)</span>
+                            </button>
+                            <button type="button" data-size="7" class="option-btn size-option option-btn--active-purple">
+                                7 × 7 <span class="option-btn-subtext">قياسي (49)</span>
+                            </button>
+                            <button type="button" data-size="9" class="option-btn size-option">
+                                9 × 9 <span class="option-btn-subtext">ملحمي (81)</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="settings-group" id="settingsGroupSpeed">
+                        <label class="settings-label"><i class="fa-solid fa-gauge-high icon-sky"></i> سرعة موجات الانشطار:</label>
+                        <div class="settings-options-grid" id="speedButtons">
+                            <button type="button" data-speed="300" class="option-btn speed-option">هادئة</button>
+                            <button type="button" data-speed="210" class="option-btn speed-option option-btn--active-sky">متوسطة</button>
+                            <button type="button" data-speed="120" class="option-btn speed-option">فائقة</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- عدد القوى وتخصيص القادة والروبوتات -->
+                <div class="settings-group" id="settingsGroupPlayerCount">
+                    <label class="settings-label"><i class="fa-solid fa-users icon-emerald"></i> عدد القوى المتنافسة (2 إلى 4):</label>
+                    <div class="settings-options-grid" id="playerCountButtons">
+                        <button type="button" data-count="2" class="option-btn pcount-option option-btn--active-emerald">قوتان (2)</button>
+                        <button type="button" data-count="3" class="option-btn pcount-option">3 قوى</button>
+                        <button type="button" data-count="4" class="option-btn pcount-option">4 قوى</button>
+                    </div>
+                </div>
+
+                <div class="settings-group" id="settingsGroupPlayerSetup">
+                    <label class="settings-label"><i class="fa-solid fa-robot icon-sky"></i> تشكيل القادة والروبوتات (الاسم، اللون، العقيدة التكتيكية):</label>
+                    <div id="playerSetupRows" class="player-setup-list">
+                        <!-- يتم توليدها ديناميكياً بواسطة js/app.js -->
+                    </div>
+                </div>
+
+                <!-- المظهر البصري والاهتزاز -->
+                <div class="settings-group">
+                    <label class="settings-label"><i class="fa-solid fa-palette icon-rose"></i> المظهر البصري للمفاعل:</label>
+                    <div class="settings-options-grid" id="themeSelectorButtons">
+                        <button type="button" data-theme="emerald" class="option-btn theme-option option-btn--active-emerald">
+                            <i class="fa-solid fa-atom"></i> الزمردي
+                        </button>
+                        <button type="button" data-theme="cyberpunk" class="option-btn theme-option">
+                            <i class="fa-solid fa-bolt"></i> السايبربانك
+                        </button>
+                        <button type="button" data-theme="retro" class="option-btn theme-option">
+                            <i class="fa-solid fa-terminal"></i> الرادار
+                        </button>
+                        <button type="button" data-theme="deepcore" class="option-btn theme-option">
+                            <i class="fa-solid fa-snowflake"></i> الجليدي
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- شريط إطلاق المعركة السفلي -->
+        <footer class="setup-footer">
+            <div class="glass-panel setup-footer-bar">
+                <div class="setup-summary-info">
+                    <span class="setup-summary-badge" id="setupSummaryModeBadge">وضع البطاقات الذرية • القياسي التكتيكي</span>
+                    <span class="setup-summary-meta" id="setupSummaryMetaText">مفاعل 7×7 • قوتان • الإعدادات ستُقفل عند بدء الاشتباك</span>
+                </div>
+                <button type="button" id="btnLaunchBattleFromSetup" class="setup-launch-btn">
+                    <i class="fa-solid fa-radiation"></i>
+                    <span>قفل الإعدادات وإطلاق المعركة النووية</span>
+                </button>
+            </div>
+        </footer>
+    </section>
+
+    <!-- ================= 02. ساحة المعركة الجديدة كلياً (#battleScreen) ================= -->
+    <div id="battleScreen" class="battle-screen hidden">
+
+        <!-- 2.1 الشريط التكتيكي العلوي المدمج (HUD Top Bar) -->
+        <header class="app-header">
+            <div class="glass-panel header-bar">
+                <!-- اليمين: الهوية + شارة الطور المقفلة -->
+                <div class="brand-box">
+                    <div class="brand-logo">
+                        <i class="fa-solid fa-atom brand-logo-icon"></i>
+                    </div>
+                    <div>
+                        <div class="brand-title-row">
+                            <h1 class="brand-title">الحرب الذرية</h1>
+                            <span class="locked-mode-pill" id="activeModeBadge" title="الوضع مقفل أثناء المعركة">
+                                <i class="fa-solid fa-lock"></i> البطاقات الذرية
+                            </span>
+                        </div>
+                        <p class="brand-meta" id="headerBoardInfo">مفاعل 7×7 • 49 غرفة انشطار</p>
+                    </div>
+                </div>
+
+                <!-- المنتصف: كبسولة الدور النشط + مؤشر الجولة + مؤقت الصاعقة -->
+                <div class="hud-center-cluster">
+                    <div id="turnBanner" class="turn-banner" title="القوة صاحبة الدور الحالي">
+                        <span class="turn-dot-wrapper">
+                            <span id="turnPing" class="turn-ping"></span>
+                            <span id="turnDot" class="turn-dot"></span>
+                        </span>
+                        <span id="currentPlayerName" class="turn-player-name">اليورانيوم الأخضر</span>
+                    </div>
+
+                    <span id="turnCounterBadge" class="round-badge">الجولة 1</span>
+
+                    <!-- مؤشر مؤقت الصاعقة الذرية (يظهر فقط في طور Blitz) -->
+                    <div id="blitzTimerBadge" class="blitz-timer-badge hidden" title="الوقت المتبقي لحركتك">
+                        <i class="fa-solid fa-stopwatch fa-spin"></i>
+                        <span id="blitzSecondsVal">6</span>ث
+                    </div>
+                </div>
+
+                <!-- اليسار: أزرار التحكم السريع -->
+                <div class="header-actions">
+                    <button id="btnBackToWelcome" title="العودة للقائمة الرئيسية" class="action-btn">
+                        <i class="fa-solid fa-house icon-amber"></i>
+                        <span class="action-btn-label">الرئيسية</span>
+                    </button>
+                    <button id="btnBackToSetup" title="العودة لغرفة التجهيز لتغيير الوضع أو الإعدادات" class="action-btn">
+                        <i class="fa-solid fa-sliders icon-purple"></i>
+                        <span class="action-btn-label">التجهيز</span>
+                    </button>
+                    <button id="btnTacticalAdvisor" title="طلب توجيه تكتيكي ذكي للحركة القادمة" class="action-btn action-btn--advisor">
+                        <i class="fa-solid fa-lightbulb icon-amber"></i>
+                        <span class="action-btn-label">توجيه</span>
+                    </button>
+                    <button id="btnToggleNumbers" title="إظهار/إخفاء أعداد الذرات" class="action-btn">
+                        <i class="fa-solid fa-hashtag icon-sky"></i>
+                    </button>
+                    <button id="btnSoundToggle" title="كتم/تشغيل الصوتيات النووية" class="action-btn">
+                        <i id="soundIcon" class="fa-solid fa-volume-high icon-emerald"></i>
+                    </button>
+                    <button id="btnBattleHaptic" title="كتم/تشغيل الاهتزاز اللمسي" class="action-btn">
+                        <i id="battleHapticIcon" class="fa-solid fa-mobile-screen icon-emerald"></i>
+                    </button>
+                    <button id="btnBattleTheme" title="تبديل المظهر والثيم" class="action-btn">
+                        <i class="fa-solid fa-palette icon-rose"></i>
+                    </button>
+                    <button id="btnBattleDossier" title="ملف القائد والأنواط النووية" class="action-btn">
+                        <i class="fa-solid fa-id-card-clip icon-sky"></i>
+                    </button>
+                    <button id="btnRulesModal" title="قواعد الاشتباك النووي" class="action-btn">
+                        <i class="fa-solid fa-radiation icon-amber"></i>
+                    </button>
+                    <button id="btnSettingsModal" title="ضبط السرعة والمظهر" class="action-btn hidden">
+                        <i class="fa-solid fa-gauge-high icon-sky"></i>
+                    </button>
+                    <button id="btnRestartFast" title="إعادة تشغيل المعركة بنفس الإعدادات المقفلة" class="action-btn action-btn--primary">
+                        <i class="fa-solid fa-rotate-right"></i>
+                        <span class="action-btn-label">إعادة</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- 2.2 ساحة القتال المركزية (بدون قوائم جانبية مزدحمة!) -->
+        <main class="battle-arena-main">
+
+            <!-- شريط كبسولات القوى النووية الأفقي المدمج أعلى المفاعل -->
+            <div class="arena-top-strips">
+                <div id="playersListContainer" class="players-pods-strip">
+                    <!-- يتم بناء كبسولات اللاعبين ديناميكياً بواسطة js/app.js -->
+                </div>
+
+                <!-- شريط حالة المفاعل ومقياس غايغر والتعبيرات السريعة -->
+                <div class="reactor-telemetry-bar glass-panel">
+                    <div class="telemetry-status">
+                        <i class="fa-solid fa-wave-square icon-emerald"></i>
+                        <span id="chainWaveStatus" class="reactor-status-badge reactor-status-badge--stable">
+                            المفاعل في حالة استقرار
+                        </span>
+                    </div>
+
+                    <div class="telemetry-geiger">
+                        <span class="geiger-mini-label">الإشعاع:</span>
+                        <div class="geiger-meter-bar">
+                            <div id="geigerMeterFill" class="geiger-meter-fill"></div>
+                        </div>
                         <span id="geigerValueText" class="geiger-value">0.14 μSv/h</span>
                     </div>
-                    <div class="geiger-meter-bar">
-                        <div id="geigerMeterFill" class="geiger-meter-fill"></div>
-                    </div>
-                </div>
 
-                <!-- دليل الكتلة الحرجة وغرف الانشطار -->
-                <div class="critical-guide-section">
-                    <h3 class="critical-guide-title">
-                        <i class="fa-solid fa-triangle-exclamation icon-amber"></i>
-                        الكتلة الحرجة للاستقرار:
-                    </h3>
-                    <div class="critical-guide-grid" id="criticalGuideGrid">
-                        <div class="critical-guide-card">
-                            <div class="critical-guide-capacity icon-amber">1 <span class="critical-guide-unit">ذرة</span></div>
-                            <div class="critical-guide-type">غرفة زاوية</div>
-                            <div class="critical-guide-trigger">تنشطر عند 2</div>
-                        </div>
-                        <div class="critical-guide-card">
-                            <div class="critical-guide-capacity icon-sky">2 <span class="critical-guide-unit">ذرة</span></div>
-                            <div class="critical-guide-type">غرفة طرفية</div>
-                            <div class="critical-guide-trigger">تنشطر عند 3</div>
-                        </div>
-                        <div class="critical-guide-card">
-                            <div class="critical-guide-capacity icon-emerald">3 <span class="critical-guide-unit">ذرات</span></div>
-                            <div class="critical-guide-type">قلب المفاعل</div>
-                            <div class="critical-guide-trigger">تنشطر عند 4</div>
-                        </div>
+                    <div id="quickEmotesBar" class="quick-emotes-dock">
+                        <button type="button" class="emote-btn" data-emote="☢️" title="خطر نووي!">☢️</button>
+                        <button type="button" class="emote-btn" data-emote="💥" title="انشطار كارثي!">💥</button>
+                        <button type="button" class="emote-btn" data-emote="🛡️" title="دفاع حصين!">🛡️</button>
+                        <button type="button" class="emote-btn" data-emote="🎯" title="ضربة محكمة!">🎯</button>
+                        <button type="button" class="emote-btn" data-emote="⚡" title="طاقة قصوى!">⚡</button>
+                        <button type="button" class="emote-btn" data-emote="🤝" title="لعب نظيف!">🤝</button>
                     </div>
                 </div>
             </div>
-        </aside>
 
-        <!-- لوحة المفاعل الذري المركزية وشريط البطاقات التكتيكية (html/board.html) -->
-        <section class="reactor-section">
-            <!-- شارة وضع المتفرج والمراقبة المباشرة -->
+            <!-- شارة وضع المتفرج -->
             <div id="spectatorBanner" class="spectator-banner hidden">
                 <i class="fa-solid fa-eye icon-sky"></i>
-                <span>وضع المتفرج (Spectator): أنت ترصد وقائع المعركة النووية دون التحكم في غرف المفاعل</span>
+                <span>وضع المتفرج (Spectator): أنت ترصد وقائع المعركة النووية المباشرة</span>
             </div>
 
-            <!-- شريط التعبيرات التكتيكية السريعة (Quick Emotes) -->
-            <div id="quickEmotesBar" class="quick-emotes-dock">
-                <span class="quick-emotes-label"><i class="fa-regular fa-message icon-sky"></i> تعبير:</span>
-                <button type="button" class="emote-btn" data-emote="☢️" title="خطر نووي!">☢️</button>
-                <button type="button" class="emote-btn" data-emote="💥" title="انشطار كارثي!">💥</button>
-                <button type="button" class="emote-btn" data-emote="🛡️" title="دفاع حصين!">🛡️</button>
-                <button type="button" class="emote-btn" data-emote="🎯" title="ضربة محكمة!">🎯</button>
-                <button type="button" class="emote-btn" data-emote="⚡" title="طاقة قصوى!">⚡</button>
-                <button type="button" class="emote-btn" data-emote="🤝" title="لعب نظيف!">🤝</button>
-                <button type="button" class="emote-btn" data-emote="😂" title="ابتسامة!">😂</button>
-                <button type="button" class="emote-btn" data-emote="🏳️" title="استسلام وشيك!">🏳️</button>
-            </div>
-
-            <div id="boardWrapper" class="game-board-wrapper">
-                <div id="gameBoard" class="game-board">
-                    <!-- يتم توليد غرف المفاعل ديناميكياً بواسطة js/app.js -->
-                </div>
-            </div>
-
-            <!-- شريط بطاقات العناصر والمساعدة التكتيكية (وضع البطاقات الذرية فقط) -->
-            <div id="neutronArsenalBar" class="neutron-floating-dock hidden">
-                <!-- لوحة رصيد النيوترونات -->
-                <div class="dock-neutron-info">
-                    <div class="dock-neutron-header">
-                        <span class="dock-neutron-label">
-                            <i class="fa-solid fa-atom icon-sky"></i> رصيد النيوترونات
-                        </span>
-                        <span id="neutronValueDisplay" class="dock-neutron-val">0 / 10</span>
-                    </div>
-                    <div class="neutron-meter-track" id="neutronMeterTrack">
-                        <!-- 10 مؤشرات ضوئية -->
+            <!-- قلب المفاعل الذري في المركز -->
+            <section class="reactor-section">
+                <div id="boardWrapper" class="game-board-wrapper">
+                    <div id="gameBoard" class="game-board">
+                        <!-- يتم توليد غرف المفاعل ديناميكياً بواسطة js/app.js -->
                     </div>
                 </div>
 
-                <div class="dock-divider"></div>
-
-                <!-- خانة البطاقات التكتيكية (مقسمة: بطاقات العناصر وبطاقات المساعدة) -->
-                <div class="dock-cards-container">
-                    <!-- 1. قسم بطاقات العناصر -->
-                    <div class="dock-card-subgroup dock-card-subgroup--elements">
-                        <div class="dock-subgroup-header">
-                            <span class="dock-subgroup-title">
-                                <i class="fa-solid fa-atom icon-sky"></i> بطاقات العناصر
-                            </span>
+                <!-- منصة أوراق البطاقات التكتيكية السفلية (تظهر في وضع البطاقات الذرية فقط - بدون أزرار تبديل أطوار!) -->
+                <div id="neutronArsenalBar" class="neutron-floating-dock hidden">
+                    <div class="dock-energy-bar">
+                        <div class="dock-neutron-info">
+                            <div class="dock-neutron-header">
+                                <span class="dock-neutron-label">
+                                    <i class="fa-solid fa-bolt icon-sky"></i> طاقة النيوترونات
+                                </span>
+                                <span id="neutronValueDisplay" class="dock-neutron-val">0 / 10</span>
+                            </div>
+                            <div class="neutron-meter-track" id="neutronMeterTrack"></div>
                         </div>
-                        <div class="dock-subgroup-cards">
-                            <button type="button" class="arsenal-btn" data-action="atom" data-atoms="1" data-cost="3" id="btnArsenalSingle" title="إلقاء ذرة أحادية في غرفة فارغة (تكلفة 3 نيوترونات)">
+                        <div id="arsenalHintText" class="dock-hint-text">
+                            💡 انقر على ذرتك لتغذيتها (1⚡) • أو اختر بطاقة تكتيكية من يدك أدناه
+                        </div>
+                    </div>
+
+                    <div class="tactical-cards-hand">
+                        <button type="button" class="arsenal-btn tactical-card tactical-card--element" data-action="atom" data-atoms="1" data-cost="3" id="btnArsenalSingle" title="إلقاء ذرة أحادية في غرفة فارغة">
+                            <div class="tactical-card-cost" id="costBadgeSingle">⚡ 3</div>
+                            <div class="tactical-card-visual">
                                 <span class="arsenal-atom-preview preview-1">●</span>
-                                <span class="arsenal-btn-name">أحادية</span>
-                                <span class="arsenal-btn-cost">⚡ 3</span>
-                            </button>
-                            <button type="button" class="arsenal-btn" data-action="atom" data-atoms="2" data-cost="6" id="btnArsenalDouble" title="إلقاء ذرة ثنائية في غرفة فارغة (تكلفة 6 نيوترونات)">
+                            </div>
+                            <div class="arsenal-btn-name">ذرة أحادية</div>
+                            <div class="tactical-card-type">توسع • فراغ</div>
+                        </button>
+
+                        <button type="button" class="arsenal-btn tactical-card tactical-card--element" data-action="atom" data-atoms="2" data-cost="6" id="btnArsenalDouble" title="إلقاء ذرة ثنائية في غرفة فارغة">
+                            <div class="tactical-card-cost" id="costBadgeDouble">⚡ 6</div>
+                            <div class="tactical-card-visual">
                                 <span class="arsenal-atom-preview preview-2">●●</span>
-                                <span class="arsenal-btn-name">ثنائية</span>
-                                <span class="arsenal-btn-cost">⚡ 6</span>
-                            </button>
-                            <button type="button" class="arsenal-btn" data-action="atom" data-atoms="3" data-cost="9" id="btnArsenalTriple" title="إلقاء نواة ثلاثية في غرفة فارغة (تكلفة 9 نيوترونات)">
+                            </div>
+                            <div class="arsenal-btn-name">ثنائي النظائر</div>
+                            <div class="tactical-card-type">شحن • فراغ</div>
+                        </button>
+
+                        <button type="button" class="arsenal-btn tactical-card tactical-card--element" data-action="atom" data-atoms="3" data-cost="9" id="btnArsenalTriple" title="إلقاء نواة ثلاثية مقاومة في غرفة فارغة">
+                            <div class="tactical-card-cost" id="costBadgeTriple">⚡ 9</div>
+                            <div class="tactical-card-visual">
                                 <span class="arsenal-atom-preview preview-3">●●●</span>
-                                <span class="arsenal-btn-name">ثلاثية</span>
-                                <span class="arsenal-btn-cost">⚡ 9</span>
-                            </button>
-                        </div>
-                    </div>
+                            </div>
+                            <div class="arsenal-btn-name">النواة الثلاثية</div>
+                            <div class="tactical-card-type">قلعة • فراغ</div>
+                        </button>
 
-                    <!-- فاصل عمودي أنيق بين الفئتين -->
-                    <div class="dock-subgroup-separator"></div>
-
-                    <!-- 2. قسم بطاقات المساعدة -->
-                    <div class="dock-card-subgroup dock-card-subgroup--support">
-                        <div class="dock-subgroup-header">
-                            <span class="dock-subgroup-title">
-                                <i class="fa-solid fa-wand-magic-sparkles icon-amber"></i> بطاقات المساعدة
-                            </span>
-                        </div>
-                        <div class="dock-subgroup-cards">
-                            <button type="button" class="arsenal-btn arsenal-btn--control-rod" data-action="controlRod" data-cost="5" id="btnArsenalControlRod" title="تثبيت درع نووي واقٍ على إحدى غرفك لامتصاص الانفجارات (تكلفة 5 نيوترونات)">
+                        <button type="button" class="arsenal-btn arsenal-btn--control-rod tactical-card tactical-card--defense" data-action="controlRod" data-cost="5" id="btnArsenalControlRod" title="تثبيت درع نووي واقٍ على إحدى غرفك لامتصاص الانفجارات">
+                            <div class="tactical-card-cost arsenal-btn-cost--rod" id="costBadgeControlRod">🛡️ 5</div>
+                            <div class="tactical-card-visual">
                                 <i class="fa-solid fa-shield-halved arsenal-rod-icon"></i>
-                                <span class="arsenal-btn-name">درع نووي</span>
-                                <span class="arsenal-btn-cost arsenal-btn-cost--rod">🛡️ 5</span>
-                            </button>
-                            <button type="button" class="arsenal-btn arsenal-btn--energy-drain" data-action="energyDrain" data-cost="3" id="btnArsenalEnergyDrain" title="إلقاء هجوم على ذرة معادية لإرجاعها إلى المستوى الأول (تكلفة 3 نيوترونات)">
+                            </div>
+                            <div class="arsenal-btn-name">درع التحكم</div>
+                            <div class="tactical-card-type">تحصين غرفتك</div>
+                        </button>
+
+                        <button type="button" class="arsenal-btn arsenal-btn--energy-drain tactical-card tactical-card--offense" data-action="energyDrain" data-cost="3" id="btnArsenalEnergyDrain" title="إلقاء هجوم إخماد طاقة على ذرة معادية لإرجاعها للمستوى الأول">
+                            <div class="tactical-card-cost arsenal-btn-cost--drain" id="costBadgeEnergyDrain">⚡ 3</div>
+                            <div class="tactical-card-visual">
                                 <i class="fa-solid fa-bolt-slash arsenal-drain-icon"></i>
-                                <span class="arsenal-btn-name">إخماد طاقة</span>
-                                <span class="arsenal-btn-cost arsenal-btn-cost--drain">⚡ 3</span>
-                            </button>
-                        </div>
+                            </div>
+                            <div class="arsenal-btn-name">إخماد طاقة</div>
+                            <div class="tactical-card-type">إضعاف العدو</div>
+                        </button>
                     </div>
                 </div>
-
-                <!-- نص إرشادي تكتيكي مدمج -->
-                <div id="arsenalHintText" class="dock-hint-text">
-                    💡 تغذية غرفتك 1 n⁰ • الذرات في الفراغ (⚡3, ⚡6, ⚡9) • الدرع (🛡️ 5) يمتص الصدمة • الإخماد (⚡ 3) يعيد ذرة الخصم لمستوى 1
-                </div>
-            </div>
-        </section>
-
-    </main>
-
-    <!-- ================= 03. شريط التذييل (html/footer.html) ================= -->
-    <footer class="app-footer">
-        الحرب الذرية (Atomic War) • الإصدار 0.1 بيتا • محاكي الانشطار النووي والتفاعل المتسلسل
-    </footer>
-
+            </section>
+        </main>
     </div><!-- نهاية حاوية شاشة المعركة #battleScreen -->
 
     <!-- ================= 04. النوافذ المنبثقة (Modals) ================= -->
@@ -378,90 +542,57 @@
 
             <div class="modal-actions">
                 <button id="btnPlayAgainModal" class="modal-btn-primary">
-                    <i class="fa-solid fa-play"></i> معركة جديدة
+                    <i class="fa-solid fa-rotate-right"></i> إعادة بنفس الإعدادات
                 </button>
-                <button id="btnBackToWelcomeFromWin" class="modal-btn-secondary" title="العودة لاختيار وضع اللعب">
-                    <i class="fa-solid fa-layer-group icon-amber"></i> تغيير الوضع
+                <button id="btnOpenSettingsFromWin" class="modal-btn-secondary" title="العودة لغرفة التجهيز لتغيير الطور أو الإعدادات">
+                    <i class="fa-solid fa-sliders icon-purple"></i> غرفة التجهيز
                 </button>
-                <button id="btnOpenSettingsFromWin" class="modal-btn-secondary" title="إعدادات المفاعل">
-                    <i class="fa-solid fa-sliders"></i>
+                <button id="btnBackToWelcomeFromWin" class="modal-btn-secondary" title="العودة للشاشة الرئيسية">
+                    <i class="fa-solid fa-house icon-amber"></i> الرئيسية
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- 2. نافذة تخصيص المفاعل والقوى النووية (html/modal-settings.html) -->
+    <!-- 2. نافذة الضبط السريع للسرعة والاهتزاز (تستخدم في الأونلاين أو الضبط السريع دون كسر قفل الطور) -->
     <div id="settingsModal" class="modal-backdrop hidden">
         <div class="glass-panel modal-card">
             <div class="modal-header">
                 <h2 class="modal-title" id="settingsModalTitle">
-                    <i class="fa-solid fa-sliders icon-emerald"></i>
-                    تخصيص المفاعل الذري والقوى
+                    <i class="fa-solid fa-gauge-high icon-sky"></i>
+                    ضبط سرعة الانشطار والاهتزاز
                 </h2>
                 <button id="btnCloseSettings" class="modal-close-btn">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
 
-            <!-- أبعاد المفاعل -->
-            <div class="settings-group" id="settingsGroupGridSize">
-                <label class="settings-label">أبعاد شبكة المفاعل:</label>
-                <div class="settings-options-grid" id="gridSizeButtons">
-                    <button type="button" data-size="5" class="option-btn size-option">
-                        5 × 5 <span class="option-btn-subtext">مفاعل تكتيكي (25)</span>
-                    </button>
-                    <button type="button" data-size="7" class="option-btn size-option option-btn--active-purple">
-                        7 × 7 <span class="option-btn-subtext">المفاعل القياسي (49)</span>
-                    </button>
-                    <button type="button" data-size="9" class="option-btn size-option">
-                        9 × 9 <span class="option-btn-subtext">المفاعل الملحمي (81)</span>
-                    </button>
+            <div class="settings-group">
+                <label class="settings-label">سرعة موجات الانشطار المتسلسل:</label>
+                <div class="settings-options-grid">
+                    <button type="button" data-speed="300" class="option-btn speed-option">هادئة</button>
+                    <button type="button" data-speed="210" class="option-btn speed-option option-btn--active-sky">متوسطة</button>
+                    <button type="button" data-speed="120" class="option-btn speed-option">فائقة</button>
                 </div>
             </div>
 
-            <!-- سرعة انتشار الانشطار -->
-            <div class="settings-group" id="settingsGroupSpeed">
-                <label class="settings-label">سرعة الانشطار المتسلسل:</label>
-                <div class="settings-options-grid" id="speedButtons">
-                    <button type="button" data-speed="300" class="option-btn speed-option">
-                        هادئة
-                    </button>
-                    <button type="button" data-speed="210" class="option-btn speed-option option-btn--active-sky">
-                        متوسطة (مثالية)
-                    </button>
-                    <button type="button" data-speed="120" class="option-btn speed-option">
-                        فائقة السرعة
-                    </button>
-                </div>
-            </div>
-
-            <!-- عدد القوى المشاركة -->
-            <div class="settings-group" id="settingsGroupPlayerCount">
-                <label class="settings-label">عدد القوى المتنافسة (2 إلى 4):</label>
-                <div class="settings-options-grid" id="playerCountButtons">
-                    <button type="button" data-count="2" class="option-btn pcount-option option-btn--active-emerald">
-                        قوتان (2)
-                    </button>
-                    <button type="button" data-count="3" class="option-btn pcount-option">
-                        3 قوى
-                    </button>
-                    <button type="button" data-count="4" class="option-btn pcount-option">
-                        4 قوى
-                    </button>
-                </div>
-            </div>
-
-            <!-- تخصيص كل قوة نووية -->
-            <div class="settings-group" id="settingsGroupPlayerSetup">
-                <label class="settings-label">تخصيص القوى (الاسم، النظير المشع، أو آلي AI):</label>
-                <div id="playerSetupRows" class="player-setup-list">
-                    <!-- يتم توليدها ديناميكياً بواسطة js/app.js -->
+            <div class="settings-group">
+                <label class="settings-label">الاهتزاز اللمسي (Haptic Feedback):</label>
+                <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(30, 41, 59, 0.5); padding: 0.65rem 0.95rem; border-radius: 8px; border: 1px solid rgba(148, 163, 184, 0.2);">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fa-solid fa-mobile-screen icon-sky" style="font-size: 1.1rem;"></i>
+                        <span style="font-size: 0.85rem; color: #cbd5e1;">اهتزاز تفاعلي عند وضع الذرات وسلاسل الانشطار</span>
+                    </div>
+                    <label class="player-ai-toggle" style="cursor: pointer; margin: 0;">
+                        <input type="checkbox" id="checkHapticSetting" checked style="width: 18px; height: 18px; accent-color: #38bdf8; cursor: pointer;">
+                        <span id="hapticSettingLabel" style="font-size: 0.85rem; font-weight: 700; color: #38bdf8; margin-right: 0.4rem;">مفعّل</span>
+                    </label>
                 </div>
             </div>
 
             <div class="modal-actions">
                 <button id="btnApplySettings" class="modal-btn-primary">
-                    حفظ وتنشيط المفاعل الجديد
+                    حفظ الضبط السريع
                 </button>
             </div>
         </div>
@@ -517,7 +648,78 @@
         </div>
     </div>
 
-    <!-- 4. نافذة الردهة لمعركة أونلاين P2P (Online Multiplayer Lobby) -->
+    <!-- 4. نافذة ملف القائد والأنواط النووية الشرفية (Commander Dossier) -->
+    <div id="dossierModal" class="modal-backdrop hidden">
+        <div class="glass-panel modal-card modal-card--dossier">
+            <div class="modal-header">
+                <h2 class="modal-title">
+                    <i class="fa-solid fa-id-card-clip icon-sky"></i>
+                    ملف القائد والأنواط التكتيكية
+                </h2>
+                <button id="btnCloseDossier" class="modal-close-btn" title="إغلاق">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- بطاقة رتبة القائد وهويته -->
+            <div class="dossier-hero-card">
+                <div class="dossier-profile-left">
+                    <div class="dossier-avatar-badge">
+                        <i class="fa-solid fa-user-astronaut"></i>
+                    </div>
+                    <div>
+                        <h3 id="dossierCommanderName" class="dossier-name">القائد الذري</h3>
+                        <div class="dossier-rank-title">
+                            <span id="dossierRankTitle" style="color: #38bdf8;">ملازم إشعاعي مستجد</span>
+                            <span id="dossierRankStars" class="dossier-stars">★</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="dossier-winrate-badge">
+                    <div id="dossierWinrateVal" class="dossier-winrate-val">0%</div>
+                    <div class="dossier-winrate-label">نسبة الانتصارات</div>
+                </div>
+            </div>
+
+            <!-- شبكة الإحصائيات الحيوية -->
+            <div class="dossier-stats-grid">
+                <div class="dossier-stat-tile">
+                    <div class="dossier-stat-icon icon-sky"><i class="fa-solid fa-shield-halved"></i></div>
+                    <div id="statTotalBattles" class="dossier-stat-number">0</div>
+                    <div class="dossier-stat-caption">إجمالي المعارك</div>
+                </div>
+                <div class="dossier-stat-tile">
+                    <div class="dossier-stat-icon icon-emerald"><i class="fa-solid fa-trophy"></i></div>
+                    <div id="statTotalWins" class="dossier-stat-number">0</div>
+                    <div class="dossier-stat-caption">الانتصارات</div>
+                </div>
+                <div class="dossier-stat-tile">
+                    <div class="dossier-stat-icon icon-amber"><i class="fa-solid fa-atom"></i></div>
+                    <div id="statTotalAtoms" class="dossier-stat-number">0</div>
+                    <div class="dossier-stat-caption">الذرات المنشورة</div>
+                </div>
+                <div class="dossier-stat-tile">
+                    <div class="dossier-stat-icon icon-rose"><i class="fa-solid fa-explosion"></i></div>
+                    <div id="statMaxChain" class="dossier-stat-number">0</div>
+                    <div class="dossier-stat-caption">أكبر انشطار متسلسل</div>
+                </div>
+            </div>
+
+            <!-- معرض الأنواط النووية الشرفية -->
+            <div class="medals-section-header">
+                <span class="medals-section-title">
+                    <i class="fa-solid fa-medal icon-amber"></i>
+                    الأنواط والأوسمة النووية الشرفية
+                </span>
+                <span id="medalsUnlockedCount" class="medals-count-badge">0 / 8 مفتوح</span>
+            </div>
+            <div id="medalsGridContainer" class="medals-grid">
+                <!-- يتم بناؤها ديناميكياً بواسطة dossierAndThemes.js -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. نافذة الردهة لمعركة أونلاين P2P (Online Multiplayer Lobby) -->
     <div id="onlineLobbyModal" class="modal-backdrop hidden">
         <div class="glass-panel modal-card modal-card--online">
             <div class="modal-header">
@@ -717,7 +919,9 @@
     <script src="js/engine/atomicEngine.js"></script>
     <!-- 4. محاكاة المعركة الخلفية -->
     <script src="js/simulation/welcomeSim.js"></script>
-    <!-- 5. مدير الواجهة والتطبيق -->
+    <!-- 5. ميزات ملف القائد والأنواط والاهتزاز والثيمات -->
+    <script src="js/features/dossierAndThemes.js"></script>
+    <!-- 6. مدير الواجهة والتطبيق -->
     <script src="js/app.js"></script>
 </body>
 </html>
