@@ -57,7 +57,7 @@
         <!-- 02. الأزرار العائمة مباشرة على الخلفية -->
         <div class="welcome-floating-content">
             <div class="welcome-floating-modes">
-                <!-- الصف الأول: يمين (البطاقات الذرية)، منتصف (الوضع العادي)، يسار (وضع 2 مغلق) -->
+                <!-- الصف الأول: يمين (البطاقات الذرية)، منتصف (الوضع العادي)، يسار (معركة أونلاين P2P) -->
                 <div class="welcome-modes-row">
                     <!-- اليمين: البطاقات الذرية -->
                     <button type="button" id="btnStartAdvancedMode" class="rect-mode-btn rect-mode-btn--advanced">
@@ -71,16 +71,20 @@
                         <span class="rect-mode-label">الوضع العادي</span>
                     </button>
 
-                    <!-- اليسار: وضع 2 (مغلق) -->
+                    <!-- اليسار: معركة أونلاين عبر P2P -->
+                    <button type="button" id="btnOpenOnlineModal" class="rect-mode-btn rect-mode-btn--online">
+                        <i class="fa-solid fa-tower-broadcast rect-mode-icon"></i>
+                        <span class="rect-mode-label">معركة أونلاين</span>
+                    </button>
+                </div>
+
+                <!-- الصف الثاني أسفله: وضع 2 و وضع 3 (مغلقان) -->
+                <div class="welcome-modes-subrow" style="gap: 0.85rem;">
                     <button type="button" id="btnMode2" class="rect-mode-btn rect-mode-btn--locked" title="وضع 2 مغلق">
                         <i class="fa-solid fa-lock rect-mode-icon"></i>
                         <span class="rect-mode-label">وضع 2</span>
                         <span class="rect-mode-badge">مغلق</span>
                     </button>
-                </div>
-
-                <!-- الصف الثاني أسفله: وضع 3 (مغلق) -->
-                <div class="welcome-modes-subrow">
                     <button type="button" id="btnMode3" class="rect-mode-btn rect-mode-btn--locked" title="وضع 3 مغلق">
                         <i class="fa-solid fa-lock rect-mode-icon"></i>
                         <span class="rect-mode-label">وضع 3</span>
@@ -137,6 +141,11 @@
                 <button id="btnSoundToggle" title="كتم/تشغيل الصوتيات النووية" class="action-btn">
                     <i id="soundIcon" class="fa-solid fa-volume-high icon-emerald"></i>
                     <span class="action-btn-label">الصوت</span>
+                </button>
+                <!-- زر المساعد التوجيهي التكتيكي -->
+                <button id="btnTacticalAdvisor" title="طلب توجيه تكتيكي ذكي للحركة القادمة" class="action-btn action-btn--advisor">
+                    <i class="fa-solid fa-lightbulb icon-amber"></i>
+                    <span class="action-btn-label">توجيه</span>
                 </button>
                 <button id="btnRulesModal" title="قواعد الاشتباك النووي" class="action-btn">
                     <i class="fa-solid fa-radiation icon-amber"></i>
@@ -224,6 +233,25 @@
 
         <!-- لوحة المفاعل الذري المركزية وشريط البطاقات التكتيكية (html/board.html) -->
         <section class="reactor-section">
+            <!-- شارة وضع المتفرج والمراقبة المباشرة -->
+            <div id="spectatorBanner" class="spectator-banner hidden">
+                <i class="fa-solid fa-eye icon-sky"></i>
+                <span>وضع المتفرج (Spectator): أنت ترصد وقائع المعركة النووية دون التحكم في غرف المفاعل</span>
+            </div>
+
+            <!-- شريط التعبيرات التكتيكية السريعة (Quick Emotes) -->
+            <div id="quickEmotesBar" class="quick-emotes-dock">
+                <span class="quick-emotes-label"><i class="fa-regular fa-message icon-sky"></i> تعبير:</span>
+                <button type="button" class="emote-btn" data-emote="☢️" title="خطر نووي!">☢️</button>
+                <button type="button" class="emote-btn" data-emote="💥" title="انشطار كارثي!">💥</button>
+                <button type="button" class="emote-btn" data-emote="🛡️" title="دفاع حصين!">🛡️</button>
+                <button type="button" class="emote-btn" data-emote="🎯" title="ضربة محكمة!">🎯</button>
+                <button type="button" class="emote-btn" data-emote="⚡" title="طاقة قصوى!">⚡</button>
+                <button type="button" class="emote-btn" data-emote="🤝" title="لعب نظيف!">🤝</button>
+                <button type="button" class="emote-btn" data-emote="😂" title="ابتسامة!">😂</button>
+                <button type="button" class="emote-btn" data-emote="🏳️" title="استسلام وشيك!">🏳️</button>
+            </div>
+
             <div id="boardWrapper" class="game-board-wrapper">
                 <div id="gameBoard" class="game-board">
                     <!-- يتم توليد غرف المفاعل ديناميكياً بواسطة js/app.js -->
@@ -366,7 +394,7 @@
     <div id="settingsModal" class="modal-backdrop hidden">
         <div class="glass-panel modal-card">
             <div class="modal-header">
-                <h2 class="modal-title">
+                <h2 class="modal-title" id="settingsModalTitle">
                     <i class="fa-solid fa-sliders icon-emerald"></i>
                     تخصيص المفاعل الذري والقوى
                 </h2>
@@ -376,7 +404,7 @@
             </div>
 
             <!-- أبعاد المفاعل -->
-            <div class="settings-group">
+            <div class="settings-group" id="settingsGroupGridSize">
                 <label class="settings-label">أبعاد شبكة المفاعل:</label>
                 <div class="settings-options-grid" id="gridSizeButtons">
                     <button type="button" data-size="5" class="option-btn size-option">
@@ -392,7 +420,7 @@
             </div>
 
             <!-- سرعة انتشار الانشطار -->
-            <div class="settings-group">
+            <div class="settings-group" id="settingsGroupSpeed">
                 <label class="settings-label">سرعة الانشطار المتسلسل:</label>
                 <div class="settings-options-grid" id="speedButtons">
                     <button type="button" data-speed="300" class="option-btn speed-option">
@@ -408,7 +436,7 @@
             </div>
 
             <!-- عدد القوى المشاركة -->
-            <div class="settings-group">
+            <div class="settings-group" id="settingsGroupPlayerCount">
                 <label class="settings-label">عدد القوى المتنافسة (2 إلى 4):</label>
                 <div class="settings-options-grid" id="playerCountButtons">
                     <button type="button" data-count="2" class="option-btn pcount-option option-btn--active-emerald">
@@ -424,7 +452,7 @@
             </div>
 
             <!-- تخصيص كل قوة نووية -->
-            <div class="settings-group">
+            <div class="settings-group" id="settingsGroupPlayerSetup">
                 <label class="settings-label">تخصيص القوى (الاسم، النظير المشع، أو آلي AI):</label>
                 <div id="playerSetupRows" class="player-setup-list">
                     <!-- يتم توليدها ديناميكياً بواسطة js/app.js -->
@@ -489,7 +517,193 @@
         </div>
     </div>
 
+    <!-- 4. نافذة الردهة لمعركة أونلاين P2P (Online Multiplayer Lobby) -->
+    <div id="onlineLobbyModal" class="modal-backdrop hidden">
+        <div class="glass-panel modal-card modal-card--online">
+            <div class="modal-header">
+                <h2 class="modal-title">
+                    <i class="fa-solid fa-tower-broadcast icon-sky"></i>
+                    غرفة العمليات المشتركة (أونلاين P2P)
+                </h2>
+                <button id="btnCloseOnlineLobby" class="modal-close-btn" title="إغلاق">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- إشعار حالة الاتصال -->
+            <div id="onlineStatusBanner" class="online-status-banner online-status-banner--info">
+                <i class="fa-solid fa-circle-info"></i>
+                <span id="onlineStatusText">حدد هويتك النووية واختر تأسيس مفاعل أو الانضمام لغرفة</span>
+            </div>
+
+            <!-- هيدر تعريف اسم اللاعب المحفور في المتصفح -->
+            <div class="online-player-name-section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.3rem;">
+                    <label for="onlinePlayerNameInput" class="online-player-name-label">
+                        <i class="fa-solid fa-user-astronaut icon-sky"></i> اسم القائد الذري الخاص بك:
+                    </label>
+                    <span class="persistent-storage-badge" title="محفوظ في هذا المتصفح بشكل دائم">
+                        <i class="fa-solid fa-hard-drive icon-emerald"></i> محفوظ في المتصفح
+                    </span>
+                </div>
+                <div class="online-player-input-wrap">
+                    <input type="text" id="onlinePlayerNameInput" class="online-text-input" placeholder="اكتب اسمك التكتيكي (مثال: صقر المفاعل)" maxlength="16" value="قائد اليورانيوم">
+                </div>
+            </div>
+
+            <!-- تبويبات: إنشاء غرفة / انضمام لغرفة -->
+            <div class="online-tabs">
+                <button type="button" id="tabBtnCreateRoom" class="online-tab-btn online-tab-btn--active">
+                    <i class="fa-solid fa-circle-plus"></i> تأسيس مفاعل (مضيف)
+                </button>
+                <button type="button" id="tabBtnJoinRoom" class="online-tab-btn">
+                    <i class="fa-solid fa-right-to-bracket"></i> الانضمام لمفاعل (ضيف)
+                </button>
+            </div>
+
+            <!-- محتوى تبويب تأسيس غرفة (المضيف) -->
+            <div id="tabContentCreateRoom" class="online-tab-pane">
+                <!-- شاشة إعدادات الغرفة قبل التأسيس -->
+                <div id="hostSetupSection">
+                    <!-- 1. اختيار نمط اللعبة -->
+                    <div class="settings-group">
+                        <label class="settings-label">اختر نمط الاشتباك النووي:</label>
+                        <div class="online-mode-selector">
+                            <div class="online-mode-card online-mode-card--active" data-mode="normal" id="onlineModeCardNormal">
+                                <div class="online-mode-card-title">
+                                    <i class="fa-solid fa-crosshairs icon-emerald"></i> الوضع العادي
+                                </div>
+                                <p class="online-mode-card-desc">سعة موحدة 3 ذرات في جميع الغرف، انشطار عند 4 بالتساوي وتطاير الذرات الزائدة.</p>
+                            </div>
+                            <div class="online-mode-card" data-mode="advanced" id="onlineModeCardAdvanced">
+                                <div class="online-mode-card-title">
+                                    <i class="fa-solid fa-atom icon-purple"></i> البطاقات الذرية
+                                </div>
+                                <p class="online-mode-card-desc">كتل حرجة حسب الموقع (2، 3، 4)، نظام النيوترونات، ودروع طاقة مهدئة واقية.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. أبعاد شبكة المفاعل (المضيف يحدد الحجم قبل التأسيس) -->
+                    <div class="settings-group" style="margin-top: 0.85rem;">
+                        <label class="settings-label">أبعاد شبكة المفاعل لهذه المعركة:</label>
+                        <div class="settings-options-grid" id="onlineGridSizeButtons">
+                            <button type="button" data-size="5" class="option-btn online-size-option">
+                                5 × 5 <span class="option-btn-subtext">تكتيكي سريع</span>
+                            </button>
+                            <button type="button" data-size="6" class="option-btn online-size-option">
+                                6 × 6 <span class="option-btn-subtext">اشتباك مركز</span>
+                            </button>
+                            <button type="button" data-size="7" class="option-btn online-size-option option-btn--active-purple">
+                                7 × 7 <span class="option-btn-subtext">المفاعل القياسي</span>
+                            </button>
+                            <button type="button" data-size="8" class="option-btn online-size-option">
+                                8 × 8 <span class="option-btn-subtext">رقعة واسعة</span>
+                            </button>
+                            <button type="button" data-size="9" class="option-btn online-size-option">
+                                9 × 9 <span class="option-btn-subtext">معركة ملحمية</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <button type="button" id="btnHostCreateRoom" class="modal-btn-primary modal-btn-block" style="margin-top: 1rem;">
+                        <i class="fa-solid fa-satellite-dish"></i> حجز تردد الغرفة وتوليد الكود
+                    </button>
+                </div>
+
+                <!-- شاشة انتظار اللاعبين في غرفة المضيف -->
+                <div id="hostWaitingSection" class="hidden">
+                    <div class="room-code-box">
+                        <span class="room-code-label">رمز المفاعل المشترك (شارك هذا الرمز مع أصدقائك):</span>
+                        <span id="displayRoomCode" class="room-code-value">AW-....</span>
+                        <div class="room-code-actions">
+                            <button type="button" id="btnCopyRoomCode" class="btn-code-action" title="نسخ الرمز">
+                                <i class="fa-solid fa-copy"></i> نسخ الرمز
+                            </button>
+                            <button type="button" id="btnCopyRoomLink" class="btn-code-action" title="نسخ رابط مباشر">
+                                <i class="fa-solid fa-share-nodes"></i> نسخ رابط الدعوة
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- قائمة فتحات اللاعبين المتصلين -->
+                    <div class="settings-group" style="margin-top: 1rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+                            <label class="settings-label" style="margin: 0;">القوى المتصلة بالمفاعل:</label>
+                            <button type="button" id="btnFillBots" class="btn-action-sm" title="إكمال المقاعد الشاغرة بروبوتات ذكاء اصطناعي">
+                                <i class="fa-solid fa-robot icon-sky"></i> إكمال الشواغر بالروبوتات
+                            </button>
+                        </div>
+                        <div id="hostPlayersSlotsList" class="lobby-players-grid">
+                            <!-- يتم ملؤها ديناميكياً -->
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 0.6rem; margin-top: 0.8rem;">
+                        <button type="button" id="btnHostStartBattle" class="modal-btn-primary" style="flex: 2; opacity: 0.5; cursor: not-allowed;" disabled>
+                            <i class="fa-solid fa-play"></i> في انتظار انضمام الخصوم...
+                        </button>
+                        <button type="button" id="btnHostLeaveRoom" class="btn-code-action" style="flex: 1; border-color: rgba(244, 63, 94, 0.45); color: #fda4af;" title="إلغاء الغرفة والرجوع">
+                            <i class="fa-solid fa-arrow-right-from-bracket"></i> إلغاء الغرفة
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- محتوى تبويب الانضمام إلى غرفة (الضيف) -->
+            <div id="tabContentJoinRoom" class="online-tab-pane hidden">
+                <div id="clientJoinInputSection">
+                    <div class="settings-group">
+                        <label class="settings-label">أدخل رمز الغرفة (أحرف فقط):</label>
+                        <input type="text" id="joinRoomCodeInput" class="online-text-input" placeholder="مثال: WARK" maxlength="4" style="text-align: center; font-size: 1.5rem; font-family: monospace; letter-spacing: 4px; text-transform: uppercase;">
+                    </div>
+                    <!-- خيار الانضمام كمتفرج (مراقبة المعركة فقط) -->
+                    <div class="spectator-join-option" style="margin-top: 0.75rem; display: flex; align-items: center; gap: 0.5rem; background: rgba(15, 23, 42, 0.55); padding: 0.65rem 0.85rem; border-radius: 8px; border: 1px solid rgba(56, 189, 248, 0.25);">
+                        <input type="checkbox" id="joinAsSpectatorCheck" style="width: 18px; height: 18px; cursor: pointer; accent-color: #38bdf8;">
+                        <label for="joinAsSpectatorCheck" style="cursor: pointer; font-size: 0.88rem; color: #cbd5e1; user-select: none; margin: 0;">
+                            <i class="fa-solid fa-eye icon-sky" style="margin-left: 0.35rem;"></i> الانضمام كمتفرج (شاشة مراقبة حية دون اللعب)
+                        </label>
+                    </div>
+                    <button type="button" id="btnClientConnect" class="modal-btn-primary modal-btn-block" style="margin-top: 1rem;">
+                        <i class="fa-solid fa-link"></i> اتصال بالمفاعل الذري
+                    </button>
+                </div>
+
+                <!-- شاشة انتظار الضيف بعد نجاح الاتصال -->
+                <div id="clientWaitingSection" class="hidden">
+                    <div class="room-code-box">
+                        <span class="room-code-label">تم الارتباط بنجاح بالمفاعل:</span>
+                        <span id="displayClientRoomCode" class="room-code-value">AW-....</span>
+                        <p id="clientLobbyModeInfo" style="margin: 0; font-size: 0.85rem; color: #94a3b8;"></p>
+                    </div>
+
+                    <div class="settings-group" style="margin-top: 1rem;">
+                        <label class="settings-label">القوى الحاضرة في الغرفة:</label>
+                        <div id="clientPlayersSlotsList" class="lobby-players-grid">
+                            <!-- يتم ملؤها ديناميكياً -->
+                        </div>
+                    </div>
+
+                    <div style="text-align: center; padding: 0.8rem; background: rgba(30, 41, 59, 0.4); border-radius: 8px; border: 1px dashed rgba(56, 189, 248, 0.4);">
+                        <i class="fa-solid fa-spinner fa-spin icon-sky" style="margin-left: 0.4rem;"></i>
+                        <span style="font-size: 0.88rem; font-weight: 700; color: #f8fafc;">في انتظار إشارة المضيف لإشعال المعركة...</span>
+                    </div>
+
+                    <div style="margin-top: 0.85rem; text-align: center;">
+                        <button type="button" id="btnClientLeaveRoom" class="btn-code-action" style="border-color: rgba(244, 63, 94, 0.45); color: #fda4af;" title="مغادرة الغرفة">
+                            <i class="fa-solid fa-arrow-right-from-bracket"></i> مغادرة الغرفة
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- ================= 05. ملفات الجافا سكريبت المعمارية المقسمة ================= -->
+    <!-- 0. مكتبة PeerJS للعب الجماعي المباشر P2P WebRTC -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js"></script>
+    <script src="js/network/peerMultiplayer.js"></script>
+
     <!-- 1. محاكي الصوتيات -->
     <script src="js/audio/soundManager.js"></script>
     <!-- 2. أوضاع اللعب المعمارية المستقلة (Modular Modes) -->

@@ -11,6 +11,7 @@
 @import url('css/atoms.css');
 @import url('css/shield.css');
 @import url('css/modals.css');
+@import url('css/online.css');
 
 /* تنسيقات الأنماط المستقلة (Modular Modes Stylesheets) */
 @import url('modes/normal/normalMode.css');

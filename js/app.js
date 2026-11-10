@@ -30,10 +30,20 @@ class AtomicWarsUIController {
         this.aiTimer = null;
         this.cellElements = [];
 
+        // إعدادات شبكة اللعب الجماعي أونلاين (P2P PeerJS)
+        this.network = (typeof AtomicPeerNetwork !== 'undefined') ? new AtomicPeerNetwork() : null;
+        this.isOnlineMatch = false;
+        this.localPlayerId = 0;
+        this.onlineSelectedMode = 'normal';
+        this.onlineSelectedGridSize = 7;
+        this.onlineSelectedPlayerCount = 4;
+
         this.cacheDOM();
+        this.setupNetworkCallbacks();
         this.bindEvents();
         this.renderWelcomePreview();
         this.updateModeUI();
+        this.checkUrlRoomParam();
 
         // تشغيل محاكاة المعركة الخلفية تلقائياً للشاشة الترحيبية
         if (this.welcomeScreenEl && !this.welcomeScreenEl.classList.contains('hidden')) {
@@ -73,6 +83,60 @@ class AtomicWarsUIController {
         this.settingsModal = document.getElementById('settingsModal');
         this.rulesModal = document.getElementById('rulesModal');
 
+        // عناصر نافذة التخصيص
+        this.settingsModalTitle = document.getElementById('settingsModalTitle');
+        this.settingsGroupGridSize = document.getElementById('settingsGroupGridSize');
+        this.settingsGroupSpeed = document.getElementById('settingsGroupSpeed');
+        this.settingsGroupPlayerCount = document.getElementById('settingsGroupPlayerCount');
+        this.settingsGroupPlayerSetup = document.getElementById('settingsGroupPlayerSetup');
+        this.btnApplySettings = document.getElementById('btnApplySettings');
+        this.btnRestartFast = document.getElementById('btnRestartFast');
+        this.btnPlayAgainModal = document.getElementById('btnPlayAgainModal');
+        this.btnOpenSettingsFromWin = document.getElementById('btnOpenSettingsFromWin');
+
+        // عناصر نافذة الردهة الأونلاين (P2P Lobby)
+        this.onlineLobbyModal = document.getElementById('onlineLobbyModal');
+        this.btnOpenOnlineModal = document.getElementById('btnOpenOnlineModal');
+        this.btnCloseOnlineLobby = document.getElementById('btnCloseOnlineLobby');
+        this.onlineStatusBanner = document.getElementById('onlineStatusBanner');
+        this.onlineStatusText = document.getElementById('onlineStatusText');
+        this.onlinePlayerNameInput = document.getElementById('onlinePlayerNameInput');
+        this.tabBtnCreateRoom = document.getElementById('tabBtnCreateRoom');
+        this.tabBtnJoinRoom = document.getElementById('tabBtnJoinRoom');
+        this.tabContentCreateRoom = document.getElementById('tabContentCreateRoom');
+        this.tabContentJoinRoom = document.getElementById('tabContentJoinRoom');
+        this.hostSetupSection = document.getElementById('hostSetupSection');
+        this.hostWaitingSection = document.getElementById('hostWaitingSection');
+        this.onlineModeCardNormal = document.getElementById('onlineModeCardNormal');
+        this.onlineModeCardAdvanced = document.getElementById('onlineModeCardAdvanced');
+        this.onlineGridSizeButtons = document.querySelectorAll('.online-size-option');
+        this.onlinePlayerCountButtons = document.querySelectorAll('.online-pcount-option');
+        this.btnHostCreateRoom = document.getElementById('btnHostCreateRoom');
+        this.displayRoomCode = document.getElementById('displayRoomCode');
+        this.btnCopyRoomCode = document.getElementById('btnCopyRoomCode');
+        this.btnCopyRoomLink = document.getElementById('btnCopyRoomLink');
+        this.hostPlayersSlotsList = document.getElementById('hostPlayersSlotsList');
+        this.btnHostStartBattle = document.getElementById('btnHostStartBattle');
+        this.btnHostLeaveRoom = document.getElementById('btnHostLeaveRoom');
+        this.btnFillBots = document.getElementById('btnFillBots');
+        this.clientJoinInputSection = document.getElementById('clientJoinInputSection');
+        this.clientWaitingSection = document.getElementById('clientWaitingSection');
+        this.btnClientLeaveRoom = document.getElementById('btnClientLeaveRoom');
+        this.joinRoomCodeInput = document.getElementById('joinRoomCodeInput');
+        this.btnClientConnect = document.getElementById('btnClientConnect');
+        this.joinAsSpectatorCheck = document.getElementById('joinAsSpectatorCheck');
+        this.displayClientRoomCode = document.getElementById('displayClientRoomCode');
+        this.clientLobbyModeInfo = document.getElementById('clientLobbyModeInfo');
+        this.clientPlayersSlotsList = document.getElementById('clientPlayersSlotsList');
+
+        // عناصر المساعد التكتيكي ونمط المتفرج والتعبيرات
+        this.btnTacticalAdvisor = document.getElementById('btnTacticalAdvisor');
+        this.spectatorBanner = document.getElementById('spectatorBanner');
+        this.quickEmotesBar = document.getElementById('quickEmotesBar');
+        this.isSpectator = false;
+        this.currentPings = {};
+        this.tacticalHintTimer = null;
+
         // شريط الترسانة ورصيد النيوترونات التكتيكي
         this.neutronArsenalBarEl = document.getElementById('neutronArsenalBar');
         this.neutronValueDisplayEl = document.getElementById('neutronValueDisplay');
@@ -93,6 +157,159 @@ class AtomicWarsUIController {
         const btnStartAdvanced = document.getElementById('btnStartAdvancedMode');
         if (btnStartAdvanced) {
             btnStartAdvanced.addEventListener('click', () => this.launchMode('advanced'));
+        }
+
+        // زر فتح نافذة الردهة الأونلاين
+        if (this.btnOpenOnlineModal) {
+            this.btnOpenOnlineModal.addEventListener('click', () => this.openOnlineLobby());
+        }
+
+        // أزرار الردهة الأونلاين
+        if (this.btnCloseOnlineLobby) {
+            this.btnCloseOnlineLobby.addEventListener('click', () => this.closeOnlineLobby());
+        }
+
+        if (this.tabBtnCreateRoom) {
+            this.tabBtnCreateRoom.addEventListener('click', () => this.switchOnlineTab('create'));
+        }
+        if (this.tabBtnJoinRoom) {
+            this.tabBtnJoinRoom.addEventListener('click', () => this.switchOnlineTab('join'));
+        }
+
+        if (this.onlineModeCardNormal) {
+            this.onlineModeCardNormal.addEventListener('click', () => this.selectOnlineMode('normal'));
+        }
+        if (this.onlineModeCardAdvanced) {
+            this.onlineModeCardAdvanced.addEventListener('click', () => this.selectOnlineMode('advanced'));
+        }
+
+        if (this.onlineGridSizeButtons) {
+            this.onlineGridSizeButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const sz = parseInt(btn.dataset.size, 10);
+                    this.selectOnlineGridSize(sz);
+                });
+            });
+        }
+
+        if (this.onlinePlayerNameInput) {
+            this.onlinePlayerNameInput.value = this.getPersistentPlayerName();
+            this.onlinePlayerNameInput.addEventListener('input', (e) => {
+                const val = e.target.value.trim();
+                if (val) {
+                    this.setPersistentPlayerName(val);
+                    if (this.network) {
+                        this.network.updatePlayerName(val);
+                    }
+                }
+            });
+        }
+
+        if (this.joinRoomCodeInput) {
+            this.joinRoomCodeInput.addEventListener('input', (e) => {
+                // قصر كود الغرفة على الأحرف فقط وتحويلها لأحرف كبيرة
+                e.target.value = e.target.value.replace(/[^a-zA-Z]/g, '').toUpperCase();
+            });
+        }
+
+        if (this.btnFillBots) {
+            this.btnFillBots.addEventListener('click', () => {
+                if (this.network) {
+                    this.network.fillRemainingWithBots();
+                }
+            });
+        }
+
+        if (this.btnHostCreateRoom) {
+            this.btnHostCreateRoom.addEventListener('click', () => {
+                const name = this.getPersistentPlayerName();
+                if (this.network) {
+                    this.network.createRoom(name, this.onlineSelectedMode, 4, this.onlineSelectedGridSize);
+                }
+            });
+        }
+
+        if (this.btnHostLeaveRoom) {
+            this.btnHostLeaveRoom.addEventListener('click', () => {
+                if (this.network) {
+                    this.network.leaveRoom();
+                }
+                this.setOnlineStatus('تم إلغاء الغرفة والرجوع.', 'info');
+            });
+        }
+
+        if (this.btnClientLeaveRoom) {
+            this.btnClientLeaveRoom.addEventListener('click', () => {
+                if (this.network) {
+                    this.network.leaveRoom();
+                }
+                this.setOnlineStatus('تمت مغادرة الغرفة والرجوع.', 'info');
+            });
+        }
+
+        if (this.btnHostStartBattle) {
+            this.btnHostStartBattle.addEventListener('click', () => {
+                if (this.network) {
+                    this.network.startGame();
+                }
+            });
+        }
+
+        if (this.btnCopyRoomCode) {
+            this.btnCopyRoomCode.addEventListener('click', () => {
+                if (this.network && this.network.roomCode) {
+                    navigator.clipboard.writeText(this.network.roomCode).then(() => {
+                        this.setOnlineStatus('تم نسخ رمز المفاعل للحافظة بنجاح!', 'success');
+                    }).catch(() => {
+                        this.setOnlineStatus(`الرمز: ${this.network.roomCode}`, 'info');
+                    });
+                }
+            });
+        }
+
+        if (this.btnCopyRoomLink) {
+            this.btnCopyRoomLink.addEventListener('click', () => {
+                if (this.network && this.network.roomCode) {
+                    const url = new URL(window.location.href);
+                    url.searchParams.set('room', this.network.roomCode);
+                    navigator.clipboard.writeText(url.toString()).then(() => {
+                        this.setOnlineStatus('تم نسخ رابط الدعوة المباشر للمفاعل!', 'success');
+                    }).catch(() => {
+                        this.setOnlineStatus(url.toString(), 'info');
+                    });
+                }
+            });
+        }
+
+        if (this.btnClientConnect) {
+            this.btnClientConnect.addEventListener('click', () => {
+                const rawCode = this.joinRoomCodeInput ? this.joinRoomCodeInput.value.trim().toUpperCase() : '';
+                const code = rawCode.replace(/[^A-Z]/g, '');
+                if (!code) {
+                    this.setOnlineStatus('يرجى كتابة رمز الغرفة (أحرف فقط)!', 'error');
+                    return;
+                }
+                const name = this.getPersistentPlayerName();
+                const asSpectator = this.joinAsSpectatorCheck ? this.joinAsSpectatorCheck.checked : false;
+                if (this.network) {
+                    this.network.joinRoom(code, name, asSpectator);
+                }
+            });
+        }
+
+        // زر التوجيه التكتيكي الذكي
+        if (this.btnTacticalAdvisor) {
+            this.btnTacticalAdvisor.addEventListener('click', () => this.showTacticalHint());
+        }
+
+        // شريط التعبيرات التكتيكية السريعة
+        if (this.quickEmotesBar) {
+            this.quickEmotesBar.querySelectorAll('.emote-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const emote = btn.dataset.emote;
+                    this.triggerEmote(emote);
+                });
+            });
         }
 
         // الأزرار المغلقة (وضع 2 ووضع 3)
@@ -137,16 +354,33 @@ class AtomicWarsUIController {
         // أزرار العودة للشاشة الترحيبية وتغيير الوضع
         const btnBackToWelcome = document.getElementById('btnBackToWelcome');
         if (btnBackToWelcome) {
-            btnBackToWelcome.addEventListener('click', () => this.showWelcomeScreen());
+            btnBackToWelcome.addEventListener('click', () => {
+                if (this.isOnlineMatch && this.network) {
+                    this.network.leaveRoom();
+                }
+                this.showWelcomeScreen();
+            });
         }
 
         const btnBackFromWin = document.getElementById('btnBackToWelcomeFromWin');
         if (btnBackFromWin) {
-            btnBackFromWin.addEventListener('click', () => this.showWelcomeScreen());
+            btnBackFromWin.addEventListener('click', () => {
+                if (this.isOnlineMatch && this.network) {
+                    this.network.leaveRoom();
+                }
+                this.showWelcomeScreen();
+            });
         }
 
         // شريط الأزرار العلوي
-        document.getElementById('btnRestartFast').addEventListener('click', () => this.startNewGame());
+        document.getElementById('btnRestartFast').addEventListener('click', () => {
+            if (this.isOnlineMatch) {
+                this.setWaveStatus('لا يمكن إعادة تشغيل المفاعل منفرداً أثناء الاتصال الجماعي!', 'amber');
+                this.sound.playShieldDeflect();
+                return;
+            }
+            this.startNewGame();
+        });
 
         const btnToggleNumbers = document.getElementById('btnToggleNumbers');
         if (btnToggleNumbers) {
@@ -192,7 +426,13 @@ class AtomicWarsUIController {
         // أزرار نافذة النصر
         document.getElementById('btnPlayAgainModal').addEventListener('click', () => {
             this.toggleModal(this.victoryModal, false);
-            this.startNewGame();
+            if (this.isOnlineMatch) {
+                if (this.network && this.network.isHost) {
+                    this.network.startGame();
+                }
+            } else {
+                this.startNewGame();
+            }
         });
         document.getElementById('btnOpenSettingsFromWin').addEventListener('click', () => {
             this.toggleModal(this.victoryModal, false);
@@ -229,6 +469,14 @@ class AtomicWarsUIController {
 
         // تطبيق الإعدادات وبدء اللقاء
         document.getElementById('btnApplySettings').addEventListener('click', () => {
+            if (this.isOnlineMatch) {
+                // في المعركة الأونلاين: نطبق سرعة الانشطار فقط ولا نُعيد تشغيل اللعبة أو نغير الحجم
+                document.documentElement.style.setProperty('--fly-duration', `${this.config.waveSpeedMs}ms`);
+                this.toggleModal(this.settingsModal, false);
+                this.setWaveStatus(`تم ضبط سرعة موجات الانشطار إلى ${this.config.waveSpeedMs}ms`, 'sky');
+                return;
+            }
+
             this.savePlayerSetupFromDOM();
             this.syncOptionHighlights();
             this.renderWelcomePreview();
@@ -441,9 +689,30 @@ class AtomicWarsUIController {
             this.aiTimer = null;
         }
 
+        if (this.isOnlineMatch) {
+            if (this.network) this.network.cleanup();
+            this.isOnlineMatch = false;
+        }
+        this.isSpectator = false;
+        if (this.spectatorBanner) {
+            this.spectatorBanner.classList.add('hidden');
+        }
+        if (this.tacticalHintTimer) {
+            clearTimeout(this.tacticalHintTimer);
+            this.tacticalHintTimer = null;
+        }
+        document.querySelectorAll('.cell-tactical-hint').forEach(el => el.classList.remove('cell-tactical-hint'));
+        if (this.boardWrapperEl) {
+            this.boardWrapperEl.classList.remove('board-wrapper--locked');
+        }
+        if (this.btnRestartFast) {
+            this.btnRestartFast.classList.remove('hidden');
+        }
+
         this.toggleModal(this.victoryModal, false);
         this.toggleModal(this.settingsModal, false);
         this.toggleModal(this.rulesModal, false);
+        if (this.onlineLobbyModal) this.toggleModal(this.onlineLobbyModal, false);
 
         if (this.battleScreenEl) this.battleScreenEl.classList.add('hidden');
         document.body.classList.remove('has-arsenal-dock');
@@ -484,7 +753,8 @@ class AtomicWarsUIController {
                 color: palette.color,
                 darkColor: palette.darkColor,
                 glow: palette.glow,
-                isAI: setup.isAI
+                isAI: setup.isAI,
+                personality: setup.personality || 'balanced'
             };
         });
 
@@ -550,8 +820,23 @@ class AtomicWarsUIController {
 
     async onCellClicked(r, c) {
         if (this.isAnimating || this.engine.isGameOver) return;
+
+        // منع المتفرج من التفاعل بالرقعة
+        if (this.isSpectator) {
+            this.setWaveStatus('أنت في وضع المتفرج 👁️: تراقب وقائع الاشتباك النووي المباشر دون التحكم بالرقعة.', 'amber');
+            this.sound.playShieldDeflect();
+            return;
+        }
+
         const currentPlayer = this.engine.getCurrentPlayer();
         if (currentPlayer.isAI) return;
+
+        // في المعركة الأونلاين: يمنع التفاعل إلا في دور هذا الجهاز
+        if (this.isOnlineMatch && currentPlayer.id !== this.localPlayerId) {
+            this.setWaveStatus(`في انتظار حركة الخصم [${currentPlayer.name}]...`, 'amber');
+            this.sound.playShieldDeflect();
+            return;
+        }
 
         const cell = this.engine.board[r][c];
         const hasNeutrons = this.engine.mode && typeof this.engine.mode.hasNeutronSystem === 'function' && this.engine.mode.hasNeutronSystem();
@@ -716,7 +1001,7 @@ class AtomicWarsUIController {
     /**
      * معالجة حركة اللاعب وعرض الانشطارات المتسلسلة
      */
-    async processPlayerMove(r, c, atomsToPlace = 1, actionType = 'atom') {
+    async processPlayerMove(r, c, atomsToPlace = 1, actionType = 'atom', isRemote = false) {
         if (!this.engine.isValidMove(r, c, this.engine.currentPlayerIndex, atomsToPlace, actionType)) return;
 
         this.isAnimating = true;
@@ -737,6 +1022,17 @@ class AtomicWarsUIController {
         if (!result.valid) {
             this.isAnimating = false;
             return;
+        }
+
+        // إذا كانت الحركة محلية وناجحة في معركة أونلاين، يتم بثها للخصوم (أو إذا كان المضيف يدير دور الروبوت)
+        if (this.isOnlineMatch && !isRemote) {
+            const isLocal = actingPlayer.id === this.localPlayerId;
+            const isHostBot = (this.network && this.network.isHost && actingPlayer.isAI);
+            if (isLocal || isHostBot) {
+                if (this.network) {
+                    this.network.sendMove(r, c, atomsToPlace, actionType, actingPlayer.id);
+                }
+            }
         }
 
         if (actionType === 'energyDrain') {
@@ -1179,7 +1475,9 @@ class AtomicWarsUIController {
                     <div class="player-meta-box">
                         <div class="player-name-row">
                             <span>${p.name}</span>
-                            ${p.isAI ? '<i class="fa-solid fa-robot icon-sky" title="ذكاء اصطناعي"></i>' : ''}
+                            ${this.isOnlineMatch && p.id === this.localPlayerId ? '<span class="player-local-badge">أنت</span>' : ''}
+                            ${p.isAI ? `<i class="fa-solid fa-robot icon-sky" title="${p.personality === 'aggressive' ? 'روبوت هجومي' : (p.personality === 'defensive' ? 'روبوت حذر' : 'روبوت متوازن')}"></i>` : ''}
+                            ${this.getPingBadgeHTML(p.id)}
                         </div>
                         ${statusLabel}
                     </div>
@@ -1207,9 +1505,27 @@ class AtomicWarsUIController {
         document.documentElement.style.setProperty('--turn-color', currentPlayer.color);
         document.documentElement.style.setProperty('--turn-glow', currentPlayer.glow);
 
-        if (this.currentPlayerNameEl) {
-            this.currentPlayerNameEl.textContent = currentPlayer.name + (currentPlayer.isAI ? ' (آلي)' : '');
-            this.currentPlayerNameEl.style.color = currentPlayer.color;
+        if (this.isOnlineMatch) {
+            const isMyTurn = (currentPlayer.id === this.localPlayerId);
+            if (this.currentPlayerNameEl) {
+                this.currentPlayerNameEl.textContent = currentPlayer.name + (isMyTurn ? ' (دورك الآن!)' : ' (انتظار الخصم)');
+                this.currentPlayerNameEl.style.color = currentPlayer.color;
+            }
+            if (this.boardWrapperEl) {
+                if (isMyTurn) {
+                    this.boardWrapperEl.classList.remove('board-wrapper--locked');
+                } else {
+                    this.boardWrapperEl.classList.add('board-wrapper--locked');
+                }
+            }
+        } else {
+            if (this.currentPlayerNameEl) {
+                this.currentPlayerNameEl.textContent = currentPlayer.name + (currentPlayer.isAI ? ' (آلي)' : '');
+                this.currentPlayerNameEl.style.color = currentPlayer.color;
+            }
+            if (this.boardWrapperEl) {
+                this.boardWrapperEl.classList.remove('board-wrapper--locked');
+            }
         }
         if (this.turnDotEl) {
             this.turnDotEl.style.backgroundColor = currentPlayer.color;
@@ -1368,6 +1684,11 @@ class AtomicWarsUIController {
         if (!this.inBattle || !this.engine || this.engine.isGameOver) return;
         const currentPlayer = this.engine.getCurrentPlayer();
         if (currentPlayer.isAI) {
+            // في المعركة الأونلاين: فقط المضيف هو من يدير حركة الروبوتات تجنباً للاختلاف بين الأجهزة
+            if (this.isOnlineMatch && !(this.network && this.network.isHost)) {
+                return;
+            }
+
             this.isAnimating = true;
             this.aiTimer = setTimeout(async () => {
                 if (!this.inBattle || !this.engine || this.engine.isGameOver) {
@@ -1376,7 +1697,7 @@ class AtomicWarsUIController {
                 }
                 const aiMove = this.engine.computeBestAIMove();
                 if (aiMove) {
-                    await this.processPlayerMove(aiMove.r, aiMove.c, aiMove.atomCount || 1, aiMove.actionType || 'atom');
+                    await this.processPlayerMove(aiMove.r, aiMove.c, aiMove.atomCount || 1, aiMove.actionType || 'atom', false);
                 } else {
                     this.isAnimating = false;
                 }
@@ -1400,29 +1721,77 @@ class AtomicWarsUIController {
         document.getElementById('statMaxChain').textContent = `${this.engine.longestChain} موجات`;
         document.getElementById('statFinalCells').textContent = winner.cellCount;
 
+        if (this.isOnlineMatch) {
+            if (this.btnOpenSettingsFromWin) {
+                this.btnOpenSettingsFromWin.classList.add('hidden');
+            }
+            if (this.btnPlayAgainModal) {
+                if (this.network && this.network.isHost) {
+                    this.btnPlayAgainModal.innerHTML = '<i class="fa-solid fa-rotate-right"></i> معركة جديدة بنفس المتنافسين';
+                    this.btnPlayAgainModal.classList.remove('hidden');
+                } else {
+                    this.btnPlayAgainModal.classList.add('hidden');
+                }
+            }
+        } else {
+            if (this.btnOpenSettingsFromWin) {
+                this.btnOpenSettingsFromWin.classList.remove('hidden');
+            }
+            if (this.btnPlayAgainModal) {
+                this.btnPlayAgainModal.innerHTML = '<i class="fa-solid fa-play"></i> معركة جديدة';
+                this.btnPlayAgainModal.classList.remove('hidden');
+            }
+        }
+
         this.toggleModal(this.victoryModal, true);
     }
 
     populateSettingsModal() {
-        document.querySelectorAll('.size-option').forEach(btn => {
-            if (parseInt(btn.dataset.size, 10) === this.config.gridSize) {
-                this.updateButtonGroupHighlight('.size-option', btn, 'purple');
+        if (this.isOnlineMatch) {
+            // في المعركة الأونلاين: إخفاء الحجم واللاعبين وتخصيص سرعة الانشطار فقط
+            if (this.settingsGroupGridSize) this.settingsGroupGridSize.classList.add('hidden');
+            if (this.settingsGroupPlayerCount) this.settingsGroupPlayerCount.classList.add('hidden');
+            if (this.settingsGroupPlayerSetup) this.settingsGroupPlayerSetup.classList.add('hidden');
+            if (this.settingsGroupSpeed) this.settingsGroupSpeed.classList.remove('hidden');
+            if (this.settingsModalTitle) {
+                this.settingsModalTitle.innerHTML = '<i class="fa-solid fa-gauge-high icon-sky"></i> تخصيص سرعة الانشطار (المباراة أونلاين)';
             }
-        });
+            if (this.btnApplySettings) {
+                this.btnApplySettings.textContent = 'تطبيق سرعة العرض للمفاعل';
+            }
+        } else {
+            // في الأوفلاين: إظهار جميع الإعدادات بحرية
+            if (this.settingsGroupGridSize) this.settingsGroupGridSize.classList.remove('hidden');
+            if (this.settingsGroupPlayerCount) this.settingsGroupPlayerCount.classList.remove('hidden');
+            if (this.settingsGroupPlayerSetup) this.settingsGroupPlayerSetup.classList.remove('hidden');
+            if (this.settingsGroupSpeed) this.settingsGroupSpeed.classList.remove('hidden');
+            if (this.settingsModalTitle) {
+                this.settingsModalTitle.innerHTML = '<i class="fa-solid fa-sliders icon-emerald"></i> تخصيص المفاعل الذري والقوى';
+            }
+            if (this.btnApplySettings) {
+                this.btnApplySettings.textContent = 'حفظ وتنشيط المفاعل الجديد';
+            }
+
+            document.querySelectorAll('.size-option').forEach(btn => {
+                if (parseInt(btn.dataset.size, 10) === this.config.gridSize) {
+                    this.updateButtonGroupHighlight('.size-option', btn, 'purple');
+                }
+            });
+
+            document.querySelectorAll('.pcount-option').forEach(btn => {
+                if (parseInt(btn.dataset.count, 10) === this.config.playerCount) {
+                    this.updateButtonGroupHighlight('.pcount-option', btn, 'emerald');
+                }
+            });
+
+            this.renderPlayerSetupRows();
+        }
 
         document.querySelectorAll('.speed-option').forEach(btn => {
             if (parseInt(btn.dataset.speed, 10) === this.config.waveSpeedMs) {
                 this.updateButtonGroupHighlight('.speed-option', btn, 'sky');
             }
         });
-
-        document.querySelectorAll('.pcount-option').forEach(btn => {
-            if (parseInt(btn.dataset.count, 10) === this.config.playerCount) {
-                this.updateButtonGroupHighlight('.pcount-option', btn, 'emerald');
-            }
-        });
-
-        this.renderPlayerSetupRows();
     }
 
     renderPlayerSetupRows() {
@@ -1441,6 +1810,7 @@ class AtomicWarsUIController {
                 </button>
             `).join('');
 
+            const curPersonality = pSetup.personality || 'balanced';
             row.innerHTML = `
                 <input type="text" data-player-name="${i}" value="${pSetup.name}" maxlength="18"
                     class="player-name-input" />
@@ -1451,9 +1821,24 @@ class AtomicWarsUIController {
                     <input type="checkbox" data-player-ai="${i}" ${pSetup.isAI ? 'checked' : ''} class="player-ai-checkbox" />
                     <span>آلي</span>
                 </label>
+                <select data-player-personality="${i}" class="player-personality-select" ${!pSetup.isAI ? 'style="display:none;"' : ''} title="شخصية الذكاء الاصطناعي">
+                    <option value="balanced" ${curPersonality === 'balanced' ? 'selected' : ''}>🎯 متوازن</option>
+                    <option value="aggressive" ${curPersonality === 'aggressive' ? 'selected' : ''}>⚔️ هجومي</option>
+                    <option value="defensive" ${curPersonality === 'defensive' ? 'selected' : ''}>🛡️ حذر</option>
+                </select>
             `;
             container.appendChild(row);
         }
+
+        container.querySelectorAll('[data-player-ai]').forEach(chk => {
+            chk.addEventListener('change', () => {
+                const idx = parseInt(chk.dataset.playerAi, 10);
+                const selectEl = container.querySelector(`[data-player-personality="${idx}"]`);
+                if (selectEl) {
+                    selectEl.style.display = chk.checked ? 'inline-block' : 'none';
+                }
+            });
+        });
 
         container.querySelectorAll('.palette-swatch').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -1477,6 +1862,517 @@ class AtomicWarsUIController {
             const idx = parseInt(chk.dataset.playerAi, 10);
             this.config.playersSetup[idx].isAI = chk.checked;
         });
+        container.querySelectorAll('[data-player-personality]').forEach(sel => {
+            const idx = parseInt(sel.dataset.playerPersonality, 10);
+            this.config.playersSetup[idx].personality = sel.value;
+        });
+    }
+
+    /* ==========================================================================
+       قسم إدارة اللعب الجماعي أونلاين (Online Multiplayer P2P Methods)
+       ========================================================================== */
+
+    setupNetworkCallbacks() {
+        if (!this.network) return;
+
+        this.network.onStatusChange = (text, type) => {
+            this.setOnlineStatus(text, type);
+        };
+
+        this.network.onError = (msg) => {
+            this.setOnlineStatus(msg, 'error');
+        };
+
+        this.network.onLobbyUpdate = (lobbyState) => {
+            this.renderOnlineLobby(lobbyState);
+        };
+
+        this.network.onGameStart = (config) => {
+            this.startOnlineGame(config);
+        };
+
+        this.network.onMoveReceived = (move) => {
+            this.handleRemoteMove(move);
+        };
+
+        this.network.onEmoteReceived = (data) => {
+            this.handleRemoteEmote(data);
+        };
+
+        this.network.onPingUpdate = (pings) => {
+            this.handlePingUpdate(pings);
+        };
+
+        this.network.onPlayerLeft = (player) => {
+            this.handlePlayerLeft(player);
+        };
+
+        this.network.onRoomClosed = () => {
+            if (this.clientWaitingSection) this.clientWaitingSection.classList.add('hidden');
+            if (this.clientJoinInputSection) this.clientJoinInputSection.classList.remove('hidden');
+            this.setOnlineStatus('قام المضيف بإلغاء الغرفة والرجوع للقائمة.', 'amber');
+            this.sound.playShieldDeflect();
+        };
+
+        this.network.onLeaveRoom = () => {
+            if (this.hostWaitingSection) this.hostWaitingSection.classList.add('hidden');
+            if (this.hostSetupSection) this.hostSetupSection.classList.remove('hidden');
+            if (this.clientWaitingSection) this.clientWaitingSection.classList.add('hidden');
+            if (this.clientJoinInputSection) this.clientJoinInputSection.classList.remove('hidden');
+        };
+    }
+
+    checkUrlRoomParam() {
+        if (typeof window === 'undefined') return;
+        try {
+            const params = new URLSearchParams(window.location.search);
+            const room = params.get('room');
+            if (room) {
+                setTimeout(() => {
+                    this.openOnlineLobby();
+                    this.switchOnlineTab('join');
+                    if (this.joinRoomCodeInput) {
+                        this.joinRoomCodeInput.value = room.toUpperCase();
+                    }
+                    this.setOnlineStatus(`تم العثور على دعوة للانضمام للمفاعل: ${room.toUpperCase()}`, 'info');
+                }, 300);
+            }
+        } catch (e) {}
+    }
+
+    openOnlineLobby() {
+        this.toggleModal(this.onlineLobbyModal, true);
+        if (this.onlinePlayerNameInput) {
+            this.onlinePlayerNameInput.value = this.getPersistentPlayerName();
+        }
+    }
+
+    closeOnlineLobby() {
+        this.toggleModal(this.onlineLobbyModal, false);
+    }
+
+    setOnlineStatus(text, type = 'info') {
+        if (!this.onlineStatusBanner || !this.onlineStatusText) return;
+        this.onlineStatusText.textContent = text;
+        this.onlineStatusBanner.className = `online-status-banner online-status-banner--${type}`;
+    }
+
+    switchOnlineTab(tab) {
+        if (tab === 'create') {
+            if (this.tabBtnCreateRoom) this.tabBtnCreateRoom.classList.add('online-tab-btn--active');
+            if (this.tabBtnJoinRoom) this.tabBtnJoinRoom.classList.remove('online-tab-btn--active');
+            if (this.tabContentCreateRoom) this.tabContentCreateRoom.classList.remove('hidden');
+            if (this.tabContentJoinRoom) this.tabContentJoinRoom.classList.add('hidden');
+        } else {
+            if (this.tabBtnCreateRoom) this.tabBtnCreateRoom.classList.remove('online-tab-btn--active');
+            if (this.tabBtnJoinRoom) this.tabBtnJoinRoom.classList.add('online-tab-btn--active');
+            if (this.tabContentCreateRoom) this.tabContentCreateRoom.classList.add('hidden');
+            if (this.tabContentJoinRoom) this.tabContentJoinRoom.classList.remove('hidden');
+        }
+    }
+
+    selectOnlineMode(mode) {
+        this.onlineSelectedMode = mode;
+        if (this.onlineModeCardNormal) {
+            this.onlineModeCardNormal.classList.toggle('online-mode-card--active', mode === 'normal');
+        }
+        if (this.onlineModeCardAdvanced) {
+            this.onlineModeCardAdvanced.classList.toggle('online-mode-card--active', mode === 'advanced');
+        }
+    }
+
+    selectOnlineGridSize(size) {
+        this.onlineSelectedGridSize = size;
+        if (this.onlineGridSizeButtons) {
+            this.onlineGridSizeButtons.forEach(btn => {
+                const bSize = parseInt(btn.dataset.size, 10);
+                btn.classList.toggle('option-btn--active-purple', bSize === size);
+            });
+        }
+    }
+
+    renderOnlineLobby(lobbyState) {
+        if (!lobbyState) return;
+
+        // في شاشة المضيف
+        if (lobbyState.isHost) {
+            if (this.hostSetupSection) this.hostSetupSection.classList.add('hidden');
+            if (this.hostWaitingSection) this.hostWaitingSection.classList.remove('hidden');
+            if (this.displayRoomCode) this.displayRoomCode.textContent = lobbyState.roomCode;
+
+            // تحديث بطاقات اللاعبين والروبوتات في مفاعل المضيف
+            if (this.hostPlayersSlotsList) {
+                this.hostPlayersSlotsList.innerHTML = '';
+                for (let i = 0; i < lobbyState.maxPlayers; i++) {
+                    const p = lobbyState.players[i];
+                    const pal = ISOTOPE_PALETTES[i] || ISOTOPE_PALETTES[0];
+                    const slotDiv = document.createElement('div');
+                    if (p) {
+                        slotDiv.className = 'lobby-slot-card';
+                        slotDiv.dataset.playerId = p.id;
+                        slotDiv.style.setProperty('--slot-color', pal.color);
+                        slotDiv.style.setProperty('--slot-glow', pal.glow);
+
+                        const pingVal = (lobbyState.pings && lobbyState.pings[p.id] !== undefined) ? lobbyState.pings[p.id] : (p.isAI || p.isHost ? 1 : 45);
+                        const pingCls = this.getPingClass(pingVal);
+
+                        if (p.isAI) {
+                            const pers = p.personality || 'balanced';
+                            const persLabel = pers === 'aggressive' ? '⚔️ هجومي' : (pers === 'defensive' ? '🛡️ حذر' : '🎯 متوازن');
+                            const persCls = `personality--${pers}`;
+                            slotDiv.innerHTML = `
+                                <button type="button" class="btn-remove-bot" data-bot-id="${p.id}" title="إزالة الروبوت"><i class="fa-solid fa-xmark"></i></button>
+                                <div class="lobby-slot-avatar"><i class="fa-solid fa-robot"></i></div>
+                                <div style="display:flex; flex-direction:column; align-items:center; gap:2px;">
+                                    <span class="lobby-slot-name">${p.name}</span>
+                                    <div style="display:flex; align-items:center; gap:4px;">
+                                        <span class="lobby-slot-role">${pal.name.split(' ')[0]}</span>
+                                        <button type="button" class="lobby-personality-badge ${persCls}" data-bot-pers-id="${p.id}" title="انقر لتبديل الخطة الذكية">${persLabel}</button>
+                                    </div>
+                                    <span class="ping-indicator ${pingCls}"><span class="ping-dot"></span>${pingVal}ms</span>
+                                </div>
+                            `;
+                        } else {
+                            slotDiv.innerHTML = `
+                                <div class="lobby-slot-avatar"><i class="fa-solid fa-atom"></i></div>
+                                <div style="display:flex; flex-direction:column; align-items:center; gap:2px;">
+                                    <span class="lobby-slot-name">${p.name} ${p.isHost ? '(المضيف)' : ''}</span>
+                                    <span class="lobby-slot-role">${pal.name.split(' ')[0]}</span>
+                                    <span class="ping-indicator ${pingCls}"><span class="ping-dot"></span>${pingVal}ms</span>
+                                </div>
+                            `;
+                        }
+                    } else {
+                        slotDiv.className = 'lobby-slot-card lobby-slot-card--waiting';
+                        slotDiv.innerHTML = `
+                            <div class="lobby-slot-avatar"><i class="fa-solid fa-user-plus"></i></div>
+                            <span class="lobby-slot-name">شاغر</span>
+                            <button type="button" class="btn-add-bot-slot" title="إضافة روبوت نووي لهذه الفتحة">
+                                <i class="fa-solid fa-robot"></i> + روبوت AI
+                            </button>
+                        `;
+                        const addBtn = slotDiv.querySelector('.btn-add-bot-slot');
+                        if (addBtn) {
+                            addBtn.addEventListener('click', () => {
+                                if (this.network) this.network.addBot();
+                            });
+                        }
+                    }
+                    this.hostPlayersSlotsList.appendChild(slotDiv);
+                }
+
+                // ربط أزرار إزالة الروبوتات
+                this.hostPlayersSlotsList.querySelectorAll('.btn-remove-bot').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const bId = parseInt(btn.dataset.botId, 10);
+                        if (this.network) this.network.removeBot(bId);
+                    });
+                });
+
+                // ربط أزرار تبديل خطة وشخصية الروبوت
+                this.hostPlayersSlotsList.querySelectorAll('.lobby-personality-badge').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const bId = parseInt(btn.dataset.botPersId, 10);
+                        if (this.network) this.network.cycleBotPersonality(bId);
+                    });
+                });
+            }
+
+            // زر بدء اللعبة للمضيف (يبدأ بالعدد الموجود حالياً: 2 أو 3 أو 4 دون اشتراط اكتمال المقاعد)
+            if (this.btnHostStartBattle) {
+                const totalParticipants = lobbyState.players.length;
+                if (totalParticipants >= 2) {
+                    this.btnHostStartBattle.disabled = false;
+                    this.btnHostStartBattle.style.opacity = '1';
+                    this.btnHostStartBattle.style.cursor = 'pointer';
+                    this.btnHostStartBattle.innerHTML = `<i class="fa-solid fa-play"></i> إطلاق المعركة النووية بالعدد الحالي (${totalParticipants} قوى)!`;
+                } else {
+                    this.btnHostStartBattle.disabled = true;
+                    this.btnHostStartBattle.style.opacity = '0.5';
+                    this.btnHostStartBattle.style.cursor = 'not-allowed';
+                    this.btnHostStartBattle.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> بانتظار انضمام لاعب أو روبوت (1/4)...`;
+                }
+            }
+        } else {
+            // في شاشة الضيف
+            if (this.clientJoinInputSection) this.clientJoinInputSection.classList.add('hidden');
+            if (this.clientWaitingSection) this.clientWaitingSection.classList.remove('hidden');
+            if (this.displayClientRoomCode) this.displayClientRoomCode.textContent = lobbyState.roomCode;
+            if (this.clientLobbyModeInfo) {
+                const modeName = lobbyState.gameMode === 'advanced' ? 'البطاقات الذرية' : 'الوضع العادي';
+                const gSize = lobbyState.gridSize || 7;
+                this.clientLobbyModeInfo.textContent = `النمط: ${modeName} • مفاعل ${gSize}×${gSize} • الحاضرون: ${lobbyState.players.length} من 4 قوى`;
+            }
+
+            if (this.clientPlayersSlotsList) {
+                this.clientPlayersSlotsList.innerHTML = '';
+                for (let i = 0; i < lobbyState.maxPlayers; i++) {
+                    const p = lobbyState.players[i];
+                    const pal = ISOTOPE_PALETTES[i] || ISOTOPE_PALETTES[0];
+                    const slotDiv = document.createElement('div');
+                    if (p) {
+                        slotDiv.className = 'lobby-slot-card';
+                        slotDiv.dataset.playerId = p.id;
+                        slotDiv.style.setProperty('--slot-color', pal.color);
+                        slotDiv.style.setProperty('--slot-glow', pal.glow);
+
+                        const pingVal = (lobbyState.pings && lobbyState.pings[p.id] !== undefined) ? lobbyState.pings[p.id] : (p.isAI || p.isHost ? 1 : 45);
+                        const pingCls = this.getPingClass(pingVal);
+
+                        if (p.isAI) {
+                            const pers = p.personality || 'balanced';
+                            const persLabel = pers === 'aggressive' ? '⚔️ هجومي' : (pers === 'defensive' ? '🛡️ حذر' : '🎯 متوازن');
+                            const persCls = `personality--${pers}`;
+                            slotDiv.innerHTML = `
+                                <div class="lobby-slot-avatar"><i class="fa-solid fa-robot"></i></div>
+                                <div style="display:flex; flex-direction:column; align-items:center; gap:2px;">
+                                    <span class="lobby-slot-name">${p.name}</span>
+                                    <div style="display:flex; align-items:center; gap:4px;">
+                                        <span class="lobby-slot-role">${pal.name.split(' ')[0]}</span>
+                                        <span class="lobby-personality-badge ${persCls}" style="cursor:default;">${persLabel}</span>
+                                    </div>
+                                    <span class="ping-indicator ${pingCls}"><span class="ping-dot"></span>${pingVal}ms</span>
+                                </div>
+                            `;
+                        } else {
+                            slotDiv.innerHTML = `
+                                <div class="lobby-slot-avatar"><i class="fa-solid fa-atom"></i></div>
+                                <div style="display:flex; flex-direction:column; align-items:center; gap:2px;">
+                                    <span class="lobby-slot-name">${p.name} ${p.id === lobbyState.localPlayerId ? '(أنت)' : ''}</span>
+                                    <span class="lobby-slot-role">${pal.name.split(' ')[0]}</span>
+                                    <span class="ping-indicator ${pingCls}"><span class="ping-dot"></span>${pingVal}ms</span>
+                                </div>
+                            `;
+                        }
+                    } else {
+                        slotDiv.className = 'lobby-slot-card lobby-slot-card--waiting';
+                        slotDiv.innerHTML = `
+                            <div class="lobby-slot-avatar"><i class="fa-solid fa-user-plus"></i></div>
+                            <span class="lobby-slot-name">شاغر</span>
+                            <span class="lobby-slot-role">بانتظار الانضمام...</span>
+                        `;
+                    }
+                    this.clientPlayersSlotsList.appendChild(slotDiv);
+                }
+            }
+        }
+    }
+
+    startOnlineGame(config) {
+        this.isOnlineMatch = true;
+        this.isSpectator = !!config.isSpectator;
+        this.localPlayerId = config.localPlayerId;
+        this.config.gameMode = config.mode;
+        this.config.gridSize = config.gridSize || 7;
+        this.config.playerCount = config.players.length;
+
+        // تهيئة اللاعبين والروبوتات بأسمائهم وألوانهم وخططهم
+        this.config.playersSetup = config.players.map((p, idx) => {
+            return {
+                name: p.name,
+                paletteIndex: idx,
+                isAI: !!p.isAI,
+                personality: p.personality || 'balanced'
+            };
+        });
+
+        // إغلاق نافذة الردهة
+        this.closeOnlineLobby();
+
+        // إظهار أو إخفاء شارة المتفرج
+        if (this.spectatorBanner) {
+            if (this.isSpectator) {
+                this.spectatorBanner.classList.remove('hidden');
+            } else {
+                this.spectatorBanner.classList.add('hidden');
+            }
+        }
+
+        // إخفاء زر مفاعل جديد السريع أثناء الأونلاين لمنع الانفصال
+        if (this.btnRestartFast) {
+            this.btnRestartFast.classList.add('hidden');
+        }
+
+        // إطلاق اللعبة
+        this.inBattle = true;
+        this.updateModeUI();
+
+        if (this.welcomeSim) {
+            this.welcomeSim.stop();
+        }
+        if (this.welcomeScreenEl) this.welcomeScreenEl.classList.add('hidden');
+        if (this.battleScreenEl) this.battleScreenEl.classList.remove('hidden');
+
+        this.sound.playPlaceAtom(false);
+        this.startNewGame();
+
+        if (this.isSpectator) {
+            this.setWaveStatus('أنت متصل كمتفرج: ترصد وقائع الاشتباك النووي المباشر لحظياً 👁️', 'cyan');
+        } else {
+            this.setWaveStatus(`بدأت المعركة النووية أونلاين! ${this.localPlayerId === 0 ? 'أنت صاحب الضربة الافتتاحية!' : 'بانتظار الضربة الأولى...'}`, 'emerald');
+        }
+    }
+
+    getPersistentPlayerName() {
+        const STORAGE_KEY = 'atomic_war_persistent_player_name';
+        try {
+            let name = localStorage.getItem(STORAGE_KEY);
+            if (!name || !name.trim()) {
+                name = 'قائد اليورانيوم';
+                localStorage.setItem(STORAGE_KEY, name);
+            }
+            return name.trim();
+        } catch (e) {
+            return 'قائد اليورانيوم';
+        }
+    }
+
+    setPersistentPlayerName(name) {
+        const STORAGE_KEY = 'atomic_war_persistent_player_name';
+        const cleanName = (name && name.trim()) ? name.trim().slice(0, 16) : 'قائد اليورانيوم';
+        try {
+            localStorage.setItem(STORAGE_KEY, cleanName);
+        } catch (e) {}
+
+        if (this.onlinePlayerNameInput && this.onlinePlayerNameInput.value !== cleanName) {
+            this.onlinePlayerNameInput.value = cleanName;
+        }
+        if (this.config && this.config.playersSetup && this.config.playersSetup[0]) {
+            this.config.playersSetup[0].name = cleanName;
+        }
+        return cleanName;
+    }
+
+    handleRemoteMove(move) {
+        if (!this.engine || !this.inBattle) return;
+        // إذا كانت الحركة قادمة من خصم، يتم تنفيذها
+        if (move.playerId !== this.localPlayerId) {
+            this.processPlayerMove(move.r, move.c, move.atomCount || 1, move.actionType || 'atom', true);
+        }
+    }
+
+    handlePlayerLeft(player) {
+        const name = (player && player.name) ? player.name : 'أحد الخصوم';
+        this.setWaveStatus(`⚠️ القوة النووية [${name}] غادرت المعركة أو انقطع اتصالها!`, 'rose');
+        this.sound.playShieldDeflect();
+    }
+
+    /**
+     * مساعد التوجيه التكتيكي (Tactical Advisor)
+     */
+    showTacticalHint() {
+        if (!this.inBattle || !this.engine || this.engine.isGameOver) {
+            this.setWaveStatus('المفاعل متوقف حالياً، لا توجد إشارات تكتيكية!', 'amber');
+            return;
+        }
+
+        if (this.isSpectator) {
+            this.setWaveStatus('أنت متفرج فقط 👁️، التوجيه التكتيكي مخصص للاعبين المقاتلين.', 'amber');
+            this.sound.playShieldDeflect();
+            return;
+        }
+
+        const currentPlayer = this.engine.getCurrentPlayer();
+        if (this.isOnlineMatch && currentPlayer.id !== this.localPlayerId) {
+            this.setWaveStatus('💡 انتظر حلول دورك في المفاعل لطلب التوجيه التكتيكي لحركتك!', 'amber');
+            this.sound.playShieldDeflect();
+            return;
+        }
+
+        const hint = this.engine.getTacticalHint();
+        if (!hint) {
+            this.setWaveStatus('لم يتم رصد مسار انشطاري حاسم في هذه اللحظة، ركز على تحصين مراكزك!', 'info');
+            return;
+        }
+
+        if (this.tacticalHintTimer) {
+            clearTimeout(this.tacticalHintTimer);
+            this.tacticalHintTimer = null;
+        }
+        document.querySelectorAll('.cell-tactical-hint').forEach(el => el.classList.remove('cell-tactical-hint'));
+
+        const cellEl = document.querySelector(`.reactor-cell[data-row="${hint.r}"][data-col="${hint.c}"]`);
+        if (cellEl) {
+            cellEl.classList.add('cell-tactical-hint');
+        }
+
+        this.sound.playShieldDeploy();
+        this.setWaveStatus(`💡 توجيه المفاعل: ${hint.reason}`, 'cyan');
+
+        this.tacticalHintTimer = setTimeout(() => {
+            if (cellEl) cellEl.classList.remove('cell-tactical-hint');
+            this.tacticalHintTimer = null;
+        }, 4500);
+    }
+
+    /**
+     * إرسال وإظهار تعبير تكتيكي سريع (Quick Emote)
+     */
+    triggerEmote(emote) {
+        if (!emote) return;
+        const myName = (this.network && this.network.localPlayerName) ? this.network.localPlayerName : 'أنت';
+
+        if (this.isOnlineMatch && this.network) {
+            this.network.sendEmote(emote);
+        } else {
+            this.showEmoteBubble(emote, myName, true);
+        }
+    }
+
+    handleRemoteEmote(data) {
+        if (!data || !data.emote) return;
+        this.showEmoteBubble(data.emote, data.playerName || 'لاعب نووي', false);
+    }
+
+    showEmoteBubble(emote, senderName, isLocal) {
+        const bubble = document.createElement('div');
+        bubble.className = 'floating-emote-bubble';
+        bubble.innerHTML = `
+            <span>${emote}</span>
+            <span class="emote-sender">${senderName}</span>
+        `;
+
+        const randomLeft = 45 + (Math.random() * 20 - 10);
+        const randomTop = 38 + (Math.random() * 16 - 8);
+        bubble.style.left = `${randomLeft}%`;
+        bubble.style.top = `${randomTop}%`;
+
+        document.body.appendChild(bubble);
+        this.sound.playCellPlace();
+
+        setTimeout(() => {
+            if (bubble && bubble.parentNode) {
+                bubble.parentNode.removeChild(bubble);
+            }
+        }, 2400);
+    }
+
+    /**
+     * إدارة تحديث زمن الاستجابة وجودة الاتصال (Ping)
+     */
+    handlePingUpdate(pings) {
+        this.currentPings = pings || {};
+        if (this.inBattle) {
+            this.renderScoreboard(this.engine.players);
+        }
+    }
+
+    getPingClass(ms) {
+        if (ms <= 80) return 'ping--good';
+        if (ms <= 180) return 'ping--medium';
+        return 'ping--bad';
+    }
+
+    getPingBadgeHTML(playerId) {
+        if (!this.isOnlineMatch) return '';
+        const ms = (this.currentPings && this.currentPings[playerId] !== undefined)
+            ? this.currentPings[playerId]
+            : (this.network && this.network.isHost && playerId === 0 ? 1 : 45);
+
+        const cls = this.getPingClass(ms);
+        return `<span class="ping-indicator ${cls}" title="زمن الاستجابة: ${ms}ms"><span class="ping-dot"></span>${ms}ms</span>`;
     }
 }
 
