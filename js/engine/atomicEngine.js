@@ -649,6 +649,16 @@ class AtomicWarsEngine {
         }
         return null;
     }
+
+    /**
+     * الحصول على التوجيه التكتيكي الذكي للاعب الحالي
+     */
+    getTacticalHint() {
+        if (typeof AtomicAIBot !== 'undefined' && typeof AtomicAIBot.getTacticalHint === 'function') {
+            return AtomicAIBot.getTacticalHint(this);
+        }
+        return null;
+    }
 }
 
 if (typeof window !== 'undefined') {
