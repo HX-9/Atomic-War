@@ -33,7 +33,7 @@ class NormalGameMode extends (typeof BaseGameMode !== 'undefined' ? BaseGameMode
         return 'يبدأ كل لاعب دورته الأولى بوضع <strong>ذرة ثلاثية (3 ذرات مشعة)</strong> في أي غرفة فارغة لتأسيس قلعته النووية المحمية بدرع 3×3. في <strong>الوضع العادي</strong>، تتسع جميع الغرف (الزوايا، الأطراف، والقلب) لـ <strong>3 ذرات كحد أقصى وتنفجر عند الذرة الرابعة</strong> دون أي اختلاف بينها، مع <strong>ضياع الذرات المنقذفة خارج حواف الرقعة</strong> في الفضاء عند انفجار الغرف الطرفية والزوايا. بعد الجولة الأولى، يتم وضع الذرات في غرفك الخاصة فقط والتوسع عبر الانشطار المتسلسل.';
     }
 
-    isValidMove(engine, r, c, playerId) {
+    isValidMove(engine, r, c, playerId, atomCount = 1, actionType = 'atom') {
         const player = engine.players[playerId];
         const cell = engine.board[r][c];
         // بعد أن يلعب اللاعب دورته الأولى، يُحظر عليه وضع الذرة في غير غرفه الخاصة

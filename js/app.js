@@ -37,6 +37,10 @@ class AtomicWarsUIController {
         this.onlineSelectedMode = 'normal';
         this.onlineSelectedGridSize = 7;
         this.onlineSelectedPlayerCount = 4;
+        this.remoteMoveQueue = [];
+        this.isProcessingRemoteMove = false;
+        this.chatUnreadCount = 0;
+        this.isChatMinimized = false;
 
         // مدراء الميزات التكتيكية (ملف القائد والأنواط، الاهتزاز اللمسي، الثيمات المتقدمة)
         this.haptic = (typeof HapticFeedbackManager !== 'undefined') ? new HapticFeedbackManager() : null;
@@ -177,6 +181,18 @@ class AtomicWarsUIController {
         // عناصر مؤقت الصاعقة الذرية (Blitz)
         this.blitzTimerBadge = document.getElementById('blitzTimerBadge');
         this.blitzSecondsVal = document.getElementById('blitzSecondsVal');
+
+        // عناصر الشات التكتيكي في وضع الأونلاين
+        this.onlineChatPanel = document.getElementById('onlineChatPanel');
+        this.chatMessagesList = document.getElementById('chatMessagesList');
+        this.chatInputText = document.getElementById('chatInputText');
+        this.chatInputForm = document.getElementById('chatInputForm');
+        this.btnSendChatMessage = document.getElementById('btnSendChatMessage');
+        this.btnMinimizeChat = document.getElementById('btnMinimizeChat');
+        this.btnToggleChat = document.getElementById('btnToggleChat');
+        this.btnToggleChatMobile = document.getElementById('btnToggleChatMobile');
+        this.chatUnreadCountBadge = document.getElementById('chatUnreadCount');
+        this.chatHeaderUnreadBadge = document.getElementById('chatHeaderUnreadBadge');
 
         // شريط الترسانة ورصيد النيوترونات التكتيكي
         this.neutronArsenalBarEl = document.getElementById('neutronArsenalBar');
@@ -388,6 +404,43 @@ class AtomicWarsUIController {
                     this.triggerEmote(emote);
                 });
             });
+        }
+
+        // أحداث الشات التكتيكي في معارك الأونلاين
+        if (this.chatInputForm) {
+            this.chatInputForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                if (this.chatInputText) {
+                    this.sendLocalChatMessage(this.chatInputText.value);
+                }
+            });
+        }
+
+        if (this.btnSendChatMessage) {
+            this.btnSendChatMessage.addEventListener('click', () => {
+                if (this.chatInputText) {
+                    this.sendLocalChatMessage(this.chatInputText.value);
+                }
+            });
+        }
+
+        document.querySelectorAll('.chat-quick-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const msg = btn.dataset.msg;
+                if (msg) this.sendLocalChatMessage(msg);
+            });
+        });
+
+        if (this.btnMinimizeChat) {
+            this.btnMinimizeChat.addEventListener('click', () => this.toggleChatPanel(false));
+        }
+
+        if (this.btnToggleChat) {
+            this.btnToggleChat.addEventListener('click', () => this.toggleChatPanel());
+        }
+
+        if (this.btnToggleChatMobile) {
+            this.btnToggleChatMobile.addEventListener('click', () => this.toggleChatPanel());
         }
 
         // أزرار ملف القائد والأنواط
@@ -871,10 +924,24 @@ class AtomicWarsUIController {
         }
 
         if (this.isOnlineMatch) {
-            if (this.network) this.network.cleanup();
+            if (this.network) this.network.leaveRoom();
             this.isOnlineMatch = false;
         }
         this.isSpectator = false;
+        this.remoteMoveQueue = [];
+        this.isProcessingRemoteMove = false;
+        this.chatUnreadCount = 0;
+        this.updateChatUnreadBadge();
+
+        if (this.onlineChatPanel) {
+            this.onlineChatPanel.classList.add('hidden', 'chat-minimized-mobile');
+        }
+        if (this.btnToggleChat) {
+            this.btnToggleChat.classList.add('hidden');
+        }
+        if (this.btnToggleChatMobile) {
+            this.btnToggleChatMobile.classList.add('hidden');
+        }
         if (this.spectatorBanner) {
             this.spectatorBanner.classList.add('hidden');
         }
@@ -1320,6 +1387,10 @@ class AtomicWarsUIController {
 
         this.handleTurnTransition(nextPlayer);
         this.checkAndTriggerAITurn();
+
+        if (this.remoteMoveQueue && this.remoteMoveQueue.length > 0) {
+            this.processNextRemoteMove();
+        }
     }
 
     /**
@@ -1405,9 +1476,14 @@ class AtomicWarsUIController {
      */
     animateExplosionWave(wave, playerObj) {
         return new Promise(resolve => {
-            // وتيرة تفاعلية تدريجية حسب عمق موجة الانشطار لإعطاء اللاعب وقتاً لفهم السلسلة
-            const baseDuration = this.config.waveSpeedMs;
-            const pacedDuration = Math.min(380, Math.max(baseDuration, baseDuration + (wave.waveIndex * 15)));
+            // وتيرة تفاعلية: سريعة وخاطفة في المعارك الأونلاين لمنع أي شعور بالتأخير
+            let pacedDuration;
+            if (this.isOnlineMatch) {
+                pacedDuration = Math.max(110, 160 - (wave.waveIndex * 8));
+            } else {
+                const baseDuration = this.config.waveSpeedMs;
+                pacedDuration = Math.min(380, Math.max(baseDuration, baseDuration + (wave.waveIndex * 15)));
+            }
             const flyingEls = [];
 
             // 1. وميض ما قبل الانشطار (Pre-detonation white-hot pulse)
@@ -2169,6 +2245,10 @@ class AtomicWarsUIController {
             this.handleRemoteEmote(data);
         };
 
+        this.network.onChatReceived = (data) => {
+            this.handleIncomingChatMessage(data);
+        };
+
         this.network.onPingUpdate = (pings) => {
             this.handlePingUpdate(pings);
         };
@@ -2177,11 +2257,18 @@ class AtomicWarsUIController {
             this.handlePlayerLeft(player);
         };
 
-        this.network.onRoomClosed = () => {
+        this.network.onRoomClosed = (reason) => {
+            const closeMsg = reason || 'قام المضيف بإلغاء الاستضافة وإغلاق الغرفة.';
             if (this.clientWaitingSection) this.clientWaitingSection.classList.add('hidden');
             if (this.clientJoinInputSection) this.clientJoinInputSection.classList.remove('hidden');
-            this.setOnlineStatus('قام المضيف بإلغاء الغرفة والرجوع للقائمة.', 'amber');
+            this.setOnlineStatus(closeMsg, 'rose');
+            this.showWelcomeToast(`⚠️ ${closeMsg}`);
             this.sound.playShieldDeflect();
+
+            if (this.inBattle) {
+                this.setWaveStatus(`⚠️ ${closeMsg}`, 'rose');
+                setTimeout(() => this.showWelcomeScreen(), 2200);
+            }
         };
 
         this.network.onLeaveRoom = () => {
@@ -2190,6 +2277,15 @@ class AtomicWarsUIController {
             if (this.clientWaitingSection) this.clientWaitingSection.classList.add('hidden');
             if (this.clientJoinInputSection) this.clientJoinInputSection.classList.remove('hidden');
         };
+
+        // عند إغلاق التبويب أو تحديث الصفحة: إخراج الآخرين فوراً وإلغاء الاستضافة
+        if (typeof window !== 'undefined') {
+            window.addEventListener('beforeunload', () => {
+                if (this.network && this.network.roomCode) {
+                    this.network.leaveRoom();
+                }
+            });
+        }
     }
 
     checkUrlRoomParam() {
@@ -2218,6 +2314,13 @@ class AtomicWarsUIController {
     }
 
     closeOnlineLobby() {
+        // إذا كان المضيف قد أنشأ غرفة وخرج من النافذة، لا نترك الآخرين عالقين في الغرفة
+        if (this.network && this.network.isHost && this.network.roomCode && !this.inBattle) {
+            this.network.leaveRoom();
+            this.setOnlineStatus('تم إلغاء الاستضافة وإغلاق الغرفة.', 'info');
+        } else if (this.network && !this.network.isHost && this.network.roomCode && !this.inBattle) {
+            this.network.leaveRoom();
+        }
         this.toggleModal(this.onlineLobbyModal, false);
     }
 
@@ -2229,11 +2332,18 @@ class AtomicWarsUIController {
 
     switchOnlineTab(tab) {
         if (tab === 'create') {
+            if (this.network && !this.network.isHost && this.network.roomCode && !this.inBattle) {
+                this.network.leaveRoom();
+            }
             if (this.tabBtnCreateRoom) this.tabBtnCreateRoom.classList.add('online-tab-btn--active');
             if (this.tabBtnJoinRoom) this.tabBtnJoinRoom.classList.remove('online-tab-btn--active');
             if (this.tabContentCreateRoom) this.tabContentCreateRoom.classList.remove('hidden');
             if (this.tabContentJoinRoom) this.tabContentJoinRoom.classList.add('hidden');
         } else {
+            // عند الانتقال لتبويب الانضمام: إذا كان المضيف قد أسس غرفة يتم إلغاؤها وإخراج من فيها فوراً
+            if (this.network && this.network.isHost && this.network.roomCode && !this.inBattle) {
+                this.network.leaveRoom();
+            }
             if (this.tabBtnCreateRoom) this.tabBtnCreateRoom.classList.remove('online-tab-btn--active');
             if (this.tabBtnJoinRoom) this.tabBtnJoinRoom.classList.add('online-tab-btn--active');
             if (this.tabContentCreateRoom) this.tabContentCreateRoom.classList.add('hidden');
@@ -2483,6 +2593,28 @@ class AtomicWarsUIController {
         } else {
             this.setWaveStatus(`بدأت المعركة النووية أونلاين! ${this.localPlayerId === 0 ? 'أنت صاحب الضربة الافتتاحية!' : 'بانتظار الضربة الأولى...'}`, 'emerald');
         }
+
+        // إظهار وتهيئة الشات التكتيكي في شاشة المعركة
+        if (this.onlineChatPanel) {
+            this.onlineChatPanel.classList.remove('hidden', 'chat-minimized-mobile');
+        }
+        if (this.btnToggleChat) {
+            this.btnToggleChat.classList.remove('hidden');
+        }
+        if (this.btnToggleChatMobile) {
+            this.btnToggleChatMobile.classList.remove('hidden');
+        }
+        this.chatUnreadCount = 0;
+        this.updateChatUnreadBadge();
+        if (this.chatMessagesList) {
+            const roomTxt = (this.network && this.network.roomCode) ? `AW-${this.network.roomCode}` : 'الأونلاين';
+            this.chatMessagesList.innerHTML = `
+                <div class="chat-system-card">
+                    <i class="fa-solid fa-satellite-dish icon-sky"></i>
+                    <span>تم فتح تردد الاتصال التكتيكي المشفر للغرفة [${roomTxt}]. تبادل الرسائل مع خصومك!</span>
+                </div>
+            `;
+        }
     }
 
     getPersistentPlayerName() {
@@ -2517,16 +2649,198 @@ class AtomicWarsUIController {
 
     handleRemoteMove(move) {
         if (!this.engine || !this.inBattle) return;
-        // إذا كانت الحركة قادمة من خصم، يتم تنفيذها
-        if (move.playerId !== this.localPlayerId) {
-            this.processPlayerMove(move.r, move.c, move.atomCount || 1, move.actionType || 'atom', true);
+        if (move.playerId === this.localPlayerId) return;
+
+        // إدراج الحركة في طابور الحركات التتابعي لمنع تعارضها مع أي أنيميشن جارية
+        this.remoteMoveQueue.push(move);
+        this.processNextRemoteMove();
+    }
+
+    async processNextRemoteMove() {
+        if (this.isProcessingRemoteMove || this.remoteMoveQueue.length === 0) return;
+        if (this.isAnimating) return; // الانتظار حتى تنتهي حركة الانشطار الجارية
+
+        const move = this.remoteMoveQueue.shift();
+        if (!move) return;
+
+        this.isProcessingRemoteMove = true;
+        try {
+            await this.processPlayerMove(move.r, move.c, move.atomCount || 1, move.actionType || 'atom', true);
+        } catch (e) {
+            console.error('Remote move execution error:', e);
+        } finally {
+            this.isProcessingRemoteMove = false;
+            if (this.remoteMoveQueue.length > 0) {
+                this.processNextRemoteMove();
+            }
         }
     }
 
     handlePlayerLeft(player) {
+        const pId = (player && player.id !== undefined) ? player.id : null;
         const name = (player && player.name) ? player.name : 'أحد الخصوم';
-        this.setWaveStatus(`⚠️ القوة النووية [${name}] غادرت المعركة أو انقطع اتصالها!`, 'rose');
+
+        // 1. تسجيل واقعة انسحاب الخصم في السجل العسكري للقائد
+        if (this.dossier && typeof this.dossier.recordOpponentForfeit === 'function') {
+            this.dossier.recordOpponentForfeit(name);
+        }
+
+        // 2. إبلاغ اللاعب بشكل بارز ومفصل
+        this.setWaveStatus(`📢 إشعار عسكري: انسحب الخصم [${name}] من المعركة! تم تسجيل الانسحاب رسمياً في سجلك.`, 'rose');
         this.sound.playShieldDeflect();
+
+        // 3. إضافة رسالة رسمية في الشات التكتيكي
+        this.addSystemChatMessage(`⚠️ انسحب الخصم [${name}] من المفاعل، وتم تسجيل الواقعة في السجل العسكري.`);
+
+        // 4. إظهار إشعار Toast منبثق
+        this.showWelcomeToast(`🚨 انسحب الخصم [${name}] وتم تسجيل الواقعة في ملفك!`);
+
+        // 5. معالجة الانقطاع في محرك اللعبة النووي وإنهاء دوره فوراً
+        if (this.inBattle && this.engine && !this.engine.isGameOver && pId !== null) {
+            const discResult = this.engine.handlePlayerDisconnection(pId);
+            if (discResult) {
+                this.renderBoardState(this.engine.board);
+                this.renderScoreboard(this.engine.players);
+                this.updateTurnIndicator();
+
+                if (discResult.isGameOver && discResult.winner) {
+                    this.sound.playVictory();
+                    setTimeout(() => {
+                        this.showVictoryModal(discResult.winner);
+                        const sub = document.querySelector('.victory-subtitle');
+                        if (sub) sub.textContent = `سيطرة نووية مطلقة بعد انسحاب الخصم [${name}]! تم تسجيل الانتصار في سجلك.`;
+                    }, 400);
+                    return;
+                }
+
+                if (discResult.turnAdvanced && discResult.nextPlayer) {
+                    this.handleTurnTransition(discResult.nextPlayer);
+                    this.checkAndTriggerAITurn();
+                    this.setWaveStatus(`تم إنهاء دور [${name}] المنسحب، وانتقلت المعركة إلى القائد [${discResult.nextPlayer.name}]!`, 'sky');
+                }
+            }
+        }
+    }
+
+    /* ==========================================================================
+       دوال إدارة الشات التكتيكي في معارك الأونلاين (Online Comms Methods)
+       ========================================================================== */
+
+    handleIncomingChatMessage(data) {
+        if (!data || !data.text) return;
+        const isLocal = (data.senderId === this.localPlayerId && !data.isSpectator);
+
+        this.renderChatMessageCard({
+            senderId: data.senderId,
+            senderName: data.senderName || 'قائد نووي',
+            text: data.text,
+            isLocal: isLocal,
+            isSpectator: !!data.isSpectator,
+            timestamp: data.timestamp || Date.now()
+        });
+
+        if (!isLocal) {
+            this.sound.playChatMessage();
+            if (this.isChatHiddenOrMinimized()) {
+                this.chatUnreadCount++;
+                this.updateChatUnreadBadge();
+            }
+        }
+    }
+
+    sendLocalChatMessage(text) {
+        if (!text || !text.trim() || !this.network) return;
+        const clean = text.trim().slice(0, 120);
+        this.network.sendChat(clean);
+        if (this.chatInputText) {
+            this.chatInputText.value = '';
+            this.chatInputText.focus();
+        }
+    }
+
+    renderChatMessageCard(msg) {
+        if (!this.chatMessagesList) return;
+
+        const card = document.createElement('div');
+        card.className = `chat-msg-card ${msg.isLocal ? 'chat-msg-card--local' : 'chat-msg-card--remote'}`;
+
+        const timeStr = new Date(msg.timestamp).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+
+        let playerColor = '#38bdf8';
+        if (this.engine && this.engine.players && msg.senderId >= 0 && this.engine.players[msg.senderId]) {
+            playerColor = this.engine.players[msg.senderId].color || '#38bdf8';
+        }
+
+        const safeName = this.escapeHtml(msg.senderName);
+        const safeText = this.escapeHtml(msg.text);
+
+        card.innerHTML = `
+            <div class="chat-msg-header">
+                <span class="chat-msg-dot" style="background-color: ${playerColor}; box-shadow: 0 0 6px ${playerColor};"></span>
+                <span class="chat-msg-name">${safeName} ${msg.isLocal ? '<span style="opacity: 0.7; font-size: 0.65rem;">(أنت)</span>' : ''}</span>
+                <span class="chat-msg-time">${timeStr}</span>
+            </div>
+            <div class="chat-msg-bubble">${safeText}</div>
+        `;
+
+        this.chatMessagesList.appendChild(card);
+        this.chatMessagesList.scrollTop = this.chatMessagesList.scrollHeight;
+    }
+
+    addSystemChatMessage(text) {
+        if (!this.chatMessagesList) return;
+        const card = document.createElement('div');
+        card.className = 'chat-system-card';
+        card.innerHTML = `
+            <i class="fa-solid fa-circle-info icon-sky"></i>
+            <span>${this.escapeHtml(text)}</span>
+        `;
+        this.chatMessagesList.appendChild(card);
+        this.chatMessagesList.scrollTop = this.chatMessagesList.scrollHeight;
+    }
+
+    escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    isChatHiddenOrMinimized() {
+        if (!this.onlineChatPanel) return true;
+        return this.onlineChatPanel.classList.contains('hidden') ||
+               this.onlineChatPanel.classList.contains('chat-minimized-mobile');
+    }
+
+    toggleChatPanel(forceOpen = null) {
+        if (!this.onlineChatPanel) return;
+        const isCurrentlyHidden = this.onlineChatPanel.classList.contains('hidden') ||
+                                  this.onlineChatPanel.classList.contains('chat-minimized-mobile');
+        const shouldOpen = (forceOpen !== null) ? forceOpen : isCurrentlyHidden;
+
+        if (shouldOpen) {
+            this.onlineChatPanel.classList.remove('hidden', 'chat-minimized-mobile');
+            this.chatUnreadCount = 0;
+            this.updateChatUnreadBadge();
+            if (this.chatInputText) this.chatInputText.focus();
+        } else {
+            this.onlineChatPanel.classList.add('chat-minimized-mobile');
+            if (window.innerWidth >= 1024) {
+                this.onlineChatPanel.classList.add('hidden');
+            }
+        }
+    }
+
+    updateChatUnreadBadge() {
+        const count = this.chatUnreadCount;
+        [this.chatUnreadCountBadge, this.chatHeaderUnreadBadge].forEach(badge => {
+            if (!badge) return;
+            if (count > 0) {
+                badge.textContent = count > 9 ? '9+' : count;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        });
     }
 
     /**
@@ -2715,6 +3029,8 @@ class AtomicWarsUIController {
         if (winsEl) winsEl.textContent = d.wins;
         if (atomsEl) atomsEl.textContent = d.totalAtomsPlaced;
         if (maxChainEl) maxChainEl.textContent = `${d.maxChainReaction} موجات`;
+        const forfeitsEl = document.getElementById('statTotalForfeits');
+        if (forfeitsEl) forfeitsEl.textContent = d.opponentForfeits || 0;
         if (countBadge) countBadge.textContent = `${d.unlockedMedals.length} / ${this.dossier.medalsDefinition.length} مفتوح`;
 
         if (grid) {

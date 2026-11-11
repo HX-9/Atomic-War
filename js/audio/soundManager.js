@@ -310,6 +310,31 @@ class NuclearSoundManager {
         osc.start(now);
         osc.stop(now + 0.3);
     }
+
+    /**
+     * صوت نغمة وصول رسالة في الشات التكتيكي
+     */
+    playChatMessage() {
+        if (!this.enabled) return;
+        this.init();
+        if (!this.ctx) return;
+
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(580, now);
+        osc.frequency.exponentialRampToValueAtTime(880, now + 0.12);
+
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.14);
+    }
 }
 
 if (typeof window !== 'undefined') {

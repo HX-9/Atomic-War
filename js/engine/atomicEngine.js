@@ -676,7 +676,71 @@ class AtomicWarsEngine {
             this.players.forEach(p => {
                 if (p.id !== this.winner.id) p.alive = false;
             });
+        } else if (alivePlayers.length === 1 && this.players.filter(p => !p.disconnected).length === 1) {
+            // فوز بالانسحاب إذا لم يتبق سوى لاعب واحد متصل
+            this.isGameOver = true;
+            this.winner = alivePlayers[0];
         }
+    }
+
+    /**
+     * معالجة انقطاع اتصال أو انسحاب لاعب أثناء المعركة الجارية
+     * ينهي دوره فوراً إذا كان دوره نشطاً، وينقل المعركة للاعب التالي
+     */
+    handlePlayerDisconnection(playerId) {
+        if (playerId < 0 || playerId >= this.players.length) return null;
+        const player = this.players[playerId];
+        if (!player || player.disconnected) return null;
+
+        player.alive = false;
+        player.disconnected = true;
+
+        // إخلاء وتحييد جميع ذرات اللاعب ودروعه من الرقعة
+        for (let r = 0; r < this.rows; r++) {
+            for (let c = 0; c < this.cols; c++) {
+                const cell = this.board[r][c];
+                if (cell.owner === playerId) {
+                    cell.owner = null;
+                    cell.atoms = 0;
+                    cell.hasControlRod = false;
+                }
+            }
+        }
+
+        // إزالة درع البداية الخاص به إن وجد
+        this.clearPlayerShield(playerId);
+
+        // إعادة حساب الإحصائيات
+        this.recalculateStats();
+
+        // فحص عدد اللاعبين المتبقين على قيد الحياة وغير المنقطعين
+        const remainingAlive = this.players.filter(p => p.alive && !p.disconnected);
+        if (remainingAlive.length <= 1) {
+            this.isGameOver = true;
+            this.winner = remainingAlive.length === 1 ? remainingAlive[0] : null;
+            return {
+                isGameOver: true,
+                winner: this.winner,
+                turnAdvanced: false,
+                nextPlayer: this.winner,
+                disconnectedPlayer: player
+            };
+        }
+
+        let turnAdvanced = false;
+        // إذا كان الدور الحالي هو دور هذا اللاعب المنقطع، انتقل للاعب الحي التالي فوراً
+        if (this.currentPlayerIndex === playerId) {
+            this.advanceToNextAlivePlayer();
+            turnAdvanced = true;
+        }
+
+        return {
+            isGameOver: this.isGameOver,
+            winner: this.winner,
+            turnAdvanced,
+            nextPlayer: this.getCurrentPlayer(),
+            disconnectedPlayer: player
+        };
     }
 
     /**

@@ -693,3 +693,365 @@
     border-color: #38bdf8;
     outline: none;
 }
+
+/* ==========================================================================
+   الحرب الذرية - نظام الشات التكتيكي في معارك الأونلاين (Online Battle Chat)
+   ========================================================================== */
+
+/* صف ساحة المعركة الذي يجمع الشات التكتيكي على اليمين والمفاعل في المركز */
+.arena-battle-row {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 1.1rem;
+    position: relative;
+    max-width: 100%;
+}
+
+/* لوحة الشات التكتيكي في وضع الأونلاين (تظهر على اليمين في واجهة RTL) */
+.online-chat-panel {
+    width: 340px;
+    min-width: 310px;
+    max-width: 360px;
+    height: 540px;
+    max-height: calc(100vh - 140px);
+    background: linear-gradient(165deg, rgba(15, 23, 42, 0.94) 0%, rgba(30, 41, 59, 0.92) 100%);
+    border: 1.5px solid rgba(56, 189, 248, 0.35);
+    border-radius: 18px;
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.6), 0 0 20px rgba(14, 165, 233, 0.15);
+    backdrop-filter: blur(14px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+    z-index: 20;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    flex-shrink: 0;
+}
+
+/* الهيدر العلوي للشات */
+.chat-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.65rem 0.85rem;
+    background: rgba(15, 23, 42, 0.75);
+    border-bottom: 1px solid rgba(56, 189, 248, 0.2);
+}
+
+.chat-panel-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.chat-panel-title {
+    font-size: 0.88rem;
+    font-weight: 800;
+    color: #f8fafc;
+    letter-spacing: -0.2px;
+}
+
+.chat-live-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #34d399;
+    background: rgba(16, 185, 129, 0.15);
+    border: 1px solid rgba(52, 211, 153, 0.4);
+    border-radius: 9999px;
+    padding: 0.15rem 0.45rem;
+}
+
+.chat-live-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #10b981;
+    box-shadow: 0 0 8px #10b981;
+    animation: livePulse 1.5s infinite ease-in-out;
+}
+
+@keyframes livePulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+.chat-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.chat-icon-btn {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    transition: all 0.2s;
+}
+
+.chat-icon-btn:hover {
+    color: #f8fafc;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* حاوية قائمة الرسائل */
+.chat-messages-container {
+    flex: 1;
+    padding: 0.7rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(56, 189, 248, 0.3) transparent;
+}
+
+.chat-messages-container::-webkit-scrollbar {
+    width: 4px;
+}
+.chat-messages-container::-webkit-scrollbar-thumb {
+    background: rgba(56, 189, 248, 0.35);
+    border-radius: 4px;
+}
+
+/* بطاقة الرسالة */
+.chat-msg-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    max-width: 90%;
+    animation: chatFadeIn 0.22s ease-out;
+}
+
+@keyframes chatFadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.chat-msg-card--local {
+    align-self: flex-start;
+}
+
+.chat-msg-card--remote {
+    align-self: flex-end;
+}
+
+.chat-msg-header {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.72rem;
+    color: #94a3b8;
+}
+
+.chat-msg-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    box-shadow: 0 0 6px currentColor;
+}
+
+.chat-msg-name {
+    font-weight: 700;
+    color: #e2e8f0;
+}
+
+.chat-msg-time {
+    font-size: 0.65rem;
+    color: #64748b;
+    margin-right: auto;
+}
+
+.chat-msg-bubble {
+    background: rgba(30, 41, 59, 0.85);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 10px;
+    padding: 0.42rem 0.65rem;
+    font-size: 0.83rem;
+    line-height: 1.35;
+    color: #f1f5f9;
+    word-break: break-word;
+}
+
+.chat-msg-card--local .chat-msg-bubble {
+    background: rgba(14, 116, 144, 0.4);
+    border-color: rgba(56, 189, 248, 0.4);
+    border-top-right-radius: 2px;
+}
+
+.chat-msg-card--remote .chat-msg-bubble {
+    background: rgba(51, 65, 85, 0.65);
+    border-top-left-radius: 2px;
+}
+
+/* رسائل النظام في الشات */
+.chat-system-card {
+    align-self: center;
+    background: rgba(30, 41, 59, 0.55);
+    border: 1px dashed rgba(56, 189, 248, 0.3);
+    border-radius: 8px;
+    padding: 0.35rem 0.6rem;
+    font-size: 0.72rem;
+    color: #cbd5e1;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    text-align: center;
+    max-width: 96%;
+    margin: 0.2rem 0;
+}
+
+/* شريط العبارات السريعة */
+.chat-quick-pills {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.35rem;
+    padding: 0.45rem 0.6rem;
+    background: rgba(15, 23, 42, 0.65);
+    border-top: 1px solid rgba(148, 163, 184, 0.14);
+    overflow: hidden;
+}
+
+.chat-quick-btn {
+    flex: 1;
+    text-align: center;
+    background: rgba(30, 41, 59, 0.8);
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    border-radius: 8px;
+    padding: 0.35rem 0.2rem;
+    font-size: 0.74rem;
+    font-family: inherit;
+    font-weight: 700;
+    color: #e2e8f0;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.18s;
+}
+.chat-quick-btn:hover {
+    background: rgba(56, 189, 248, 0.28);
+    border-color: #38bdf8;
+    color: #ffffff;
+    transform: translateY(-1px);
+}
+
+/* شريط الإدخال */
+.chat-input-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.5rem 0.65rem;
+    background: rgba(15, 23, 42, 0.95);
+    border-top: 1px solid rgba(56, 189, 248, 0.2);
+}
+
+.chat-input {
+    flex: 1;
+    background: rgba(30, 41, 59, 0.8);
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    border-radius: 8px;
+    padding: 0.42rem 0.65rem;
+    color: #f8fafc;
+    font-family: inherit;
+    font-size: 0.82rem;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.chat-input:focus {
+    border-color: #38bdf8;
+    box-shadow: 0 0 8px rgba(56, 189, 248, 0.3);
+}
+
+.chat-send-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #0284c7, #38bdf8);
+    border: none;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    flex-shrink: 0;
+}
+
+.chat-send-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.45);
+}
+
+/* زر عائم / علامة تبويب سريعة للشات في الشاشات الصغيرة */
+.floating-chat-toggle {
+    position: fixed;
+    bottom: 1.2rem;
+    right: 1.2rem;
+    background: linear-gradient(135deg, #0284c7, #0ea5e9);
+    border: 1.5px solid rgba(56, 189, 248, 0.7);
+    color: #ffffff;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    box-shadow: 0 6px 20px rgba(14, 165, 233, 0.45);
+    cursor: pointer;
+    z-index: 99;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.floating-chat-toggle:hover {
+    transform: scale(1.08);
+}
+.chat-unread-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: #f43f5e;
+    color: #ffffff;
+    border-radius: 9999px;
+    font-size: 0.68rem;
+    font-weight: 800;
+    min-width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    border: 1.5px solid #0f172a;
+}
+
+/* التجاوب مع الشاشات المتوسطة والصغيرة */
+@media (max-width: 1023px) {
+    .online-chat-panel {
+        position: fixed;
+        top: auto;
+        bottom: 4.8rem;
+        right: 1rem;
+        width: 340px;
+        max-width: calc(100vw - 2rem);
+        height: 440px;
+        z-index: 100;
+        box-shadow: 0 18px 45px rgba(0, 0, 0, 0.85), 0 0 25px rgba(56, 189, 248, 0.35);
+    }
+    .online-chat-panel.chat-minimized-mobile {
+        display: none !important;
+    }
+}

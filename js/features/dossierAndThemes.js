@@ -210,6 +210,7 @@ class CommanderDossier {
             siegeWins: 0,
             controlRodsUsed: 0,
             energyDrainsUsed: 0,
+            opponentForfeits: 0,
             unlockedMedals: []
         };
         try {
@@ -239,6 +240,25 @@ class CommanderDossier {
 
     recordEnergyDrain() {
         this.data.energyDrainsUsed++;
+        this.save();
+    }
+
+    /**
+     * تسجيل واقعة انسحاب أو خروج الخصم من المعركة رسمياً
+     * @param {string} opponentName اسم الخصم المنسحب
+     */
+    recordOpponentForfeit(opponentName = 'خصم نووي') {
+        this.data.opponentForfeits = (this.data.opponentForfeits || 0) + 1;
+        if (!this.data.forfeitLog) {
+            this.data.forfeitLog = [];
+        }
+        this.data.forfeitLog.unshift({
+            name: opponentName,
+            time: Date.now()
+        });
+        if (this.data.forfeitLog.length > 20) {
+            this.data.forfeitLog.pop();
+        }
         this.save();
     }
 

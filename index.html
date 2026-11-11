@@ -381,11 +381,16 @@
                     </span>
                 </div>
 
-                <!-- اليسار: 5 أزرار تكتيكية مرتبة وموحدة الأبعاد فقط -->
+                <!-- اليسار: أزرار تكتيكية مرتبة وموحدة الأبعاد -->
                 <div class="header-actions">
                     <button id="btnTacticalAdvisor" title="طلب توجيه تكتيكي ذكي للحركة القادمة" class="action-btn action-btn--advisor">
                         <i class="fa-solid fa-lightbulb icon-amber"></i>
                         <span class="action-btn-label">توجيه</span>
+                    </button>
+                    <button id="btnToggleChat" title="تبديل إظهار/إخفاء الشات التكتيكي" class="action-btn hidden" style="position: relative;">
+                        <i class="fa-solid fa-comments icon-sky"></i>
+                        <span class="action-btn-label">الشات</span>
+                        <span id="chatHeaderUnreadBadge" class="chat-unread-badge hidden">0</span>
                     </button>
                     <button id="btnRestartFast" title="إعادة تشغيل المعركة بنفس الإعدادات المقفلة" class="action-btn action-btn--primary">
                         <i class="fa-solid fa-rotate-right"></i>
@@ -421,101 +426,150 @@
                 <span>وضع المتفرج (Spectator): أنت ترصد وقائع المعركة النووية المباشرة</span>
             </div>
 
-            <!-- قلب المفاعل الذري في المركز -->
-            <section class="reactor-section">
-                <div id="boardWrapper" class="game-board-wrapper">
-                    <div id="gameBoard" class="game-board">
-                        <!-- يتم توليد غرف المفاعل ديناميكياً بواسطة js/app.js -->
-                    </div>
-                </div>
+            <!-- صف ساحة المعركة المشترك: الشات التكتيكي على اليمين والمفاعل في المركز -->
+            <div class="arena-battle-row">
 
-                <!-- منصة أوراق البطاقات التكتيكية السفلية (تظهر في وضع البطاقات الذرية فقط) -->
-                <div id="neutronArsenalBar" class="neutron-floating-dock hidden">
-                    <div class="dock-energy-bar">
-                        <div class="dock-neutron-info">
-                            <div class="dock-neutron-header">
-                                <span class="dock-neutron-label">
-                                    <i class="fa-solid fa-bolt icon-sky"></i> طاقة النيوترونات
-                                </span>
-                                <span id="neutronValueDisplay" class="dock-neutron-val">0 / 10</span>
-                            </div>
-                            <div class="neutron-meter-track" id="neutronMeterTrack"></div>
+                <!-- لوحة الشات التكتيكي في وضع الأونلاين (تظهر على اليمين في واجهة RTL) -->
+                <aside id="onlineChatPanel" class="online-chat-panel hidden">
+                    <div class="chat-panel-header">
+                        <div class="chat-panel-title-wrap">
+                            <i class="fa-solid fa-comments icon-sky"></i>
+                            <span class="chat-panel-title">الاتصال التكتيكي</span>
+                            <span class="chat-live-badge"><span class="chat-live-dot"></span> مباشر</span>
                         </div>
-                        <div id="arsenalHintText" class="dock-hint-text">
-                            💡 انقر على ذرتك لتغذيتها (1⚡) • أو اختر بطاقة تكتيكية من يدك أدناه
+                        <div class="chat-header-actions">
+                            <button type="button" id="btnMinimizeChat" class="chat-icon-btn" title="تصغير/إخفاء الشات">
+                                <i class="fa-solid fa-chevron-right"></i>
+                            </button>
                         </div>
                     </div>
 
-                    <div class="tactical-cards-hand">
-                        <button type="button" class="arsenal-btn tactical-card tactical-card--element" data-action="atom" data-atoms="1" data-cost="3" id="btnArsenalSingle" title="إلقاء ذرة أحادية في غرفة فارغة">
-                            <div class="tactical-card-cost" id="costBadgeSingle">⚡ 3</div>
-                            <div class="tactical-card-visual">
-                                <span class="arsenal-atom-preview preview-1">●</span>
-                            </div>
-                            <div class="arsenal-btn-name">ذرة أحادية</div>
-                            <div class="tactical-card-type">توسع • فراغ</div>
-                        </button>
-
-                        <button type="button" class="arsenal-btn tactical-card tactical-card--element" data-action="atom" data-atoms="2" data-cost="6" id="btnArsenalDouble" title="إلقاء ذرة ثنائية في غرفة فارغة">
-                            <div class="tactical-card-cost" id="costBadgeDouble">⚡ 6</div>
-                            <div class="tactical-card-visual">
-                                <span class="arsenal-atom-preview preview-2">●●</span>
-                            </div>
-                            <div class="arsenal-btn-name">ثنائي النظائر</div>
-                            <div class="tactical-card-type">شحن • فراغ</div>
-                        </button>
-
-                        <button type="button" class="arsenal-btn tactical-card tactical-card--element" data-action="atom" data-atoms="3" data-cost="9" id="btnArsenalTriple" title="إلقاء نواة ثلاثية مقاومة في غرفة فارغة">
-                            <div class="tactical-card-cost" id="costBadgeTriple">⚡ 9</div>
-                            <div class="tactical-card-visual">
-                                <span class="arsenal-atom-preview preview-3">●●●</span>
-                            </div>
-                            <div class="arsenal-btn-name">النواة الثلاثية</div>
-                            <div class="tactical-card-type">قلعة • فراغ</div>
-                        </button>
-
-                        <button type="button" class="arsenal-btn arsenal-btn--control-rod tactical-card tactical-card--defense" data-action="controlRod" data-cost="5" id="btnArsenalControlRod" title="تثبيت درع نووي واقٍ على إحدى غرفك لامتصاص الانفجارات">
-                            <div class="tactical-card-cost arsenal-btn-cost--rod" id="costBadgeControlRod">🛡️ 5</div>
-                            <div class="tactical-card-visual">
-                                <i class="fa-solid fa-shield-halved arsenal-rod-icon"></i>
-                            </div>
-                            <div class="arsenal-btn-name">درع التحكم</div>
-                            <div class="tactical-card-type">تحصين غرفتك</div>
-                        </button>
-
-                        <button type="button" class="arsenal-btn arsenal-btn--energy-drain tactical-card tactical-card--offense" data-action="energyDrain" data-cost="3" id="btnArsenalEnergyDrain" title="إلقاء هجوم إخماد طاقة على ذرة معادية لإرجاعها للمستوى الأول">
-                            <div class="tactical-card-cost arsenal-btn-cost--drain" id="costBadgeEnergyDrain">⚡ 3</div>
-                            <div class="tactical-card-visual">
-                                <i class="fa-solid fa-bolt-slash arsenal-drain-icon"></i>
-                            </div>
-                            <div class="arsenal-btn-name">إخماد طاقة</div>
-                            <div class="tactical-card-type">إضعاف العدو</div>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- شريط سفلي مدمج جداً للإشعاع والتعبيرات السريعة أسفل المفاعل -->
-                <div class="reactor-bottom-bar glass-panel">
-                    <div class="telemetry-geiger">
-                        <i class="fa-solid fa-radiation icon-emerald"></i>
-                        <span class="geiger-mini-label">الإشعاع:</span>
-                        <div class="geiger-meter-bar">
-                            <div id="geigerMeterFill" class="geiger-meter-fill"></div>
+                    <!-- حاوية الرسائل التكتيكية الحية -->
+                    <div id="chatMessagesList" class="chat-messages-container">
+                        <div class="chat-system-card">
+                            <i class="fa-solid fa-satellite-dish icon-sky"></i>
+                            <span>تردد الاتصال التكتيكي نشط. تبادل الرسائل والتكتيكات مع خصومك!</span>
                         </div>
-                        <span id="geigerValueText" class="geiger-value">0.14 μSv/h</span>
                     </div>
 
-                    <div id="quickEmotesBar" class="quick-emotes-dock">
-                        <button type="button" class="emote-btn" data-emote="☢️" title="خطر نووي!">☢️</button>
-                        <button type="button" class="emote-btn" data-emote="💥" title="انشطار كارثي!">💥</button>
-                        <button type="button" class="emote-btn" data-emote="🛡️" title="دفاع حصين!">🛡️</button>
-                        <button type="button" class="emote-btn" data-emote="🎯" title="ضربة محكمة!">🎯</button>
-                        <button type="button" class="emote-btn" data-emote="⚡" title="طاقة قصوى!">⚡</button>
-                        <button type="button" class="emote-btn" data-emote="🤝" title="لعب نظيف!">🤝</button>
+                    <!-- شريط العبارات السريعة الجاهزة (3 ردود تكتيكية سريعة) -->
+                    <div class="chat-quick-pills">
+                        <button type="button" class="chat-quick-btn" data-msg="ضربة محكمة! 🎯">🎯 ضربة محكمة</button>
+                        <button type="button" class="chat-quick-btn" data-msg="انشطار كارثي! 💥">💥 انشطار كارثي</button>
+                        <button type="button" class="chat-quick-btn" data-msg="معركة ممتازة! 🤝">🤝 معركة ممتازة</button>
                     </div>
-                </div>
-            </section>
+
+                    <!-- شريط إدخال الرسالة والإرسال -->
+                    <form id="chatInputForm" class="chat-input-bar" onsubmit="return false;">
+                        <input type="text" id="chatInputText" class="chat-input" placeholder="اكتب رسالة تكتيكية..." maxlength="120" autocomplete="off">
+                        <button type="submit" id="btnSendChatMessage" class="chat-send-btn" title="إرسال (Enter)">
+                            <i class="fa-solid fa-paper-plane"></i>
+                        </button>
+                    </form>
+                </aside>
+
+                <!-- قلب المفاعل الذري في المركز -->
+                <section class="reactor-section">
+                    <div id="boardWrapper" class="game-board-wrapper">
+                        <div id="gameBoard" class="game-board">
+                            <!-- يتم توليد غرف المفاعل ديناميكياً بواسطة js/app.js -->
+                        </div>
+                    </div>
+
+                    <!-- منصة أوراق البطاقات التكتيكية السفلية (تظهر في وضع البطاقات الذرية فقط) -->
+                    <div id="neutronArsenalBar" class="neutron-floating-dock hidden">
+                        <div class="dock-energy-bar">
+                            <div class="dock-neutron-info">
+                                <div class="dock-neutron-header">
+                                    <span class="dock-neutron-label">
+                                        <i class="fa-solid fa-bolt icon-sky"></i> طاقة النيوترونات
+                                    </span>
+                                    <span id="neutronValueDisplay" class="dock-neutron-val">0 / 10</span>
+                                </div>
+                                <div class="neutron-meter-track" id="neutronMeterTrack"></div>
+                            </div>
+                            <div id="arsenalHintText" class="dock-hint-text">
+                                💡 انقر على ذرتك لتغذيتها (1⚡) • أو اختر بطاقة تكتيكية من يدك أدناه
+                            </div>
+                        </div>
+
+                        <div class="tactical-cards-hand">
+                            <button type="button" class="arsenal-btn tactical-card tactical-card--element" data-action="atom" data-atoms="1" data-cost="3" id="btnArsenalSingle" title="إلقاء ذرة أحادية في غرفة فارغة">
+                                <div class="tactical-card-cost" id="costBadgeSingle">⚡ 3</div>
+                                <div class="tactical-card-visual">
+                                    <span class="arsenal-atom-preview preview-1">●</span>
+                                </div>
+                                <div class="arsenal-btn-name">ذرة أحادية</div>
+                                <div class="tactical-card-type">توسع • فراغ</div>
+                            </button>
+
+                            <button type="button" class="arsenal-btn tactical-card tactical-card--element" data-action="atom" data-atoms="2" data-cost="6" id="btnArsenalDouble" title="إلقاء ذرة ثنائية في غرفة فارغة">
+                                <div class="tactical-card-cost" id="costBadgeDouble">⚡ 6</div>
+                                <div class="tactical-card-visual">
+                                    <span class="arsenal-atom-preview preview-2">●●</span>
+                                </div>
+                                <div class="arsenal-btn-name">ثنائي النظائر</div>
+                                <div class="tactical-card-type">شحن • فراغ</div>
+                            </button>
+
+                            <button type="button" class="arsenal-btn tactical-card tactical-card--element" data-action="atom" data-atoms="3" data-cost="9" id="btnArsenalTriple" title="إلقاء نواة ثلاثية مقاومة في غرفة فارغة">
+                                <div class="tactical-card-cost" id="costBadgeTriple">⚡ 9</div>
+                                <div class="tactical-card-visual">
+                                    <span class="arsenal-atom-preview preview-3">●●●</span>
+                                </div>
+                                <div class="arsenal-btn-name">النواة الثلاثية</div>
+                                <div class="tactical-card-type">قلعة • فراغ</div>
+                            </button>
+
+                            <button type="button" class="arsenal-btn arsenal-btn--control-rod tactical-card tactical-card--defense" data-action="controlRod" data-cost="5" id="btnArsenalControlRod" title="تثبيت درع نووي واقٍ على إحدى غرفك لامتصاص الانفجارات">
+                                <div class="tactical-card-cost arsenal-btn-cost--rod" id="costBadgeControlRod">🛡️ 5</div>
+                                <div class="tactical-card-visual">
+                                    <i class="fa-solid fa-shield-halved arsenal-rod-icon"></i>
+                                </div>
+                                <div class="arsenal-btn-name">درع التحكم</div>
+                                <div class="tactical-card-type">تحصين غرفتك</div>
+                            </button>
+
+                            <button type="button" class="arsenal-btn arsenal-btn--energy-drain tactical-card tactical-card--offense" data-action="energyDrain" data-cost="3" id="btnArsenalEnergyDrain" title="إلقاء هجوم إخماد طاقة على ذرة معادية لإرجاعها للمستوى الأول">
+                                <div class="tactical-card-cost arsenal-btn-cost--drain" id="costBadgeEnergyDrain">⚡ 3</div>
+                                <div class="tactical-card-visual">
+                                    <i class="fa-solid fa-bolt-slash arsenal-drain-icon"></i>
+                                </div>
+                                <div class="arsenal-btn-name">إخماد طاقة</div>
+                                <div class="tactical-card-type">إضعاف العدو</div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- شريط سفلي مدمج جداً للإشعاع والتعبيرات السريعة أسفل المفاعل -->
+                    <div class="reactor-bottom-bar glass-panel">
+                        <div class="telemetry-geiger">
+                            <i class="fa-solid fa-radiation icon-emerald"></i>
+                            <span class="geiger-mini-label">الإشعاع:</span>
+                            <div class="geiger-meter-bar">
+                                <div id="geigerMeterFill" class="geiger-meter-fill"></div>
+                            </div>
+                            <span id="geigerValueText" class="geiger-value">0.14 μSv/h</span>
+                        </div>
+
+                        <div id="quickEmotesBar" class="quick-emotes-dock">
+                            <button type="button" class="emote-btn" data-emote="☢️" title="خطر نووي!">☢️</button>
+                            <button type="button" class="emote-btn" data-emote="💥" title="انشطار كارثي!">💥</button>
+                            <button type="button" class="emote-btn" data-emote="🛡️" title="دفاع حصين!">🛡️</button>
+                            <button type="button" class="emote-btn" data-emote="🎯" title="ضربة محكمة!">🎯</button>
+                            <button type="button" class="emote-btn" data-emote="⚡" title="طاقة قصوى!">⚡</button>
+                            <button type="button" class="emote-btn" data-emote="🤝" title="لعب نظيف!">🤝</button>
+                        </div>
+                    </div>
+                </section>
+            </div><!-- نهاية arena-battle-row -->
         </main>
+
+        <!-- زر عائم / علامة تبويب سريعة للشات في الشاشات الصغيرة -->
+        <button type="button" id="btnToggleChatMobile" class="floating-chat-toggle hidden" title="فتح الشات التكتيكي">
+            <i class="fa-solid fa-comments"></i>
+            <span id="chatUnreadCount" class="chat-unread-badge hidden">0</span>
+        </button>
     </div><!-- نهاية حاوية شاشة المعركة #battleScreen -->
 
     <!-- ================= 04. النوافذ المنبثقة (Modals) ================= -->
@@ -758,6 +812,11 @@
                     <div class="dossier-stat-icon icon-rose"><i class="fa-solid fa-explosion"></i></div>
                     <div id="statMaxChain" class="dossier-stat-number">0</div>
                     <div class="dossier-stat-caption">أكبر انشطار متسلسل</div>
+                </div>
+                <div class="dossier-stat-tile">
+                    <div class="dossier-stat-icon icon-sky"><i class="fa-solid fa-user-xmark"></i></div>
+                    <div id="statTotalForfeits" class="dossier-stat-number">0</div>
+                    <div class="dossier-stat-caption">انسحابات الخصوم</div>
                 </div>
             </div>
 
