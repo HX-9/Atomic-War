@@ -29,6 +29,10 @@ class AtomicWarsEngine {
             this.mode = gameMode;
         } else if (typeof GAME_MODES !== 'undefined' && GAME_MODES[gameMode]) {
             this.mode = GAME_MODES[gameMode];
+        } else if (gameMode === 'advanced' && typeof cardsModeInstance !== 'undefined' && cardsModeInstance) {
+            this.mode = cardsModeInstance;
+        } else if (gameMode === 'normal' && typeof normalModeInstance !== 'undefined' && normalModeInstance) {
+            this.mode = normalModeInstance;
         } else {
             // كائن احتياطي للوضع
             this.mode = {
@@ -54,6 +58,7 @@ class AtomicWarsEngine {
             darkColor: p.darkColor,
             glow: p.glow,
             isAI: !!p.isAI,
+            personality: p.personality || 'balanced',
             alive: true,
             hasPlayed: false,
             neutrons: 0,
@@ -76,21 +81,30 @@ class AtomicWarsEngine {
      */
     initBoard() {
         this.board = [];
+        const isSiegeMode = !!(this.mode && typeof this.mode.isSiege === 'function' && this.mode.isSiege());
+        const centerR = Math.floor(this.rows / 2);
+        const centerC = Math.floor(this.cols / 2);
+
         for (let r = 0; r < this.rows; r++) {
             const row = [];
             for (let c = 0; c < this.cols; c++) {
                 const criticalMass = this.calculateCriticalMass(r, c);
+                const isCitadel = isSiegeMode && (r === centerR && c === centerC);
+                const isSiegeRing = isSiegeMode && !isCitadel && (Math.abs(r - centerR) + Math.abs(c - centerC) === 1);
+
                 row.push({
                     row: r,
                     col: c,
                     owner: null,                        // معرّف اللاعب المالك
                     atoms: 0,                           // عدد الذرات داخل الغرفة
-                    maxStableCapacity: criticalMass - 1, // أقصى استيعاب مستقر (1 زاوية، 2 طرف، 3 قلب)
-                    criticalMass: criticalMass,         // الكتلة الحرجة التي تؤدي للانشطار (2، 3، 4)
+                    maxStableCapacity: criticalMass - 1, // أقصى استيعاب مستقر
+                    criticalMass: criticalMass,         // الكتلة الحرجة التي تؤدي للانشطار
                     hasShield: false,                   // درع طاقة واقٍ في الجولة الأولى
                     shieldPlayer: null,                 // اللاعب صاحب الدرع
                     shieldZoneOwner: null,              // مالك نطاق الحماية 3×3
-                    hasControlRod: false                // قضيب تحكم نووي (مهدئ) يمتص انفجارات الخصم
+                    hasControlRod: isSiegeRing,         // قضيب تحكم نووي (في طور الحصار تحاط القلعة بدروع أولية)
+                    isCitadel: isCitadel,               // قلعة قلب المفاعل في طور الحصار (+2⚡ كل دور للمسيطر)
+                    meltdownTurns: 0                    // عداد الانصهار الحراري في طور Meltdown
                 });
             }
             this.board.push(row);
@@ -102,13 +116,25 @@ class AtomicWarsEngine {
      * حساب عتبة الكتلة الحرجة للغرفة بحسب موقعها الهندسي ووضع اللعبة
      */
     calculateCriticalMass(r, c) {
+        const isTopOrBottom = (r === 0 || r === this.rows - 1);
+        const isLeftOrRight = (c === 0 || c === this.cols - 1);
+
+        // في حال تفعيل الانشطار القطري (Diagonal Mode):
+        // تنفجر الغرف في 8 اتجاهات وتكون كتلتها الحرجة سريعة التفاعل (3 للزوايا، 4 للحواف، 5 للوسط)
+        if (this.mode && typeof this.mode.hasDiagonalFission === 'function' && this.mode.hasDiagonalFission()) {
+            if (isTopOrBottom && isLeftOrRight) {
+                return 3; // غرفة زاوية (3 جيران): تنشطر عند 3
+            } else if (isTopOrBottom || isLeftOrRight) {
+                return 4; // غرفة طرفية (5 جيران): تنشطر عند 4
+            } else {
+                return 5; // قلب المفاعل القطري (8 جيران): ينشطر عند 5 ويقذف في الـ 8 اتجاهات!
+            }
+        }
+
         // في الوضع العادي (Normal Mode): كل الغرف متماثلة، تتسع لـ 3 ذرات كحد أقصى وتنفجر عند 4
         if (this.gameMode === 'normal' || (this.mode && typeof this.mode.hasUniformCriticalMass === 'function' && this.mode.hasUniformCriticalMass())) {
             return 4;
         }
-
-        const isTopOrBottom = (r === 0 || r === this.rows - 1);
-        const isLeftOrRight = (c === 0 || c === this.cols - 1);
 
         if (isTopOrBottom && isLeftOrRight) {
             return 2; // غرفة زاوية: تنشطر عند 2
@@ -120,7 +146,7 @@ class AtomicWarsEngine {
     }
 
     /**
-     * إرجاع الغرف المجاورة المتعامدة (أعلى، أسفل، يمين، يسار)
+     * إرجاع الغرف المجاورة المتعامدة (والقطرية إذا كان الطور القطري مفعلاً)
      */
     getOrthogonalNeighbors(r, c) {
         const dirs = [
@@ -129,6 +155,17 @@ class AtomicWarsEngine {
             { dr: 0,  dc: 1 },
             { dr: 0,  dc: -1 }
         ];
+
+        // في حال تفعيل الانشطار القطري، إضافة الجيران بالزوايا
+        if (this.mode && typeof this.mode.hasDiagonalFission === 'function' && this.mode.hasDiagonalFission()) {
+            dirs.push(
+                { dr: -1, dc: -1 },
+                { dr: -1, dc: 1 },
+                { dr: 1,  dc: -1 },
+                { dr: 1,  dc: 1 }
+            );
+        }
+
         const neighbors = [];
         for (const d of dirs) {
             const nr = r + d.dr;
@@ -296,11 +333,13 @@ class AtomicWarsEngine {
         }
 
         let atomsToAdd = 1;
+        const hasNeutrons = (this.mode && typeof this.mode.hasNeutronSystem === 'function' && this.mode.hasNeutronSystem());
         if (isFirstMove) {
             atomsToAdd = (this.mode && typeof this.mode.getOpeningAtoms === 'function' ? this.mode.getOpeningAtoms() : 3);
-            player.neutrons = 0;
+            player.neutrons = (hasNeutrons && typeof this.mode.getStartingNeutrons === 'function')
+                ? this.mode.getStartingNeutrons()
+                : 0;
         } else {
-            const hasNeutrons = (this.mode && typeof this.mode.hasNeutronSystem === 'function' && this.mode.hasNeutronSystem());
             if (hasNeutrons) {
                 if (cell.owner === null) {
                     // إلقاء ذرة خارجية في غرفة فارغة (تكلفة المستوى: 3 للأحادية، 6 للثنائية، 9 للثلاثية)
@@ -341,14 +380,44 @@ class AtomicWarsEngine {
         }
 
         // طابور الغرف التي بلغت أو تجاوزت الكتلة الحرجة
-        let fissionQueue = [];
+        const initialQueue = [];
         if (cell.atoms >= cell.criticalMass) {
-            fissionQueue.push({ row: r, col: c });
+            initialQueue.push({ row: r, col: c });
         }
 
+        const waves = this.runFissionLoop(initialQueue, playerId);
+
+        // مكافأة السلسلة الانشطارية (+1⚡ عند تحقيق سلسلة من موجتين أو أكثر في وضع البطاقات)
+        if (hasNeutrons && waves.length >= 2 && !this.isGameOver) {
+            const maxN = typeof this.mode.getMaxNeutrons === 'function' ? this.mode.getMaxNeutrons() : 10;
+            player.neutrons = Math.min(maxN, (player.neutrons || 0) + 1);
+        }
+
+        this.recalculateStats();
+        this.updateEliminations();
+
+        if (!this.isGameOver) {
+            this.advanceToNextAlivePlayer();
+        }
+
+        return {
+            valid: true,
+            placedAt: { row: r, col: c, playerId },
+            waves: waves,
+            isGameOver: this.isGameOver,
+            winner: this.winner
+        };
+    }
+
+    /**
+     * معالجة طابور الانشطار المتسلسل (BFS) في 4 أو 8 اتجاهات بحسب الطور النشط
+     */
+    runFissionLoop(initialQueue, playerId) {
+        let fissionQueue = [...initialQueue];
         const waves = [];
         let safetyCounter = 0;
         const MAX_WAVES = 400; // حماية ضد الحلقات اللانهائية
+        const isDiagonal = !!(this.mode && typeof this.mode.hasDiagonalFission === 'function' && this.mode.hasDiagonalFission());
 
         while (fissionQueue.length > 0 && safetyCounter < MAX_WAVES) {
             safetyCounter++;
@@ -378,6 +447,7 @@ class AtomicWarsEngine {
                     explodingCell.atoms = 0;
                     explodingCell.owner = null;
                 }
+                explodingCell.meltdownTurns = 0;
 
                 waveExplosions.push({ row, col, playerId });
 
@@ -387,6 +457,15 @@ class AtomicWarsEngine {
                     { dr: 0,  dc: 1 },
                     { dr: 0,  dc: -1 }
                 ];
+
+                if (isDiagonal) {
+                    dirs.push(
+                        { dr: -1, dc: -1 },
+                        { dr: -1, dc: 1 },
+                        { dr: 1,  dc: -1 },
+                        { dr: 1,  dc: 1 }
+                    );
+                }
 
                 for (const d of dirs) {
                     const nr = row + d.dr;
@@ -402,7 +481,7 @@ class AtomicWarsEngine {
                             playerId: playerId,
                             isVoid: false
                         });
-                    } else if (explodingCell.criticalMass === 4) {
+                    } else if (!isDiagonal && explodingCell.criticalMass === 4) {
                         // في الغرف ذات السعة الموحدة 3 (تنفجر عند 4): المقذوفات المنطلقة للخارج تضيع في حواف الفضاء
                         transfers.push({
                             fromRow: row,
@@ -441,11 +520,11 @@ class AtomicWarsEngine {
                 // آلية 3: مقاومة النواة الثلاثية (Triple Atom Resistance)
                 const hasCoreResistance = (this.mode && typeof this.mode.hasFortressCoreResistance === 'function' && this.mode.hasFortressCoreResistance());
                 if (hasCoreResistance && targetCell.owner !== null && targetCell.owner !== playerId && targetCell.atoms >= 3) {
-                    // الذرة الثلاثية فقط من لا تهزم من أول ضربة: تمتص المقذوف وتتحول إلى ذرة أحادية (3 ➔ 1) دون أن تسقط للخصم أو تنفجر!
+                    // الذرة الثلاثية تمتص المقذوف وتتحول إلى ذرة أحادية (3 ➔ 1) دون أن تسقط للخصم!
                     targetCell.atoms = 1;
                     t.coreResisted = true;
                     t.resistedAt = { row: t.toRow, col: t.toCol, remainingAtoms: 1 };
-                    continue; // المقذوف تم امتصاصه واستنفاده
+                    continue;
                 }
 
                 targetCell.owner = playerId;
@@ -478,20 +557,79 @@ class AtomicWarsEngine {
             this.longestChain = waves.length;
         }
 
+        return waves;
+    }
+
+    /**
+     * اختيار غرفة مرشحة للانصهار الحراري في طور انصهار القلب (Meltdown Mode)
+     */
+    pickMeltdownCandidate() {
+        const occupiedCandidates = [];
+        const innerEmptyCandidates = [];
+
+        for (let r = 0; r < this.rows; r++) {
+            for (let c = 0; c < this.cols; c++) {
+                const cell = this.board[r][c];
+                if (cell.hasShield || this.getCellShieldZoneOwner(r, c) !== null) continue;
+                if (cell.owner !== null && cell.atoms > 0) {
+                    occupiedCandidates.push({ r, c });
+                } else if (r > 0 && r < this.rows - 1 && c > 0 && c < this.cols - 1) {
+                    innerEmptyCandidates.push({ r, c });
+                }
+            }
+        }
+
+        if (occupiedCandidates.length > 0) {
+            return occupiedCandidates[Math.floor(Math.random() * occupiedCandidates.length)];
+        }
+        if (innerEmptyCandidates.length > 0) {
+            return innerEmptyCandidates[Math.floor(Math.random() * innerEmptyCandidates.length)];
+        }
+        return null;
+    }
+
+    /**
+     * تفجير بؤرة انصهار بيئية مستقلة في الغرفة (r, c) دون استهلاك دور أي لاعب
+     */
+    triggerMeltdownAt(r, c) {
+        if (this.isGameOver) return { triggered: false, waves: [] };
+        if (r < 0 || r >= this.rows || c < 0 || c >= this.cols) return { triggered: false, waves: [] };
+
+        const cell = this.board[r][c];
+        cell.meltdownTurns = 0;
+
+        // تحديد القوة المستفيدة من الانفجار البيئي (مالك الخلية الحالي، أو اللاعب الأقل سيطرة)
+        let meltPlayerId = cell.owner;
+        if (meltPlayerId === null || !this.players[meltPlayerId] || !this.players[meltPlayerId].alive) {
+            const alivePlayers = this.players.filter(p => p.alive);
+            if (alivePlayers.length === 0) return { triggered: false, waves: [] };
+            alivePlayers.sort((a, b) => a.atomCount - b.atomCount);
+            meltPlayerId = alivePlayers[0].id;
+        }
+
+        cell.owner = meltPlayerId;
+        cell.atoms = cell.criticalMass;
+
+        const waves = this.runFissionLoop([{ row: r, col: c }], meltPlayerId);
         this.recalculateStats();
         this.updateEliminations();
 
-        if (!this.isGameOver) {
-            this.advanceToNextAlivePlayer();
-        }
-
         return {
-            valid: true,
-            placedAt: { row: r, col: c, playerId },
+            triggered: true,
+            player: this.players[meltPlayerId],
             waves: waves,
             isGameOver: this.isGameOver,
             winner: this.winner
         };
+    }
+
+    /**
+     * تمرير الدور بأمان في حال انتهاء وقت الصاعقة وعدم توفر حركة
+     */
+    skipTurnSafely() {
+        if (this.isGameOver) return this.getCurrentPlayer();
+        this.advanceToNextAlivePlayer();
+        return this.getCurrentPlayer();
     }
 
     cloneBoardState() {
@@ -538,7 +676,71 @@ class AtomicWarsEngine {
             this.players.forEach(p => {
                 if (p.id !== this.winner.id) p.alive = false;
             });
+        } else if (alivePlayers.length === 1 && this.players.filter(p => !p.disconnected).length === 1) {
+            // فوز بالانسحاب إذا لم يتبق سوى لاعب واحد متصل
+            this.isGameOver = true;
+            this.winner = alivePlayers[0];
         }
+    }
+
+    /**
+     * معالجة انقطاع اتصال أو انسحاب لاعب أثناء المعركة الجارية
+     * ينهي دوره فوراً إذا كان دوره نشطاً، وينقل المعركة للاعب التالي
+     */
+    handlePlayerDisconnection(playerId) {
+        if (playerId < 0 || playerId >= this.players.length) return null;
+        const player = this.players[playerId];
+        if (!player || player.disconnected) return null;
+
+        player.alive = false;
+        player.disconnected = true;
+
+        // إخلاء وتحييد جميع ذرات اللاعب ودروعه من الرقعة
+        for (let r = 0; r < this.rows; r++) {
+            for (let c = 0; c < this.cols; c++) {
+                const cell = this.board[r][c];
+                if (cell.owner === playerId) {
+                    cell.owner = null;
+                    cell.atoms = 0;
+                    cell.hasControlRod = false;
+                }
+            }
+        }
+
+        // إزالة درع البداية الخاص به إن وجد
+        this.clearPlayerShield(playerId);
+
+        // إعادة حساب الإحصائيات
+        this.recalculateStats();
+
+        // فحص عدد اللاعبين المتبقين على قيد الحياة وغير المنقطعين
+        const remainingAlive = this.players.filter(p => p.alive && !p.disconnected);
+        if (remainingAlive.length <= 1) {
+            this.isGameOver = true;
+            this.winner = remainingAlive.length === 1 ? remainingAlive[0] : null;
+            return {
+                isGameOver: true,
+                winner: this.winner,
+                turnAdvanced: false,
+                nextPlayer: this.winner,
+                disconnectedPlayer: player
+            };
+        }
+
+        let turnAdvanced = false;
+        // إذا كان الدور الحالي هو دور هذا اللاعب المنقطع، انتقل للاعب الحي التالي فوراً
+        if (this.currentPlayerIndex === playerId) {
+            this.advanceToNextAlivePlayer();
+            turnAdvanced = true;
+        }
+
+        return {
+            isGameOver: this.isGameOver,
+            winner: this.winner,
+            turnAdvanced,
+            nextPlayer: this.getCurrentPlayer(),
+            disconnectedPlayer: player
+        };
     }
 
     /**
@@ -559,8 +761,20 @@ class AtomicWarsEngine {
         const nextPlayer = this.players[this.currentPlayerIndex];
         if (nextPlayer && nextPlayer.alive && nextPlayer.hasPlayed) {
             if (this.mode && typeof this.mode.hasNeutronSystem === 'function' && this.mode.hasNeutronSystem()) {
-                const perTurn = typeof this.mode.getNeutronPerTurn === 'function' ? this.mode.getNeutronPerTurn() : 2;
+                let perTurn = typeof this.mode.getNeutronPerTurn === 'function' ? this.mode.getNeutronPerTurn() : 2;
                 const maxN = typeof this.mode.getMaxNeutrons === 'function' ? this.mode.getMaxNeutrons() : 10;
+
+                // في طور الحصار (Siege): منح مكافأة قلعة المركز (+2⚡) لمن يسيطر على غرفة القلب
+                if (typeof this.mode.isSiege === 'function' && this.mode.isSiege()) {
+                    const centerR = Math.floor(this.rows / 2);
+                    const centerC = Math.floor(this.cols / 2);
+                    const citadelCell = this.board[centerR] && this.board[centerR][centerC];
+                    if (citadelCell && citadelCell.owner === nextPlayer.id && citadelCell.atoms > 0) {
+                        const bonus = typeof this.mode.getCitadelBonusNeutrons === 'function' ? this.mode.getCitadelBonusNeutrons() : 2;
+                        perTurn += bonus;
+                    }
+                }
+
                 nextPlayer.neutrons = Math.min(maxN, (nextPlayer.neutrons || 0) + perTurn);
             }
         }

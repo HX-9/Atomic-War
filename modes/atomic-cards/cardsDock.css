@@ -1,27 +1,28 @@
 /* ==========================================================================
    الحرب الذرية (Atomic War) - وضع البطاقات الذرية (Atomic Cards Mode)
-   ملف التنسيقات الخاص بشريط الترسانة التكتيكية، رصيد النيوترونات، والشارات
+   تصميم منصة أوراق البطاقات التكتيكية السفلية والشارات الخاصة بالأطوار الخمسة
    مسار الملف: modes/atomic-cards/cardsDock.css
    ========================================================================== */
 
-/* شريط الترسانة التكتيكي ورصيد النيوترونات */
+/* منصة أوراق البطاقات التكتيكية السفلية */
 .neutron-floating-dock {
   position: relative;
   width: 100%;
-  max-width: min(92vw, 640px);
-  margin: 0 auto;
+  max-width: min(96vw, 720px);
+  margin: 0.25rem auto 0 auto;
   flex-shrink: 0;
-  padding: 0.55rem 0.95rem;
-  border-radius: 1.15rem;
-  background: rgba(15, 23, 42, 0.95);
-  border: 1.5px solid rgba(56, 189, 248, 0.4);
+  padding: 0.65rem 1rem 0.75rem 1rem;
+  border-radius: 1.25rem;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.94) 0%, rgba(9, 14, 26, 0.98) 100%);
+  border: 1.5px solid rgba(56, 189, 248, 0.35);
   box-shadow:
-    0 8px 24px -4px rgba(0, 0, 0, 0.65),
-    0 0 18px rgba(56, 189, 248, 0.15);
+    0 12px 32px -6px rgba(0, 0, 0, 0.75),
+    0 0 22px rgba(56, 189, 248, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-  backdrop-filter: blur(14px);
+  gap: 0.55rem;
+  backdrop-filter: blur(16px);
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   z-index: 15;
 }
@@ -30,12 +31,32 @@
   display: none !important;
 }
 
-/* لوحة رصيد النيوترونات */
+/* الشريط العلوي لطاقة النيوترونات والإرشاد */
+.dock-energy-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  background: rgba(30, 41, 59, 0.55);
+  padding: 0.45rem 0.75rem;
+  border-radius: 0.85rem;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+@media (min-width: 640px) {
+  .dock-energy-bar {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+}
+
 .dock-neutron-info {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-  width: 100%;
+  min-width: 210px;
+  flex: 1;
 }
 
 .dock-neutron-header {
@@ -45,12 +66,12 @@
 }
 
 .dock-neutron-label {
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   font-weight: 800;
   color: #f1f5f9;
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.35rem;
 }
 
 .dock-neutron-val {
@@ -58,12 +79,16 @@
   font-weight: 900;
   color: #38bdf8;
   font-family: monospace;
+  background: rgba(14, 165, 233, 0.14);
+  padding: 0.08rem 0.45rem;
+  border-radius: 6px;
+  border: 1px solid rgba(56, 189, 248, 0.3);
 }
 
 .neutron-meter-track {
   display: grid;
-  grid-template-columns: repeat(10, 1fr);
-  gap: 3.5px;
+  grid-template-columns: repeat(var(--max-neutrons, 10), 1fr);
+  gap: 3px;
   width: 100%;
   height: 7px;
 }
@@ -71,204 +96,211 @@
 .neutron-pip {
   height: 7px;
   border-radius: 3px;
-  background: rgba(51, 65, 85, 0.6);
+  background: rgba(51, 65, 85, 0.65);
   border: 1px solid rgba(100, 116, 139, 0.35);
   transition: all 0.25s ease;
 }
 
 .neutron-pip.filled {
   background: linear-gradient(180deg, #38bdf8, #0284c7);
-  box-shadow: 0 0 6px rgba(56, 189, 248, 0.6);
+  box-shadow: 0 0 7px rgba(56, 189, 248, 0.65);
   border-color: #7dd3fc;
 }
 
-.dock-divider {
-  width: 100%;
-  height: 1px;
-  background: rgba(148, 163, 184, 0.15);
+.dock-hint-text {
+  font-size: 0.72rem;
+  color: #cbd5e1;
+  text-align: center;
+  line-height: 1.35;
+  flex: 1.3;
 }
 
-/* خانة البطاقات التكتيكية المشتركة */
-.dock-cards-container {
-  display: flex;
-  align-items: stretch;
-  gap: 0.65rem;
-  width: 100%;
+@media (min-width: 640px) {
+  .dock-hint-text {
+    text-align: left;
+  }
 }
 
-.dock-card-subgroup {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.dock-card-subgroup--elements {
-  flex: 3;
-}
-
-.dock-card-subgroup--support {
-  flex: 2;
-}
-
-.dock-subgroup-header {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.dock-subgroup-title {
-  font-size: 0.65rem;
-  font-weight: 800;
-  color: #94a3b8;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  letter-spacing: 0.02em;
-}
-
-.dock-subgroup-cards {
+/* ==========================================================================
+   يد أوراق البطاقات التكتيكية الخمس (Sci-Fi Tactical Cards Hand)
+   ========================================================================== */
+.tactical-cards-hand {
   display: grid;
-  gap: 0.35rem;
-  height: 100%;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.5rem;
+  width: 100%;
+  padding-top: 0.15rem;
 }
 
-.dock-card-subgroup--elements .dock-subgroup-cards {
-  grid-template-columns: repeat(3, 1fr);
-}
-
-.dock-card-subgroup--support .dock-subgroup-cards {
-  grid-template-columns: repeat(2, 1fr);
-}
-
-.dock-subgroup-separator {
-  width: 1.5px;
-  background: linear-gradient(
-    180deg,
-    transparent,
-    rgba(148, 163, 184, 0.35) 20%,
-    rgba(148, 163, 184, 0.35) 80%,
-    transparent
-  );
-  margin: 0.25rem 0;
-  flex-shrink: 0;
-}
-
-/* بطاقة الإجراء / الزر */
-.arsenal-btn {
+.tactical-card {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 0.32rem 0.2rem;
-  min-height: 3.15rem;
-  background: rgba(30, 41, 59, 0.85);
-  border: 1.5px solid #334155;
-  border-radius: 0.7rem;
+  justify-content: space-between;
+  padding: 0.45rem 0.3rem 0.4rem 0.3rem;
+  min-height: 4.6rem;
+  background: linear-gradient(160deg, rgba(30, 41, 59, 0.92) 0%, rgba(15, 23, 42, 0.96) 100%);
+  border: 1.5px solid rgba(71, 85, 105, 0.75);
+  border-radius: 0.85rem;
   color: #e2e8f0;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  gap: 0.15rem;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
   font-family: inherit;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
 }
 
-.arsenal-btn:hover:not(:disabled) {
-  background: rgba(51, 65, 85, 0.95);
-  border-color: #94a3b8;
-  transform: translateY(-2px);
+.tactical-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, rgba(56, 189, 248, 0.6), transparent);
+  opacity: 0.5;
+  transition: opacity 0.2s ease;
 }
 
-.arsenal-btn.active {
+.tactical-card--defense::before {
+  background: linear-gradient(90deg, transparent, rgba(52, 211, 153, 0.75), transparent);
+}
+
+.tactical-card--offense::before {
+  background: linear-gradient(90deg, transparent, rgba(245, 158, 11, 0.75), transparent);
+}
+
+.tactical-card:hover:not(:disabled) {
+  background: linear-gradient(160deg, rgba(51, 65, 85, 0.95) 0%, rgba(30, 41, 59, 0.98) 100%);
   border-color: #38bdf8;
-  background: rgba(14, 165, 233, 0.2);
-  box-shadow: 0 0 14px rgba(56, 189, 248, 0.4);
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 10px 20px -4px rgba(0, 0, 0, 0.6), 0 0 14px rgba(56, 189, 248, 0.25);
 }
 
-.arsenal-btn.active .arsenal-btn-name {
-  color: #ffffff;
+.tactical-card:hover:not(:disabled)::before {
+  opacity: 1;
 }
 
-.arsenal-btn:disabled {
+.tactical-card.active {
+  border-color: #38bdf8;
+  background: linear-gradient(160deg, rgba(14, 165, 233, 0.28) 0%, rgba(15, 23, 42, 0.95) 100%);
+  transform: translateY(-7px) scale(1.04);
+  box-shadow:
+    0 12px 24px -4px rgba(0, 0, 0, 0.7),
+    0 0 18px rgba(56, 189, 248, 0.55),
+    inset 0 0 12px rgba(56, 189, 248, 0.2);
+}
+
+.tactical-card--defense.active {
+  border-color: #34d399;
+  background: linear-gradient(160deg, rgba(16, 185, 129, 0.28) 0%, rgba(15, 23, 42, 0.95) 100%);
+  box-shadow:
+    0 12px 24px -4px rgba(0, 0, 0, 0.7),
+    0 0 18px rgba(52, 211, 153, 0.55),
+    inset 0 0 12px rgba(52, 211, 153, 0.2);
+}
+
+.tactical-card--offense.active {
+  border-color: #f59e0b;
+  background: linear-gradient(160deg, rgba(245, 158, 11, 0.28) 0%, rgba(15, 23, 42, 0.95) 100%);
+  box-shadow:
+    0 12px 24px -4px rgba(0, 0, 0, 0.7),
+    0 0 18px rgba(245, 158, 11, 0.55),
+    inset 0 0 12px rgba(245, 158, 11, 0.2);
+}
+
+.tactical-card:disabled {
   opacity: 0.35;
   cursor: not-allowed;
-  filter: grayscale(0.85);
-  transform: none;
+  filter: grayscale(0.8);
+  transform: none !important;
+  box-shadow: none;
 }
 
-.arsenal-atom-preview {
-  font-size: 0.85rem;
-  letter-spacing: 2px;
+.tactical-card-cost {
+  font-size: 0.65rem;
+  font-weight: 900;
   color: #38bdf8;
-  line-height: 1;
-}
-
-.arsenal-rod-icon {
-  font-size: 0.85rem;
-  color: #38bdf8;
-  line-height: 1;
-}
-
-.arsenal-drain-icon {
-  font-size: 0.85rem;
-  color: #f59e0b;
-  line-height: 1;
-}
-
-.arsenal-btn-name {
-  font-size: 0.7rem;
-  font-weight: 800;
-}
-
-.arsenal-btn-cost {
-  font-size: 0.63rem;
-  font-weight: 700;
-  color: #f59e0b;
-  background: rgba(245, 158, 11, 0.15);
-  padding: 0.08rem 0.38rem;
-  border-radius: 9999px;
-  border: 1px solid rgba(245, 158, 11, 0.3);
-}
-
-.arsenal-btn--control-rod.active {
-  border-color: #34d399;
-  background: rgba(52, 211, 153, 0.18);
-  box-shadow: 0 0 14px rgba(52, 211, 153, 0.4);
-}
-
-.arsenal-btn--control-rod.active .arsenal-rod-icon {
-  color: #34d399;
+  background: rgba(14, 165, 233, 0.16);
+  padding: 0.08rem 0.45rem;
+  border-radius: 999px;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  line-height: 1.2;
 }
 
 .arsenal-btn-cost--rod {
   color: #34d399;
-  background: rgba(52, 211, 153, 0.15);
-  border-color: rgba(52, 211, 153, 0.35);
-}
-
-.arsenal-btn--energy-drain.active {
-  border-color: #f59e0b;
-  background: rgba(245, 158, 11, 0.2);
-  box-shadow: 0 0 14px rgba(245, 158, 11, 0.45);
-}
-
-.arsenal-btn--energy-drain.active .arsenal-drain-icon {
-  color: #fcd34d;
+  background: rgba(52, 211, 153, 0.16);
+  border-color: rgba(52, 211, 153, 0.4);
 }
 
 .arsenal-btn-cost--drain {
-  color: #f59e0b;
-  background: rgba(245, 158, 11, 0.15);
-  border-color: rgba(245, 158, 11, 0.35);
+  color: #fbbf24;
+  background: rgba(245, 158, 11, 0.16);
+  border-color: rgba(245, 158, 11, 0.4);
 }
 
-.dock-hint-text {
-  font-size: 0.65rem;
+.tactical-card-visual {
+  height: 1.45rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0.1rem 0;
+}
+
+.arsenal-atom-preview {
+  font-size: 0.95rem;
+  letter-spacing: 2px;
+  color: #38bdf8;
+  text-shadow: 0 0 8px rgba(56, 189, 248, 0.6);
+  line-height: 1;
+}
+
+.arsenal-rod-icon {
+  font-size: 1.05rem;
+  color: #34d399;
+  filter: drop-shadow(0 0 6px rgba(52, 211, 153, 0.5));
+}
+
+.arsenal-drain-icon {
+  font-size: 1.05rem;
+  color: #fbbf24;
+  filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.5));
+}
+
+.arsenal-btn-name {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #f8fafc;
+  white-space: nowrap;
+}
+
+.tactical-card-type {
+  font-size: 0.58rem;
+  font-weight: 600;
   color: #94a3b8;
-  text-align: center;
-  line-height: 1.35;
+  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  .tactical-cards-hand {
+    gap: 0.3rem;
+  }
+  .tactical-card {
+    min-height: 4.1rem;
+    padding: 0.35rem 0.15rem;
+  }
+  .arsenal-btn-name {
+    font-size: 0.64rem;
+  }
+  .tactical-card-type {
+    display: none;
+  }
 }
 
 /* ==========================================================================
-   شارات ومؤثرات الآليات التكتيكية (Control Rods & Core Resistance)
+   شارات ومؤثرات الآليات التكتيكية (Control Rods, Citadel, Meltdown, Blitz)
    ========================================================================== */
 
 /* شارة الدرع النووي الواقي على الخلية */
@@ -279,10 +311,10 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.72rem;
-  color: #38bdf8;
-  background: rgba(15, 23, 42, 0.85);
-  border: 1px solid #38bdf8;
+  font-size: 0.7rem;
+  color: #34d399;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid #34d399;
   border-radius: 6px;
   padding: 1px 3.5px;
   pointer-events: none;
@@ -291,15 +323,56 @@
 }
 
 @keyframes rodPulseGlow {
-  0%,
-  100% {
-    box-shadow: 0 0 6px rgba(56, 189, 248, 0.5);
-    border-color: #38bdf8;
+  0%, 100% {
+    box-shadow: 0 0 6px rgba(52, 211, 153, 0.5);
+    border-color: #34d399;
   }
   50% {
-    box-shadow: 0 0 14px rgba(56, 189, 248, 0.85);
-    border-color: #7dd3fc;
+    box-shadow: 0 0 14px rgba(52, 211, 153, 0.85);
+    border-color: #6ee7b7;
   }
+}
+
+/* شارة قلعة قلب المفاعل في طور الحصار (Siege Citadel) */
+.board-cell.cell-citadel-core {
+  border: 2px solid rgba(251, 191, 36, 0.75) !important;
+  box-shadow: inset 0 0 16px rgba(245, 158, 11, 0.3), 0 0 12px rgba(245, 158, 11, 0.25);
+}
+
+.cell-citadel-badge {
+  position: absolute;
+  bottom: 2px;
+  right: 3px;
+  font-size: 0.62rem;
+  font-weight: 900;
+  color: #fbbf24;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(251, 191, 36, 0.6);
+  border-radius: 5px;
+  padding: 0px 3.5px;
+  pointer-events: none;
+  z-index: 12;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+/* شارة العد التنازلي لانصهار القلب (Meltdown Hazard Badge) */
+.cell-meltdown-badge {
+  position: absolute;
+  bottom: 2px;
+  right: 3px;
+  font-size: 0.65rem;
+  font-weight: 900;
+  color: #ffffff;
+  background: linear-gradient(135deg, #f43f5e, #e11d48);
+  border: 1px solid #fda4af;
+  border-radius: 6px;
+  padding: 1px 4px;
+  pointer-events: none;
+  z-index: 16;
+  box-shadow: 0 0 10px rgba(244, 63, 94, 0.85);
+  animation: blitzCritical 0.5s infinite alternate;
 }
 
 /* وميض امتصاص الدرع النووي للضربة المعادية */
@@ -310,9 +383,7 @@
 
 @keyframes rodAbsorbFlash {
   0% {
-    box-shadow:
-      0 0 30px #38bdf8,
-      inset 0 0 20px #38bdf8;
+    box-shadow: 0 0 30px #38bdf8, inset 0 0 20px #38bdf8;
     border-color: #7dd3fc;
     transform: scale(1.1);
   }
@@ -322,7 +393,7 @@
   }
 }
 
-/* درع مقاومة القلعة الحصينة (Core Fortress Resistance) عند امتصاص مقذوف الخصم */
+/* درع مقاومة القلعة الحصينة (Core Fortress Resistance) */
 .cell-core-resisted {
   animation: coreResistRing 0.45s ease-out forwards;
   z-index: 20;
@@ -330,9 +401,7 @@
 
 @keyframes coreResistRing {
   0% {
-    box-shadow:
-      0 0 28px #f59e0b,
-      inset 0 0 16px #f59e0b;
+    box-shadow: 0 0 28px #f59e0b, inset 0 0 16px #f59e0b;
     border-color: #f59e0b;
     transform: scale(1.08);
   }
@@ -347,7 +416,7 @@
   }
 }
 
-/* وميض تفريغ الطاقة وإرجاع الذرة للمستوى الأول (Energy Drain) */
+/* وميض تفريغ الطاقة (Energy Drain) */
 .cell-energy-drained {
   animation: energyDrainPulse 0.5s ease-out forwards;
   z-index: 25;
@@ -355,17 +424,13 @@
 
 @keyframes energyDrainPulse {
   0% {
-    box-shadow:
-      0 0 35px #f59e0b,
-      inset 0 0 25px #f59e0b;
+    box-shadow: 0 0 35px #f59e0b, inset 0 0 25px #f59e0b;
     border-color: #fcd34d;
     transform: scale(1.12);
     filter: brightness(1.6);
   }
   50% {
-    box-shadow:
-      0 0 22px #ef4444,
-      inset 0 0 16px #ef4444;
+    box-shadow: 0 0 22px #ef4444, inset 0 0 16px #ef4444;
     border-color: #f87171;
     transform: scale(0.95);
   }
@@ -373,5 +438,54 @@
     box-shadow: none;
     transform: scale(1);
     filter: brightness(1);
+  }
+}
+
+/* شارة مؤقت الصاعقة الذرية (Blitz Timer) في الهيدر */
+.blitz-timer-badge {
+  background: rgba(245, 158, 11, 0.18);
+  border: 1.5px solid #f59e0b;
+  color: #fbbf24;
+  border-radius: 999px;
+  padding: 0.2rem 0.7rem;
+  font-size: 0.78rem;
+  font-weight: 900;
+  font-family: monospace;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  animation: blitzPulse 0.9s infinite alternate;
+}
+
+@keyframes blitzPulse {
+  0% { transform: scale(1); box-shadow: 0 0 4px rgba(245, 158, 11, 0.3); }
+  100% { transform: scale(1.05); box-shadow: 0 0 12px rgba(245, 158, 11, 0.6); }
+}
+
+.blitz-timer-badge--critical {
+  background: rgba(239, 68, 68, 0.3);
+  border-color: #ef4444;
+  color: #fca5a5;
+  animation: blitzCritical 0.35s infinite alternate;
+}
+
+@keyframes blitzCritical {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.1); box-shadow: 0 0 16px rgba(239, 68, 68, 0.85); }
+}
+
+/* وميض الخلية المهددة بالانصهار النووي (Meltdown Hazard Cell) */
+.cell-hazard-meltdown {
+  animation: meltdownGlow 0.9s infinite alternate ease-in-out !important;
+  border: 2px solid #f43f5e !important;
+}
+
+@keyframes meltdownGlow {
+  0% {
+    box-shadow: inset 0 0 12px rgba(244, 63, 94, 0.45), 0 0 8px rgba(244, 63, 94, 0.45);
+  }
+  100% {
+    box-shadow: inset 0 0 22px rgba(244, 63, 94, 0.85), 0 0 20px rgba(244, 63, 94, 0.85);
+    transform: scale(1.03);
   }
 }

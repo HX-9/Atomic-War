@@ -33,12 +33,14 @@ class AtomicPeerNetwork {
         this.onGameStart = null;
         this.onMoveReceived = null;
         this.onEmoteReceived = null;
+        this.onChatReceived = null;
         this.onPingUpdate = null;
         this.onPlayerLeft = null;
         this.onRoomClosed = null;
         this.onLeaveRoom = null;
         this.onError = null;
         this.onStatusChange = null;
+        this.hostLastSeen = Date.now();
     }
 
     /**
@@ -93,14 +95,21 @@ class AtomicPeerNetwork {
 
         this.emitStatus('جاري حجز تردد المفاعل على الشبكة النظيرة...', 'info');
 
+        const iceServers = [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' },
+            { urls: 'stun:stun2.l.google.com:19302' },
+            { urls: 'stun:stun3.l.google.com:19302' },
+            { urls: 'stun:stun4.l.google.com:19302' },
+            { urls: 'stun:stun.cloudflare.com:3478' },
+            { urls: 'stun:stun.services.mozilla.com' }
+        ];
+
         try {
             this.peer = new Peer(hostPeerId, {
                 debug: 1,
                 config: {
-                    iceServers: [
-                        { urls: 'stun:stun.l.google.com:19302' },
-                        { urls: 'stun:stun1.l.google.com:19302' }
-                    ]
+                    iceServers: iceServers
                 }
             });
         } catch (err) {
@@ -134,16 +143,20 @@ class AtomicPeerNetwork {
      * معالجة اتصال ضيف أو متفرج جديد بالمضيف
      */
     handleIncomingClientConnection(conn) {
+        conn.serialization = 'json';
+        conn.lastSeen = Date.now();
+
         conn.on('data', (data) => {
+            conn.lastSeen = Date.now();
             this.handleHostReceivedData(conn, data);
         });
 
         conn.on('close', () => {
-            this.handleClientDisconnect(conn);
+            this.handleClientDisconnect(conn, 'close');
         });
 
         conn.on('error', (err) => {
-            this.handleClientDisconnect(conn);
+            this.handleClientDisconnect(conn, 'error');
         });
     }
 
@@ -152,6 +165,7 @@ class AtomicPeerNetwork {
      */
     handleHostReceivedData(conn, data) {
         if (!data || typeof data !== 'object') return;
+        conn.lastSeen = Date.now();
 
         switch (data.type) {
             case 'HELLO': {
@@ -243,7 +257,7 @@ class AtomicPeerNetwork {
             case 'MOVE': {
                 // التحقق من صحة حركة الضيف وبثها للجميع
                 if (data.playerId === conn.playerId && !conn.isSpectator) {
-                    this.broadcastToAll(data);
+                    this.broadcastToClients(data, conn);
                     if (this.onMoveReceived) {
                         this.onMoveReceived(data);
                     }
@@ -251,9 +265,28 @@ class AtomicPeerNetwork {
                 break;
             }
 
+            case 'CHAT_MSG': {
+                // بث الرسالة التكتيكية لجميع الأطراف
+                if (data && data.text) {
+                    const cleanMsg = {
+                        type: 'CHAT_MSG',
+                        senderId: conn.isSpectator ? -1 : conn.playerId,
+                        senderName: (data.senderName || 'قائد نووي').trim().slice(0, 16),
+                        isSpectator: !!conn.isSpectator,
+                        text: String(data.text).trim().slice(0, 140),
+                        timestamp: data.timestamp || Date.now()
+                    };
+                    this.broadcastToClients(cleanMsg, conn);
+                    if (this.onChatReceived) {
+                        this.onChatReceived(cleanMsg);
+                    }
+                }
+                break;
+            }
+
             case 'EMOTE': {
                 // بث التعبير التكتيكي السريع لجميع الضيوف والمتفرجين
-                this.broadcastToClients(data);
+                this.broadcastToClients(data, conn);
                 if (this.onEmoteReceived) {
                     this.onEmoteReceived(data);
                 }
@@ -295,7 +328,7 @@ class AtomicPeerNetwork {
             }
 
             case 'LEAVE': {
-                this.handleClientDisconnect(conn);
+                this.handleClientDisconnect(conn, 'leave');
                 break;
             }
         }
@@ -304,7 +337,7 @@ class AtomicPeerNetwork {
     /**
      * معالجة انقطاع اتصال أحد الضيوف أو المتفرجين
      */
-    handleClientDisconnect(conn) {
+    handleClientDisconnect(conn, reason = 'close') {
         if (conn.isSpectator) {
             this.spectators = this.spectators.filter(s => s.id !== conn.spectatorId);
             this.clientConns = this.clientConns.filter(c => c !== conn);
@@ -316,7 +349,12 @@ class AtomicPeerNetwork {
         let leftPlayer = null;
         if (pIndex !== -1) {
             leftPlayer = this.players[pIndex];
-            this.players.splice(pIndex, 1);
+            if (!this.isInGame) {
+                this.players.splice(pIndex, 1);
+            } else {
+                leftPlayer.connected = false;
+                leftPlayer.alive = false;
+            }
             delete this.playerPings[conn.playerId];
         }
 
@@ -334,7 +372,12 @@ class AtomicPeerNetwork {
             this.broadcastLobbyUpdate();
         } else if (leftPlayer && this.onPlayerLeft) {
             this.onPlayerLeft(leftPlayer);
-            this.broadcastToClients({ type: 'PLAYER_LEFT', player: leftPlayer });
+            this.broadcastToClients({
+                type: 'PLAYER_LEFT',
+                player: leftPlayer,
+                playerId: leftPlayer.id,
+                reason: reason
+            });
         }
     }
 
@@ -355,13 +398,20 @@ class AtomicPeerNetwork {
         this.emitStatus(this.isSpectator ? 'جاري الاقتران ببرج المراقبة النووية...' : 'جاري الاتصال ببرج المفاعل المشترك...', 'info');
 
         try {
+            const iceServers = [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' },
+                { urls: 'stun:stun2.l.google.com:19302' },
+                { urls: 'stun:stun3.l.google.com:19302' },
+                { urls: 'stun:stun4.l.google.com:19302' },
+                { urls: 'stun:stun.cloudflare.com:3478' },
+                { urls: 'stun:stun.services.mozilla.com' }
+            ];
+
             this.peer = new Peer({
                 debug: 1,
                 config: {
-                    iceServers: [
-                        { urls: 'stun:stun.l.google.com:19302' },
-                        { urls: 'stun:stun1.l.google.com:19302' }
-                    ]
+                    iceServers: iceServers
                 }
             });
         } catch (err) {
@@ -371,9 +421,11 @@ class AtomicPeerNetwork {
 
         this.peer.on('open', () => {
             const conn = this.peer.connect(targetPeerId, {
-                reliable: true
+                reliable: true,
+                serialization: 'json'
             });
             this.hostConn = conn;
+            this.hostLastSeen = Date.now();
 
             conn.on('open', () => {
                 this.emitStatus('تم الاقتران، جاري إرسال تصريح الدخول...', 'info');
@@ -386,6 +438,7 @@ class AtomicPeerNetwork {
             });
 
             conn.on('data', (data) => {
+                this.hostLastSeen = Date.now();
                 this.handleClientReceivedData(data);
             });
 
@@ -480,6 +533,13 @@ class AtomicPeerNetwork {
                 break;
             }
 
+            case 'CHAT_MSG': {
+                if (this.onChatReceived) {
+                    this.onChatReceived(data);
+                }
+                break;
+            }
+
             case 'PONG': {
                 const now = Date.now();
                 const latency = Math.max(1, Math.round(now - data.clientTime));
@@ -517,10 +577,11 @@ class AtomicPeerNetwork {
             }
 
             case 'ROOM_CLOSED': {
-                this.emitStatus(data.reason || 'قام المضيف بإلغاء الغرفة.', 'amber');
+                const closeReason = data.reason || 'قام المضيف بإلغاء الاستضافة وإغلاق الغرفة.';
+                this.emitStatus(closeReason, 'rose');
                 this.cleanup();
                 if (this.onRoomClosed) {
-                    this.onRoomClosed();
+                    this.onRoomClosed(closeReason);
                 }
                 break;
             }
@@ -587,11 +648,40 @@ class AtomicPeerNetwork {
     }
 
     /**
-     * بدء حلقة قياس جودة الاتصال وزمن الاستجابة (Ping)
+     * إرسال رسالة تكتيكية في شات الأونلاين
+     */
+    sendChat(text) {
+        if (!text || !text.trim()) return;
+        const cleanText = text.trim().slice(0, 140);
+        const chatData = {
+            type: 'CHAT_MSG',
+            senderId: this.isSpectator ? -1 : this.localPlayerId,
+            senderName: this.localPlayerName,
+            isSpectator: this.isSpectator,
+            text: cleanText,
+            timestamp: Date.now()
+        };
+
+        if (this.isHost) {
+            this.broadcastToClients(chatData);
+            if (this.onChatReceived) {
+                this.onChatReceived(chatData);
+            }
+        } else if (this.hostConn && this.hostConn.open) {
+            this.hostConn.send(chatData);
+            if (this.onChatReceived) {
+                this.onChatReceived(chatData);
+            }
+        }
+    }
+
+    /**
+     * بدء حلقة قياس جودة الاتصال وزمن الاستجابة وفحص نبضات الحياة
      */
     startPingLoop() {
         this.stopPingLoop();
         this.pingInterval = setInterval(() => {
+            const now = Date.now();
             if (this.isHost) {
                 // المضيف يبث جدول زمن الاستجابة لجميع المتصلين
                 this.playerPings[0] = 1;
@@ -602,14 +692,34 @@ class AtomicPeerNetwork {
                 if (this.onPingUpdate) {
                     this.onPingUpdate(this.playerPings);
                 }
+
+                // فحص نبضات القلب واكتشاف انقطاع اتصال أي ضيف (Heartbeat Watchdog)
+                const deadConns = [];
+                for (const conn of this.clientConns) {
+                    if (conn.lastSeen && (now - conn.lastSeen > 9500)) {
+                        deadConns.push(conn);
+                    }
+                }
+                for (const dead of deadConns) {
+                    this.handleClientDisconnect(dead, 'timeout');
+                    try { dead.close(); } catch (e) {}
+                }
             } else if (this.hostConn && this.hostConn.open) {
                 // الضيف أو المتفرج يرسل نبضة ping للمضيف
                 this.hostConn.send({
                     type: 'PING',
-                    clientTime: Date.now()
+                    clientTime: now
                 });
+
+                // فحص انقطاع اتصال المضيف
+                if (this.isInGame && this.hostLastSeen && (now - this.hostLastSeen > 10500)) {
+                    this.emitStatus('انقطع الاتصال بمضيف الغرفة (فقدان إشارة المفاعل)!', 'amber');
+                    if (this.onPlayerLeft) {
+                        this.onPlayerLeft({ name: 'مضيف الغرفة (انقطاع الاتصال)', isHost: true });
+                    }
+                }
             }
-        }, 3200);
+        }, 2800);
     }
 
     /**
@@ -716,13 +826,29 @@ class AtomicPeerNetwork {
     }
 
     /**
-     * مغادرة الغرفة الحالية
+     * مغادرة الغرفة الحالية أو إلغاء الاستضافة
      */
     leaveRoom() {
         if (this.isHost) {
-            this.broadcastToClients({ type: 'ROOM_CLOSED', reason: 'قام المضيف بإلغاء الغرفة والعودة للقائمة.' });
+            const reasonMsg = 'قام المضيف بإلغاء الاستضافة وإغلاق الغرفة.';
+            this.broadcastToClients({ type: 'ROOM_CLOSED', reason: reasonMsg });
+            // منح مهلة 220ms لنقل الحزمة عبر قنوات WebRTC إلى أجهزة الضيوف وإخراجهم قبل تدمير الاتصال
+            setTimeout(() => {
+                this.cleanup();
+                if (this.onLeaveRoom) {
+                    this.onLeaveRoom();
+                }
+            }, 220);
+            return;
         } else if (this.hostConn && this.hostConn.open) {
             this.hostConn.send({ type: 'LEAVE' });
+            setTimeout(() => {
+                this.cleanup();
+                if (this.onLeaveRoom) {
+                    this.onLeaveRoom();
+                }
+            }, 100);
+            return;
         }
         this.cleanup();
         if (this.onLeaveRoom) {
@@ -772,12 +898,12 @@ class AtomicPeerNetwork {
     }
 
     /**
-     * بث رسالة لجميع الضيوف والمتفرجين
+     * بث رسالة لجميع الضيوف والمتفرجين مع إمكانية استثناء اتصال مرسل
      */
-    broadcastToClients(data) {
+    broadcastToClients(data, excludeConn = null) {
         if (!this.isHost) return;
         this.clientConns.forEach((conn) => {
-            if (conn && conn.open) {
+            if (conn && conn.open && conn !== excludeConn) {
                 conn.send(data);
             }
         });

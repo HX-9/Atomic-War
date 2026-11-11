@@ -64,26 +64,30 @@
 .game-board {
   display: grid;
   grid-template-columns: repeat(var(--grid-cols), minmax(0, 1fr));
-  gap: 8px;
-  width: min(92vw, calc(100vh - 280px), 580px);
-  height: min(92vw, calc(100vh - 280px), 580px);
-  max-width: 580px;
-  max-height: 580px;
+  gap: 7px;
+  width: min(92vw, calc(100vh - 220px), 560px);
+  height: min(92vw, calc(100vh - 220px), 560px);
+  max-width: 560px;
+  max-height: 560px;
   position: relative;
   touch-action: manipulation;
 }
 
-@media (min-width: 1024px) {
-  .game-board {
-    width: min(calc(100vh - 270px), 70vh, 580px);
-    height: min(calc(100vh - 270px), 70vh, 580px);
-  }
+body.has-arsenal-dock .game-board {
+  width: min(92vw, calc(100vh - 340px), 490px);
+  height: min(92vw, calc(100vh - 340px), 490px);
+  max-width: 490px;
+  max-height: 490px;
 }
 
-@media (min-width: 1440px) {
+@media (min-width: 1024px) {
   .game-board {
-    width: min(calc(100vh - 270px), 72vh, 600px);
-    height: min(calc(100vh - 270px), 72vh, 600px);
+    width: min(calc(100vh - 210px), 68vh, 560px);
+    height: min(calc(100vh - 210px), 68vh, 560px);
+  }
+  body.has-arsenal-dock .game-board {
+    width: min(calc(100vh - 330px), 56vh, 490px);
+    height: min(calc(100vh - 330px), 56vh, 490px);
   }
 }
 

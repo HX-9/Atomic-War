@@ -1,129 +1,506 @@
 /* ==========================================================================
-   04. منطقة اللعب واللوحة الجانبية (Main Workspace & Sidebar Panels)
+   04. صفحة تجهيز المعركة (#setupScreen) وساحة المعركة الجديدة (#battleScreen)
+   مسار الملف: css/sidebar.css
    ========================================================================== */
-.main-workspace {
+
+/* ==========================================================================
+   أولاً: صفحة تجهيز وإعداد المعركة (Pre-Battle Tactical Setup Screen)
+   ========================================================================== */
+.setup-screen {
     width: 100%;
     max-width: 82rem;
+    margin: 0 auto;
+    min-height: calc(100vh - 1.5rem);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 0.85rem;
+    padding: 0.35rem 0;
+    position: relative;
+    z-index: 20;
+    animation: setupFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.setup-screen.hidden {
+    display: none !important;
+}
+
+@keyframes setupFadeIn {
+    0% { opacity: 0; transform: translateY(8px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+
+.setup-header-bar {
+    padding: 0.75rem 1.25rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.setup-header-right {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+}
+
+.setup-main-title {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 900;
+    color: #f8fafc;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.setup-subtitle {
+    margin: 0.15rem 0 0 0;
+    font-size: 0.75rem;
+    color: #94a3b8;
+}
+
+.setup-mode-switcher {
+    display: inline-flex;
+    background: rgba(15, 23, 42, 0.85);
+    padding: 0.28rem;
+    border-radius: 0.85rem;
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    gap: 0.3rem;
+}
+
+.setup-mode-tab {
+    padding: 0.45rem 1rem;
+    border-radius: 0.65rem;
+    border: 1px solid transparent;
+    background: transparent;
+    color: #94a3b8;
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 800;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    transition: all 0.2s ease;
+}
+
+.setup-mode-tab:hover {
+    color: #f1f5f9;
+}
+
+.setup-mode-tab--active {
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.22), rgba(168, 85, 247, 0.22));
+    border-color: rgba(56, 189, 248, 0.5);
+    color: #ffffff;
+    box-shadow: 0 2px 10px rgba(56, 189, 248, 0.2);
+}
+
+/* شبكة محتوى صفحة التجهيز (عمودان على الشاشات الكبيرة) */
+.setup-body-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    flex: 1;
+}
+
+@media (min-width: 1024px) {
+    .setup-body-grid {
+        grid-template-columns: 1.08fr 1fr;
+        align-items: stretch;
+    }
+}
+
+.setup-column {
+    padding: 1.15rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+}
+
+.setup-section-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+    margin-bottom: 0.65rem;
+}
+
+.setup-section-title {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 900;
+    color: #f8fafc;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.setup-lock-note {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #fbbf24;
+    background: rgba(245, 158, 11, 0.12);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    padding: 0.18rem 0.6rem;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+/* بطاقات اختيار الطور الفرعي الخمسة داخل صفحة التجهيز */
+.setup-submodes-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.setup-submode-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.85rem;
+    padding: 0.75rem 0.95rem;
+    border-radius: 0.9rem;
+    background: rgba(15, 23, 42, 0.65);
+    border: 1.5px solid rgba(71, 85, 105, 0.55);
+    cursor: pointer;
+    transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.setup-submode-card:hover {
+    background: rgba(30, 41, 59, 0.85);
+    border-color: rgba(148, 163, 184, 0.6);
+    transform: translateX(-3px);
+}
+
+.setup-submode-card--active {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.98));
+    border-color: #38bdf8;
+    box-shadow: 0 0 18px rgba(56, 189, 248, 0.25), inset 0 0 12px rgba(56, 189, 248, 0.1);
+}
+
+.setup-submode-icon-box {
+    width: 2.55rem;
+    height: 2.55rem;
+    border-radius: 0.75rem;
+    background: rgba(15, 23, 42, 0.9);
+    border: 1px solid var(--sub-color, #38bdf8);
+    color: var(--sub-color, #38bdf8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+.setup-submode-card--active .setup-submode-icon-box {
+    background: var(--sub-color, #38bdf8);
+    color: #0f172a;
+    box-shadow: 0 0 14px var(--sub-color, #38bdf8);
+}
+
+.setup-submode-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.setup-submode-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.22rem;
+}
+
+.setup-submode-name {
+    font-size: 0.88rem;
+    font-weight: 900;
+    color: #f8fafc;
+}
+
+.setup-submode-tag {
+    font-size: 0.66rem;
+    font-weight: 800;
+    color: var(--sub-color, #38bdf8);
+    background: rgba(15, 23, 42, 0.85);
+    border: 1px solid var(--sub-color, #38bdf8);
+    padding: 0.08rem 0.5rem;
+    border-radius: 999px;
+}
+
+.setup-submode-desc {
+    margin: 0;
+    font-size: 0.74rem;
+    color: #cbd5e1;
+    line-height: 1.45;
+}
+
+/* استعراض الوضع العادي في صفحة التجهيز */
+.setup-normal-showcase {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    margin-top: 0.4rem;
+}
+
+.setup-normal-feature {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.85rem;
+    padding: 0.9rem 1rem;
+    border-radius: 0.9rem;
+    background: rgba(15, 23, 42, 0.65);
+    border: 1px solid rgba(51, 65, 85, 0.7);
+}
+
+.setup-normal-feature i {
+    font-size: 1.35rem;
+    margin-top: 0.15rem;
+}
+
+.setup-normal-feature h4 {
+    margin: 0 0 0.25rem 0;
+    font-size: 0.88rem;
+    font-weight: 800;
+    color: #f8fafc;
+}
+
+.setup-normal-feature p {
+    margin: 0;
+    font-size: 0.76rem;
+    color: #94a3b8;
+    line-height: 1.45;
+}
+
+.setup-config-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.8rem;
+}
+
+/* شريط إطلاق المعركة في أسفل صفحة التجهيز */
+.setup-footer-bar {
+    padding: 0.8rem 1.25rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.setup-summary-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.setup-summary-badge {
+    font-size: 0.9rem;
+    font-weight: 900;
+    color: #38bdf8;
+}
+
+.setup-summary-meta {
+    font-size: 0.74rem;
+    color: #94a3b8;
+}
+
+.setup-launch-btn {
+    padding: 0.75rem 1.8rem;
+    border-radius: 0.9rem;
+    border: none;
+    background: linear-gradient(135deg, #10b981, #0284c7);
+    color: #ffffff;
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 900;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    box-shadow: 0 8px 22px -4px rgba(16, 185, 129, 0.55);
+    transition: all 0.22s ease;
+}
+
+.setup-launch-btn:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 12px 28px -4px rgba(56, 189, 248, 0.65);
+    filter: brightness(1.08);
+}
+
+/* ==========================================================================
+   ثانياً: ساحة المعركة الجديدة بدون قوائم جانبية (#battleScreen)
+   ========================================================================== */
+.hud-center-cluster {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    justify-self: center;
+}
+
+.locked-mode-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.72rem;
+    font-weight: 800;
+    padding: 0.22rem 0.68rem;
+    border-radius: 999px;
+    background: rgba(56, 189, 248, 0.14);
+    color: #7dd3fc;
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    user-select: none;
+    white-space: nowrap;
+}
+
+.round-badge {
+    font-size: 0.72rem;
+    font-weight: 800;
+    padding: 0.22rem 0.65rem;
+    border-radius: 9999px;
+    background: rgba(30, 41, 59, 0.85);
+    color: #cbd5e1;
+    border: 1px solid rgba(71, 85, 105, 0.7);
+    white-space: nowrap;
+}
+
+.battle-arena-main {
+    width: 100%;
+    max-width: 72rem;
     margin: 0 auto;
     flex: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
-    gap: 1.5rem;
-    padding: 0.5rem 0;
+    gap: 0.5rem;
+    padding: 0.1rem 0 0.35rem 0;
     position: relative;
     z-index: 10;
 }
 
-@media (min-width: 1024px) {
-    .main-workspace {
-        flex-direction: row;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: 2rem;
-    }
-}
-
-.reactor-sidebar {
+.arena-top-strips {
     width: 100%;
     display: flex;
     flex-direction: column;
-    gap: 1.25rem;
-    order: 2;
+    gap: 0.4rem;
 }
 
-@media (min-width: 1024px) {
-    .reactor-sidebar {
-        width: 26rem;
-        flex-shrink: 0;
-        order: 1;
-    }
-}
-
-.sidebar-panel {
-    padding: 1.25rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.875rem;
-}
-
-.panel-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-bottom: 0.5rem;
-    border-bottom: 1px solid #1e293b;
-}
-
-.panel-title {
-    font-size: 0.875rem;
-    font-weight: 700;
-    color: #e2e8f0;
-    margin: 0;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.round-badge {
-    font-size: 0.75rem;
-    padding: 0.125rem 0.625rem;
-    border-radius: 9999px;
-    background: #1e293b;
-    color: var(--text-muted);
-    border: 1px solid #334155;
-}
-
-/* ==========================================================================
-   05. بطاقات القوى النووية واللاعبين (Players Scoreboard Cards)
-   ========================================================================== */
-.players-list {
+/* شريط كبسولات القوى النووية الأفقي المدمج */
+.players-pods-strip {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.625rem;
-}
-
-@media (min-width: 1024px) {
-    .players-list {
-        grid-template-columns: 1fr;
-    }
+    grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+    gap: 0.45rem;
+    width: 100%;
 }
 
 .player-card {
-    padding: 0.75rem;
-    border-radius: 0.75rem;
-    background: rgba(30, 41, 59, 0.5);
-    border: 1px solid rgba(51, 65, 85, 0.7);
+    padding: 0.45rem 0.7rem 0.38rem 0.7rem;
+    border-radius: 0.85rem;
+    background: rgba(15, 23, 42, 0.85);
+    border: 1.5px solid rgba(51, 65, 85, 0.75);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.3rem;
+    transition: all 0.25s ease;
+    backdrop-filter: blur(10px);
+}
+
+.player-card-main {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    transition: all 0.3s ease;
+    gap: 0.45rem;
+    width: 100%;
+}
+
+.player-energy-bar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    width: 100%;
+    padding-top: 0.1rem;
+}
+
+.player-energy-icon {
+    font-size: 0.65rem;
+    color: #38bdf8;
+    filter: drop-shadow(0 0 4px rgba(56, 189, 248, 0.8));
+    animation: energyIconPulse 2.4s infinite ease-in-out;
+    flex-shrink: 0;
+}
+
+@keyframes energyIconPulse {
+    0%, 100% { opacity: 0.85; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.18); filter: drop-shadow(0 0 6px #38bdf8); }
+}
+
+.player-energy-track {
+    flex: 1;
+    height: 5px;
+    background: rgba(15, 23, 42, 0.95);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    border-radius: 999px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.7);
+}
+
+.player-energy-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #0284c7 0%, #38bdf8 60%, #67e8f9 100%);
+    border-radius: 999px;
+    box-shadow: 0 0 8px rgba(56, 189, 248, 0.8), inset 0 1px 1px rgba(255, 255, 255, 0.5);
+    transition: width 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+}
+
+.player-energy-fill::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 5px,
+        rgba(15, 23, 42, 0.4) 5px,
+        rgba(15, 23, 42, 0.4) 7px
+    );
+    pointer-events: none;
 }
 
 .player-card--active {
-    background: rgba(30, 41, 59, 0.95);
+    background: rgba(30, 41, 59, 0.96);
     border-width: 2px;
-    transform: scale(1.02);
+    transform: translateY(-1px);
 }
 
 .player-card--eliminated {
-    background: rgba(15, 23, 42, 0.4);
+    background: rgba(15, 23, 42, 0.38);
     border-color: #1e293b;
-    opacity: 0.5;
+    opacity: 0.45;
     filter: grayscale(1);
 }
 
 .player-card-info {
     display: flex;
     align-items: center;
-    gap: 0.625rem;
+    gap: 0.5rem;
     min-width: 0;
 }
 
 .player-color-dot {
-    width: 1rem;
-    height: 1rem;
+    width: 0.8rem;
+    height: 0.8rem;
     border-radius: 50%;
     flex-shrink: 0;
 }
@@ -135,27 +512,26 @@
 }
 
 .player-name-row {
-    font-weight: 700;
-    font-size: 0.8125rem;
+    font-weight: 800;
+    font-size: 0.76rem;
     color: #ffffff;
     display: flex;
     align-items: center;
-    gap: 0.375rem;
+    gap: 0.3rem;
 }
 
 .player-status-tag {
     display: inline-block;
-    font-size: 0.625rem;
-    padding: 0.125rem 0.5rem;
+    font-size: 0.58rem;
+    padding: 0.05rem 0.4rem;
     border-radius: 0.25rem;
     font-weight: 700;
-    margin-top: 0.125rem;
+    margin-top: 0.05rem;
 }
 
 .player-status-tag--turn {
     background: rgba(16, 185, 129, 0.2);
     color: #6ee7b7;
-    animation: statusPulse 1.5s infinite alternate;
 }
 
 .player-status-tag--waiting {
@@ -169,147 +545,363 @@
     color: #fda4af;
 }
 
-@keyframes statusPulse {
-    0% { opacity: 0.7; }
-    100% { opacity: 1; }
-}
-
 .player-stats-group {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.5rem;
     flex-shrink: 0;
 }
 
 .player-stat-box {
     text-align: center;
+    min-width: 1.7rem;
 }
 
 .player-stat-label {
-    font-size: 0.625rem;
-    color: var(--text-muted);
+    font-size: 0.56rem;
+    color: #94a3b8;
+    line-height: 1.1;
 }
 
 .player-stat-value {
-    font-size: 0.8125rem;
+    font-size: 0.76rem;
     font-weight: 900;
     color: #e2e8f0;
+    line-height: 1.2;
 }
 
-/* ==========================================================================
-   06. رادار المفاعل ومقياس غايغر ودليل الاستقرار (Radar, Geiger & Guide)
-   ========================================================================== */
-.radar-status-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.radar-label {
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: var(--text-muted);
-}
-
+/* شارة حالة المفاعل المدمجة في الهيدر */
 .reactor-status-badge {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-weight: 800;
-    padding: 0.15rem 0.65rem;
+    padding: 0.2rem 0.65rem;
     border-radius: 9999px;
+    max-width: 260px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .reactor-status-badge--stable {
-    background: rgba(16, 185, 129, 0.12);
+    background: rgba(16, 185, 129, 0.14);
     color: #34d399;
-    border: 1px solid rgba(16, 185, 129, 0.25);
+    border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
 .reactor-status-badge--active {
     background: rgba(245, 158, 11, 0.2);
     color: #fcd34d;
     border: 1px solid rgba(245, 158, 11, 0.4);
-    animation: statusPulse 0.8s infinite alternate;
 }
 
-.geiger-header {
+/* الشريط السفلي المدمج للإشعاع والتعبيرات السريعة أسفل المفاعل */
+.reactor-bottom-bar {
+    width: 100%;
+    max-width: min(96vw, 560px);
+    padding: 0.28rem 0.75rem;
+    border-radius: 0.85rem;
     display: flex;
+    flex-wrap: wrap;
+    align-items: center;
     justify-content: space-between;
-    font-size: 0.6875rem;
-    color: var(--text-muted);
-    margin-bottom: 0.25rem;
-    font-weight: 600;
+    gap: 0.5rem;
+}
+
+.telemetry-geiger {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.geiger-mini-label {
+    font-size: 0.66rem;
+    font-weight: 700;
+    color: #94a3b8;
+}
+
+.geiger-meter-bar {
+    width: 80px;
+    height: 6px;
+    background: rgba(30, 41, 59, 0.85);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.geiger-meter-fill {
+    height: 100%;
+    width: 12%;
+    background: linear-gradient(90deg, #10b981, #eab308, #ef4444);
+    border-radius: 3px;
+    transition: width 0.3s ease;
 }
 
 .geiger-value {
     color: #34d399;
     font-family: monospace;
+    font-size: 0.68rem;
     font-weight: 700;
 }
 
-.geiger-meter-bar {
-    height: 6px;
-    background: rgba(30, 41, 59, 0.8);
-    border-radius: 3px;
-    overflow: hidden;
+/* ==========================================================================
+   خامساً: منصة البطاقات الذرية التكتيكية السفلية (#neutronArsenalBar)
+   ========================================================================== */
+.neutron-floating-dock {
+    width: 100%;
+    max-width: min(96vw, 620px);
+    margin: 0.4rem auto 0 auto;
+    padding: 0.55rem 0.85rem;
+    background: rgba(15, 23, 42, 0.94);
+    backdrop-filter: blur(14px);
+    border: 1.5px solid rgba(56, 189, 248, 0.35);
+    border-radius: 1rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.65), 0 0 20px rgba(56, 189, 248, 0.15);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
     position: relative;
+    z-index: 25;
+    animation: dockSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.geiger-meter-fill {
-    height: 100%;
-    width: 15%;
-    background: linear-gradient(90deg, #10b981, #eab308, #ef4444);
-    border-radius: 3px;
-    transition: width 0.3s ease;
-    box-shadow: 0 0 10px rgba(16, 185, 129, 0.6);
+@keyframes dockSlideUp {
+    0% { opacity: 0; transform: translateY(12px); }
+    100% { opacity: 1; transform: translateY(0); }
 }
 
-.critical-guide-section {
-    border-top: 1px solid rgba(30, 41, 59, 0.8);
-    padding-top: 0.75rem;
+.dock-energy-bar {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
 }
 
-.critical-guide-title {
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: var(--text-muted);
-    margin: 0 0 0.5rem 0;
+.dock-neutron-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.dock-neutron-header {
     display: flex;
     align-items: center;
-    gap: 0.375rem;
+    justify-content: space-between;
 }
 
-.critical-guide-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.5rem;
+.dock-neutron-label {
+    font-size: 0.76rem;
+    font-weight: 800;
+    color: #e2e8f0;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.dock-neutron-val {
+    font-size: 0.78rem;
+    font-weight: 900;
+    font-family: monospace;
+    color: #38bdf8;
+    background: rgba(56, 189, 248, 0.12);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    padding: 0.1rem 0.5rem;
+    border-radius: 999px;
+}
+
+.neutron-meter-track {
+    display: flex;
+    gap: 3px;
+    height: 7px;
+    width: 100%;
+    background: rgba(2, 6, 23, 0.7);
+    padding: 2px;
+    border-radius: 999px;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.neutron-pip {
+    flex: 1;
+    height: 100%;
+    background: rgba(51, 65, 85, 0.5);
+    border-radius: 999px;
+    transition: all 0.25s ease;
+}
+
+.neutron-pip.filled {
+    box-shadow: 0 0 6px currentColor;
+    border-radius: 999px;
+}
+
+.dock-hint-text {
+    font-size: 0.72rem;
+    line-height: 1.35;
+    color: #cbd5e1;
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid rgba(148, 163, 184, 0.15);
+    border-radius: 0.55rem;
+    padding: 0.25rem 0.6rem;
     text-align: center;
 }
 
-.critical-guide-card {
-    background: rgba(30, 41, 59, 0.6);
-    border: 1px solid rgba(51, 65, 85, 0.6);
+/* يد البطاقات التكتيكية (Tactical Hand) */
+.tactical-cards-hand {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.45rem;
+}
+
+@media (max-width: 480px) {
+    .tactical-cards-hand {
+        gap: 0.28rem;
+    }
+}
+
+.arsenal-btn.tactical-card {
+    background: linear-gradient(145deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.95));
+    border: 1.5px solid rgba(148, 163, 184, 0.25);
     border-radius: 0.75rem;
-    padding: 0.5rem;
+    padding: 0.45rem 0.25rem 0.4rem 0.25rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    text-align: center;
+    min-height: 76px;
+    cursor: pointer;
+    font-family: inherit;
+    position: relative;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    user-select: none;
+    overflow: visible;
 }
 
-.critical-guide-capacity {
+.arsenal-btn.tactical-card:hover:not(:disabled) {
+    border-color: #38bdf8;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 18px rgba(56, 189, 248, 0.25);
+}
+
+.arsenal-btn.tactical-card.active {
+    border-color: #f59e0b !important;
+    background: linear-gradient(145deg, rgba(245, 158, 11, 0.25), rgba(30, 41, 59, 0.95)) !important;
+    transform: translateY(-4px) scale(1.03);
+    box-shadow: 0 0 16px rgba(245, 158, 11, 0.5), inset 0 0 8px rgba(245, 158, 11, 0.2) !important;
+}
+
+/* حالة عدم كفاية الطاقة للبطاقة (تبقى شارة التكلفة واضحة ومقروءة تماماً) */
+.arsenal-btn.tactical-card:disabled {
+    cursor: not-allowed;
+    background: rgba(15, 23, 42, 0.88);
+    border-color: rgba(71, 85, 105, 0.45);
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+.arsenal-btn.tactical-card:disabled .tactical-card-visual,
+.arsenal-btn.tactical-card:disabled .arsenal-btn-name,
+.arsenal-btn.tactical-card:disabled .tactical-card-type {
+    opacity: 0.38;
+    filter: grayscale(0.5);
+}
+
+.arsenal-btn.tactical-card:disabled .tactical-card-cost {
+    opacity: 1 !important;
+    background: rgba(15, 23, 42, 0.96) !important;
+    border: 1.5px solid rgba(245, 158, 11, 0.75) !important;
+    color: #fde047 !important;
+    box-shadow: 0 0 8px rgba(245, 158, 11, 0.35) !important;
+}
+
+/* شارة تكلفة الطاقة في رأس البطاقة (واضحة وبارزة بنسبة 100%) */
+.tactical-card-cost {
+    position: absolute;
+    top: 4px;
+    right: 5px;
+    background: linear-gradient(135deg, #0284c7, #0ea5e9);
+    color: #ffffff;
+    font-size: 0.74rem;
     font-weight: 900;
-    font-size: 0.875rem;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+    padding: 0.12rem 0.42rem;
+    border-radius: 999px;
+    border: 1.5px solid rgba(255, 255, 255, 0.55);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.65), 0 0 8px rgba(14, 165, 233, 0.4);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    direction: ltr;
+    line-height: 1;
+    z-index: 6;
+    pointer-events: none;
+    letter-spacing: 0.5px;
 }
 
-.critical-guide-unit {
-    font-size: 0.625rem;
-    color: var(--text-muted);
-    font-weight: 600;
+.arsenal-btn-cost--rod {
+    background: linear-gradient(135deg, #059669, #10b981) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.65), 0 0 8px rgba(16, 185, 129, 0.4) !important;
 }
 
-.critical-guide-type {
-    font-size: 0.6875rem;
-    font-weight: 600;
-    color: #e2e8f0;
+.arsenal-btn-cost--drain {
+    background: linear-gradient(135deg, #d97706, #f59e0b) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.65), 0 0 8px rgba(245, 158, 11, 0.4) !important;
 }
 
-.critical-guide-trigger {
-    font-size: 0.625rem;
-    color: #fb7185;
+@media (max-width: 480px) {
+    .tactical-card-cost {
+        font-size: 0.66rem;
+        padding: 0.08rem 0.32rem;
+        top: 3px;
+        right: 3px;
+    }
+}
+
+.tactical-card-visual {
+    margin: 0.45rem 0 0.15rem 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 22px;
+}
+
+.arsenal-atom-preview {
+    font-size: 0.82rem;
+    letter-spacing: 1px;
+    color: #38bdf8;
+    filter: drop-shadow(0 0 4px #38bdf8);
+}
+
+.preview-1 { color: #38bdf8; }
+.preview-2 { color: #818cf8; letter-spacing: 2px; }
+.preview-3 { color: #f43f5e; letter-spacing: 2px; }
+
+.arsenal-rod-icon {
+    font-size: 1.05rem;
+    color: #10b981;
+    filter: drop-shadow(0 0 5px #10b981);
+}
+
+.arsenal-drain-icon {
+    font-size: 1.05rem;
+    color: #f59e0b;
+    filter: drop-shadow(0 0 5px #f59e0b);
+}
+
+.arsenal-btn-name {
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: #f1f5f9;
+    line-height: 1.15;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+.tactical-card-type {
+    font-size: 0.58rem;
+    color: #94a3b8;
+    margin-top: 0.1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
 }
