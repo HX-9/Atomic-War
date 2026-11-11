@@ -70,10 +70,7 @@ class AtomicWarsUIController {
 
         // عناصر صفحة تجهيز وإعداد المعركة (#setupScreen)
         this.btnBackFromSetupToWelcome = document.getElementById('btnBackFromSetupToWelcome');
-        this.setupMainModeAdvanced = document.getElementById('setupMainModeAdvanced');
-        this.setupMainModeNormal = document.getElementById('setupMainModeNormal');
         this.setupCardsSubmodesSection = document.getElementById('setupCardsSubmodesSection');
-        this.setupNormalInfoSection = document.getElementById('setupNormalInfoSection');
         this.setupSubmodeCards = document.querySelectorAll('.setup-submode-card');
         this.setupSummaryModeBadge = document.getElementById('setupSummaryModeBadge');
         this.setupSummaryMetaText = document.getElementById('setupSummaryMetaText');
@@ -395,6 +392,7 @@ class AtomicWarsUIController {
 
         // أزرار ملف القائد والأنواط
         const openDossier = () => {
+            this.toggleModal(this.settingsModal, false);
             this.renderDossierModal();
             this.toggleModal(this.dossierModal, true);
         };
@@ -551,7 +549,10 @@ class AtomicWarsUIController {
         });
 
         // نافذة القواعد
-        document.getElementById('btnRulesModal').addEventListener('click', () => this.toggleModal(this.rulesModal, true));
+        document.getElementById('btnRulesModal').addEventListener('click', () => {
+            this.toggleModal(this.settingsModal, false);
+            this.toggleModal(this.rulesModal, true);
+        });
         document.getElementById('btnCloseRules').addEventListener('click', () => this.toggleModal(this.rulesModal, false));
         document.getElementById('btnGotItRules').addEventListener('click', () => this.toggleModal(this.rulesModal, false));
 
@@ -745,10 +746,6 @@ class AtomicWarsUIController {
         }
         if (this.btnOpenSettingsFromWin) {
             this.btnOpenSettingsFromWin.classList.toggle('hidden', !isCardsLocal);
-        }
-        const btnSettingsModalEl = document.getElementById('btnSettingsModal');
-        if (btnSettingsModalEl) {
-            btnSettingsModalEl.classList.toggle('hidden', isCardsLocal);
         }
     }
 
@@ -1702,6 +1699,9 @@ class AtomicWarsUIController {
         this.playersListEl.innerHTML = '';
         const currentId = this.engine.currentPlayerIndex;
         const hasNeutrons = this.engine && this.engine.mode && typeof this.engine.mode.hasNeutronSystem === 'function' && this.engine.mode.hasNeutronSystem();
+        const maxN = (this.engine && this.engine.mode && typeof this.engine.mode.getMaxNeutrons === 'function')
+            ? this.engine.mode.getMaxNeutrons()
+            : 10;
 
         playersList.forEach(p => {
             const isTurn = !this.engine.isGameOver && p.id === currentId;
@@ -1727,37 +1727,44 @@ class AtomicWarsUIController {
                         ? '<span class="player-status-tag player-status-tag--waiting">بانتظار البداية</span>'
                         : '';
 
-            const neutronStatHtml = hasNeutrons ? `
-                <div class="player-stat-box">
-                    <div class="player-stat-label">طاقة ⚡</div>
-                    <div class="player-stat-value" style="color: #38bdf8">${p.neutrons || 0}</div>
+            const currentNeutrons = p.neutrons || 0;
+            const energyPercent = Math.min(100, Math.max(0, Math.round((currentNeutrons / maxN) * 100)));
+
+            const energyBarHtml = hasNeutrons ? `
+                <div class="player-energy-bar-wrap" title="طاقة النيوترونات التكتيكية (${currentNeutrons}/${maxN})">
+                    <i class="fa-solid fa-bolt player-energy-icon"></i>
+                    <div class="player-energy-track">
+                        <div class="player-energy-fill" style="width: ${energyPercent}%;"></div>
+                    </div>
                 </div>
             ` : '';
 
             card.innerHTML = `
-                <div class="player-card-info">
-                    <span class="player-color-dot" style="background-color: ${p.color}; box-shadow: 0 0 8px ${p.color};"></span>
-                    <div class="player-meta-box">
-                        <div class="player-name-row">
-                            <span>${p.name}</span>
-                            ${this.isOnlineMatch && p.id === this.localPlayerId ? '<span class="player-local-badge">أنت</span>' : ''}
-                            ${p.isAI ? `<i class="fa-solid fa-robot icon-sky" title="${p.personality === 'aggressive' ? 'روبوت هجومي' : (p.personality === 'defensive' ? 'روبوت حذر' : 'روبوت متوازن')}"></i>` : ''}
-                            ${this.getPingBadgeHTML(p.id)}
+                <div class="player-card-main">
+                    <div class="player-card-info">
+                        <span class="player-color-dot" style="background-color: ${p.color}; box-shadow: 0 0 8px ${p.color};"></span>
+                        <div class="player-meta-box">
+                            <div class="player-name-row">
+                                <span>${p.name}</span>
+                                ${this.isOnlineMatch && p.id === this.localPlayerId ? '<span class="player-local-badge">أنت</span>' : ''}
+                                ${p.isAI ? `<i class="fa-solid fa-robot icon-sky" title="${p.personality === 'aggressive' ? 'روبوت هجومي' : (p.personality === 'defensive' ? 'روبوت حذر' : 'روبوت متوازن')}"></i>` : ''}
+                                ${this.getPingBadgeHTML(p.id)}
+                            </div>
+                            ${statusLabel}
                         </div>
-                        ${statusLabel}
+                    </div>
+                    <div class="player-stats-group">
+                        <div class="player-stat-box">
+                            <div class="player-stat-label">الغرف</div>
+                            <div class="player-stat-value">${p.cellCount}</div>
+                        </div>
+                        <div class="player-stat-box">
+                            <div class="player-stat-label">الذرات</div>
+                            <div class="player-stat-value" style="color: ${p.color}">${p.atomCount}</div>
+                        </div>
                     </div>
                 </div>
-                <div class="player-stats-group">
-                    <div class="player-stat-box">
-                        <div class="player-stat-label">الغرف</div>
-                        <div class="player-stat-value">${p.cellCount}</div>
-                    </div>
-                    <div class="player-stat-box">
-                        <div class="player-stat-label">الذرات</div>
-                        <div class="player-stat-value" style="color: ${p.color}">${p.atomCount}</div>
-                    </div>
-                    ${neutronStatHtml}
-                </div>
+                ${energyBarHtml}
             `;
 
             this.playersListEl.appendChild(card);
@@ -2047,51 +2054,14 @@ class AtomicWarsUIController {
     }
 
     populateSettingsModal() {
-        if (this.isOnlineMatch) {
-            // في المعركة الأونلاين: إخفاء الحجم واللاعبين وتخصيص سرعة الانشطار فقط
-            if (this.settingsGroupGridSize) this.settingsGroupGridSize.classList.add('hidden');
-            if (this.settingsGroupPlayerCount) this.settingsGroupPlayerCount.classList.add('hidden');
-            if (this.settingsGroupPlayerSetup) this.settingsGroupPlayerSetup.classList.add('hidden');
-            if (this.settingsGroupSpeed) this.settingsGroupSpeed.classList.remove('hidden');
-            if (this.settingsModalTitle) {
-                this.settingsModalTitle.innerHTML = '<i class="fa-solid fa-gauge-high icon-sky"></i> تخصيص سرعة الانشطار (المباراة أونلاين)';
-            }
-            if (this.btnApplySettings) {
-                this.btnApplySettings.textContent = 'تطبيق سرعة العرض للمفاعل';
-            }
-        } else {
-            // في الأوفلاين: إظهار جميع الإعدادات بحرية
-            if (this.settingsGroupGridSize) this.settingsGroupGridSize.classList.remove('hidden');
-            if (this.settingsGroupPlayerCount) this.settingsGroupPlayerCount.classList.remove('hidden');
-            if (this.settingsGroupPlayerSetup) this.settingsGroupPlayerSetup.classList.remove('hidden');
-            if (this.settingsGroupSpeed) this.settingsGroupSpeed.classList.remove('hidden');
-            if (this.settingsModalTitle) {
-                this.settingsModalTitle.innerHTML = '<i class="fa-solid fa-sliders icon-emerald"></i> تخصيص المفاعل الذري والقوى';
-            }
-            if (this.btnApplySettings) {
-                this.btnApplySettings.textContent = 'حفظ وتنشيط المفاعل الجديد';
-            }
-
-            document.querySelectorAll('.size-option').forEach(btn => {
-                if (parseInt(btn.dataset.size, 10) === this.config.gridSize) {
-                    this.updateButtonGroupHighlight('.size-option', btn, 'purple');
-                }
-            });
-
-            document.querySelectorAll('.pcount-option').forEach(btn => {
-                if (parseInt(btn.dataset.count, 10) === this.config.playerCount) {
-                    this.updateButtonGroupHighlight('.pcount-option', btn, 'emerald');
-                }
-            });
-
-            this.renderPlayerSetupRows();
+        this.syncOptionHighlights();
+        this.syncSoundIcons();
+        this.syncHapticUI();
+        this.syncThemeOptions();
+        const btnToggleNumbers = document.getElementById('btnToggleNumbers');
+        if (btnToggleNumbers) {
+            btnToggleNumbers.classList.toggle('action-btn--active', this.config.showNumbers);
         }
-
-        document.querySelectorAll('.speed-option').forEach(btn => {
-            if (parseInt(btn.dataset.speed, 10) === this.config.waveSpeedMs) {
-                this.updateButtonGroupHighlight('.speed-option', btn, 'sky');
-            }
-        });
     }
 
     renderPlayerSetupRows() {
@@ -2705,8 +2675,11 @@ class AtomicWarsUIController {
         const cur = this.themeMgr.currentTheme;
         if (this.themeOptionButtons) {
             this.themeOptionButtons.forEach(btn => {
-                const isSelected = btn.dataset.theme === cur;
-                btn.className = `option-btn theme-option ${isSelected ? 'option-btn--active-emerald' : ''}`;
+                const isSelected = (btn.dataset.theme === cur);
+                let activeClass = 'option-btn--active-emerald';
+                if (cur === 'cyberpunk') activeClass = 'option-btn--active-rose';
+                else if (cur === 'retro') activeClass = 'option-btn--active-emerald';
+                btn.className = `option-btn theme-option ${isSelected ? activeClass : ''}`;
             });
         }
     }

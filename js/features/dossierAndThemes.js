@@ -70,9 +70,8 @@ class ThemeManager {
     constructor() {
         this.themes = [
             { id: 'emerald', name: 'المفاعل الزمردي (الأصلي)', icon: 'fa-atom', color: '#10b981' },
-            { id: 'cyberpunk', name: 'السايبربانك النيوني (Cyberpunk)', icon: 'fa-bolt', color: '#f43f5e' },
-            { id: 'retro', name: 'تيرمينال الرادار (Retro CRT)', icon: 'fa-terminal', color: '#22c55e' },
-            { id: 'deepcore', name: 'قلب المفاعل الجليدي (Deep Core)', icon: 'fa-snowflake', color: '#38bdf8' }
+            { id: 'cyberpunk', name: 'نيون السايبربانك (Synthwave Matrix)', icon: 'fa-bolt', color: '#ff007f' },
+            { id: 'retro', name: 'تيرمينال الرادار (Retro CRT)', icon: 'fa-terminal', color: '#22c55e' }
         ];
         this.currentTheme = this.loadTheme();
         this.applyTheme(this.currentTheme, false);
@@ -109,10 +108,20 @@ class ThemeManager {
 
     applyTheme(themeId, notify = false) {
         if (typeof document === 'undefined') return;
-        document.body.classList.remove('theme-cyberpunk', 'theme-retro', 'theme-deepcore');
+        document.body.classList.remove('theme-cyberpunk', 'theme-retro');
         if (themeId !== 'emerald') {
             document.body.classList.add(`theme-${themeId}`);
         }
+
+        // تحديث الحالات النشطة لجميع أزرار اختيار الثيم في الواجهة
+        document.querySelectorAll('[data-theme]').forEach(btn => {
+            const bTheme = btn.getAttribute('data-theme');
+            const isMatch = (bTheme === themeId);
+            btn.classList.toggle('option-btn--active-emerald', isMatch && themeId === 'emerald');
+            btn.classList.toggle('option-btn--active-rose', isMatch && themeId === 'cyberpunk');
+            btn.classList.toggle('option-btn--active-emerald', isMatch && themeId === 'retro');
+            btn.classList.toggle('active', isMatch);
+        });
     }
 
     getCurrentThemeObj() {

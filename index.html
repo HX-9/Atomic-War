@@ -21,7 +21,7 @@
         <!-- طبقة البلور بنسبة 30% والشبكة التكتيكية -->
         <div class="welcome-blur-overlay"></div>
 
-        <!-- 01. الهيدر العلوي في الشاشة الترحيبية -->
+        <!-- 01. الهيدر العلوي النظيف في الشاشة الترحيبية -->
         <header class="welcome-top-header">
             <div class="glass-panel welcome-header-bar">
                 <div class="brand-box">
@@ -42,65 +42,102 @@
                         <i class="fa-solid fa-id-card-clip icon-sky"></i>
                         <span class="action-btn-label">ملف القائد</span>
                     </button>
-                    <button type="button" id="btnWelcomeTheme" title="تبديل المظهر والثيم" class="action-btn">
-                        <i class="fa-solid fa-palette icon-rose"></i>
-                        <span class="action-btn-label">المظهر</span>
-                    </button>
-                    <button type="button" id="btnWelcomeHaptic" title="كتم/تشغيل الاهتزاز اللمسي" class="action-btn">
-                        <i id="welcomeHapticIcon" class="fa-solid fa-mobile-screen icon-emerald"></i>
-                        <span class="action-btn-label">الاهتزاز</span>
-                    </button>
-                    <button type="button" id="btnWelcomeSoundToggle" title="كتم/تشغيل الصوتيات" class="action-btn">
-                        <i id="welcomeSoundIcon" class="fa-solid fa-volume-high icon-emerald"></i>
-                        <span class="action-btn-label">الصوتيات</span>
-                    </button>
-                    <button type="button" id="btnWelcomeRulesModal" title="قواعد اللعبة" class="action-btn">
+                    <button type="button" id="btnWelcomeRulesModal" title="قواعد الاشتباك النووي" class="action-btn">
                         <i class="fa-solid fa-radiation icon-amber"></i>
                         <span class="action-btn-label">القواعد</span>
                     </button>
-                    <button type="button" id="btnWelcomeSettingsModal" title="تخصيص المفاعل" class="action-btn">
+                    <button type="button" id="btnWelcomeTheme" title="تبديل المظهر البصري" class="action-btn action-btn--icon-only">
+                        <i class="fa-solid fa-palette icon-rose"></i>
+                    </button>
+                    <button type="button" id="btnWelcomeSoundToggle" title="كتم/تشغيل الصوتيات" class="action-btn action-btn--icon-only">
+                        <i id="welcomeSoundIcon" class="fa-solid fa-volume-high icon-emerald"></i>
+                    </button>
+                    <button type="button" id="btnWelcomeHaptic" title="كتم/تشغيل الاهتزاز اللمسي" class="action-btn action-btn--icon-only">
+                        <i id="welcomeHapticIcon" class="fa-solid fa-mobile-screen icon-emerald"></i>
+                    </button>
+                    <button type="button" id="btnWelcomeSettingsModal" title="مركز الضبط السريع" class="action-btn action-btn--icon-only">
                         <i class="fa-solid fa-sliders icon-purple"></i>
-                        <span class="action-btn-label">تخصيص</span>
                     </button>
                 </div>
             </div>
         </header>
 
-        <!-- 02. الأزرار العائمة مباشرة على الخلفية -->
+        <!-- 02. منصة بوابات القتال المركزية (Hero Mode Cards) -->
         <div class="welcome-floating-content">
             <div class="welcome-floating-modes">
-                <!-- الصف الأول: يمين (البطاقات الذرية)، منتصف (الوضع العادي)، يسار (معركة أونلاين P2P) -->
+                <div class="welcome-hero-intro">
+                    <span class="welcome-hero-kicker"><i class="fa-solid fa-radiation"></i> اختر بروتوكول الاشتباك النووي</span>
+                    <h2 class="welcome-hero-heading">سيطر على قلب المفاعل الذري</h2>
+                </div>
+
+                <!-- شبكة بطاقات الأوضاع الثلاثة الرئيسية -->
                 <div class="welcome-modes-row">
-                    <!-- اليمين: البطاقات الذرية -->
-                    <button type="button" id="btnStartAdvancedMode" class="rect-mode-btn rect-mode-btn--advanced">
-                        <i class="fa-solid fa-atom rect-mode-icon"></i>
-                        <span class="rect-mode-label">البطاقات الذرية</span>
+                    <!-- 1. البطاقات الذرية -->
+                    <button type="button" id="btnStartAdvancedMode" class="hero-mode-card hero-mode-card--advanced">
+                        <div class="hero-mode-card-top">
+                            <div class="hero-mode-icon-wrap">
+                                <i class="fa-solid fa-atom"></i>
+                            </div>
+                            <span class="hero-mode-pill hero-mode-pill--purple">5 أطوار تكتيكية</span>
+                        </div>
+                        <div class="hero-mode-card-body">
+                            <h3 class="hero-mode-title">البطاقات الذرية</h3>
+                            <p class="hero-mode-desc">طاقة نيوترونات متجددة، دروع تحكم، هجمات إخماد، وغرفة تجهيز شاملة قبل المعركة.</p>
+                        </div>
+                        <div class="hero-mode-card-footer">
+                            <span>دخول غرفة التجهيز</span>
+                            <i class="fa-solid fa-arrow-left"></i>
+                        </div>
                     </button>
 
-                    <!-- المنتصف: الوضع العادي -->
-                    <button type="button" id="btnStartNormalMode" class="rect-mode-btn rect-mode-btn--normal">
-                        <i class="fa-solid fa-crosshairs rect-mode-icon"></i>
-                        <span class="rect-mode-label">الوضع العادي</span>
+                    <!-- 2. الوضع العادي -->
+                    <button type="button" id="btnStartNormalMode" class="hero-mode-card hero-mode-card--normal">
+                        <div class="hero-mode-card-top">
+                            <div class="hero-mode-icon-wrap">
+                                <i class="fa-solid fa-crosshairs"></i>
+                            </div>
+                            <span class="hero-mode-pill hero-mode-pill--emerald">لعب فوري مباشر</span>
+                        </div>
+                        <div class="hero-mode-card-body">
+                            <h3 class="hero-mode-title">الوضع العادي</h3>
+                            <p class="hero-mode-desc">الاستراتيجية الكلاسيكية النقية؛ سعة موحدة لجميع الغرف وانشطار متسلسل مباشر.</p>
+                        </div>
+                        <div class="hero-mode-card-footer">
+                            <span>إطلاق المعركة فوراً</span>
+                            <i class="fa-solid fa-play"></i>
+                        </div>
                     </button>
 
-                    <!-- اليسار: معركة أونلاين عبر P2P -->
-                    <button type="button" id="btnOpenOnlineModal" class="rect-mode-btn rect-mode-btn--online">
-                        <i class="fa-solid fa-tower-broadcast rect-mode-icon"></i>
-                        <span class="rect-mode-label">معركة أونلاين</span>
+                    <!-- 3. معركة أونلاين P2P -->
+                    <button type="button" id="btnOpenOnlineModal" class="hero-mode-card hero-mode-card--online">
+                        <div class="hero-mode-card-top">
+                            <div class="hero-mode-icon-wrap">
+                                <i class="fa-solid fa-tower-broadcast"></i>
+                            </div>
+                            <span class="hero-mode-pill hero-mode-pill--sky">متعدد اللاعبين P2P</span>
+                        </div>
+                        <div class="hero-mode-card-body">
+                            <h3 class="hero-mode-title">معركة أونلاين</h3>
+                            <p class="hero-mode-desc">أنشئ غرفة أو انضم بكود أحرف فوري مع أصدقائك ودعم كامل للروبوتات والمتفرجين.</p>
+                        </div>
+                        <div class="hero-mode-card-footer">
+                            <span>فتح ردهة الاتصال</span>
+                            <i class="fa-solid fa-satellite-dish"></i>
+                        </div>
                     </button>
                 </div>
 
-                <!-- الصف الثاني أسفله: وضع 2 و وضع 3 (مغلقان) -->
-                <div class="welcome-modes-subrow" style="gap: 0.85rem;">
-                    <button type="button" id="btnMode2" class="rect-mode-btn rect-mode-btn--locked" title="وضع 2 مغلق">
-                        <i class="fa-solid fa-lock rect-mode-icon"></i>
-                        <span class="rect-mode-label">وضع 2</span>
-                        <span class="rect-mode-badge">مغلق</span>
+                <!-- شريط سفلي مدمج للأطوار القادمة -->
+                <div class="welcome-modes-subrow">
+                    <button type="button" id="btnMode2" class="locked-mini-pill" title="وضع 2 مغلق حالياً">
+                        <i class="fa-solid fa-lock"></i>
+                        <span>الطور 2</span>
+                        <span class="rect-mode-badge">قريباً</span>
                     </button>
-                    <button type="button" id="btnMode3" class="rect-mode-btn rect-mode-btn--locked" title="وضع 3 مغلق">
-                        <i class="fa-solid fa-lock rect-mode-icon"></i>
-                        <span class="rect-mode-label">وضع 3</span>
-                        <span class="rect-mode-badge">مغلق</span>
+                    <button type="button" id="btnMode3" class="locked-mini-pill" title="وضع 3 مغلق حالياً">
+                        <i class="fa-solid fa-lock"></i>
+                        <span>الطور 3</span>
+                        <span class="rect-mode-badge">قريباً</span>
                     </button>
                 </div>
             </div>
@@ -280,10 +317,7 @@
                             <i class="fa-solid fa-bolt"></i> السايبربانك
                         </button>
                         <button type="button" data-theme="retro" class="option-btn theme-option">
-                            <i class="fa-solid fa-terminal"></i> الرادار
-                        </button>
-                        <button type="button" data-theme="deepcore" class="option-btn theme-option">
-                            <i class="fa-solid fa-snowflake"></i> الجليدي
+                            <i class="fa-solid fa-terminal"></i> الرادار CRT
                         </button>
                     </div>
                 </div>
@@ -308,26 +342,24 @@
     <!-- ================= 02. ساحة المعركة الجديدة كلياً (#battleScreen) ================= -->
     <div id="battleScreen" class="battle-screen hidden">
 
-        <!-- 2.1 الشريط التكتيكي العلوي المدمج (HUD Top Bar) -->
+        <!-- 2.1 الشريط التكتيكي العلوي المدمج ثلاثي الأعمدة (HUD Top Bar) -->
         <header class="app-header">
             <div class="glass-panel header-bar">
-                <!-- اليمين: الهوية + شارة الطور المقفلة -->
-                <div class="brand-box">
-                    <div class="brand-logo">
+                <!-- اليمين: الهوية المختصرة + شارة الوضع المقفلة + رقم الجولة -->
+                <div class="hud-right">
+                    <div class="brand-logo brand-logo--compact">
                         <i class="fa-solid fa-atom brand-logo-icon"></i>
                     </div>
-                    <div>
-                        <div class="brand-title-row">
-                            <h1 class="brand-title">الحرب الذرية</h1>
-                            <span class="locked-mode-pill" id="activeModeBadge" title="الوضع مقفل أثناء المعركة">
-                                <i class="fa-solid fa-lock"></i> البطاقات الذرية
-                            </span>
-                        </div>
-                        <p class="brand-meta" id="headerBoardInfo">مفاعل 7×7 • 49 غرفة انشطار</p>
+                    <div class="hud-brand-cluster">
+                        <span class="locked-mode-pill" id="activeModeBadge" title="الوضع مقفل أثناء المعركة">
+                            <i class="fa-solid fa-lock"></i> البطاقات الذرية
+                        </span>
+                        <span id="turnCounterBadge" class="round-badge">الجولة 1</span>
+                        <span class="hidden" id="headerBoardInfo">مفاعل 7×7</span>
                     </div>
                 </div>
 
-                <!-- المنتصف: كبسولة الدور النشط + مؤشر الجولة + مؤقت الصاعقة -->
+                <!-- المنتصف الهندسي: كبسولة الدور النشط + مؤقت الصاعقة + حالة المفاعل -->
                 <div class="hud-center-cluster">
                     <div id="turnBanner" class="turn-banner" title="القوة صاحبة الدور الحالي">
                         <span class="turn-dot-wrapper">
@@ -337,92 +369,49 @@
                         <span id="currentPlayerName" class="turn-player-name">اليورانيوم الأخضر</span>
                     </div>
 
-                    <span id="turnCounterBadge" class="round-badge">الجولة 1</span>
-
                     <!-- مؤشر مؤقت الصاعقة الذرية (يظهر فقط في طور Blitz) -->
                     <div id="blitzTimerBadge" class="blitz-timer-badge hidden" title="الوقت المتبقي لحركتك">
                         <i class="fa-solid fa-stopwatch fa-spin"></i>
                         <span id="blitzSecondsVal">6</span>ث
                     </div>
+
+                    <!-- شارة حالة الموجة والمفاعل المدمجة -->
+                    <span id="chainWaveStatus" class="reactor-status-badge reactor-status-badge--stable">
+                        المفاعل مستقر
+                    </span>
                 </div>
 
-                <!-- اليسار: أزرار التحكم السريع -->
+                <!-- اليسار: 5 أزرار تكتيكية مرتبة وموحدة الأبعاد فقط -->
                 <div class="header-actions">
-                    <button id="btnBackToWelcome" title="العودة للقائمة الرئيسية" class="action-btn">
-                        <i class="fa-solid fa-house icon-amber"></i>
-                        <span class="action-btn-label">الرئيسية</span>
-                    </button>
-                    <button id="btnBackToSetup" title="العودة لغرفة التجهيز لتغيير الوضع أو الإعدادات" class="action-btn">
-                        <i class="fa-solid fa-sliders icon-purple"></i>
-                        <span class="action-btn-label">التجهيز</span>
-                    </button>
                     <button id="btnTacticalAdvisor" title="طلب توجيه تكتيكي ذكي للحركة القادمة" class="action-btn action-btn--advisor">
                         <i class="fa-solid fa-lightbulb icon-amber"></i>
                         <span class="action-btn-label">توجيه</span>
-                    </button>
-                    <button id="btnToggleNumbers" title="إظهار/إخفاء أعداد الذرات" class="action-btn">
-                        <i class="fa-solid fa-hashtag icon-sky"></i>
-                    </button>
-                    <button id="btnSoundToggle" title="كتم/تشغيل الصوتيات النووية" class="action-btn">
-                        <i id="soundIcon" class="fa-solid fa-volume-high icon-emerald"></i>
-                    </button>
-                    <button id="btnBattleHaptic" title="كتم/تشغيل الاهتزاز اللمسي" class="action-btn">
-                        <i id="battleHapticIcon" class="fa-solid fa-mobile-screen icon-emerald"></i>
-                    </button>
-                    <button id="btnBattleTheme" title="تبديل المظهر والثيم" class="action-btn">
-                        <i class="fa-solid fa-palette icon-rose"></i>
-                    </button>
-                    <button id="btnBattleDossier" title="ملف القائد والأنواط النووية" class="action-btn">
-                        <i class="fa-solid fa-id-card-clip icon-sky"></i>
-                    </button>
-                    <button id="btnRulesModal" title="قواعد الاشتباك النووي" class="action-btn">
-                        <i class="fa-solid fa-radiation icon-amber"></i>
-                    </button>
-                    <button id="btnSettingsModal" title="ضبط السرعة والمظهر" class="action-btn hidden">
-                        <i class="fa-solid fa-gauge-high icon-sky"></i>
                     </button>
                     <button id="btnRestartFast" title="إعادة تشغيل المعركة بنفس الإعدادات المقفلة" class="action-btn action-btn--primary">
                         <i class="fa-solid fa-rotate-right"></i>
                         <span class="action-btn-label">إعادة</span>
                     </button>
+                    <button id="btnSettingsModal" title="مركز الأدوات والضبط السريع" class="action-btn action-btn--icon-only">
+                        <i class="fa-solid fa-sliders icon-sky"></i>
+                    </button>
+                    <button id="btnBackToSetup" title="العودة لغرفة التجهيز (وضع البطاقات)" class="action-btn">
+                        <i class="fa-solid fa-layer-group icon-purple"></i>
+                        <span class="action-btn-label">التجهيز</span>
+                    </button>
+                    <button id="btnBackToWelcome" title="العودة للقائمة الرئيسية" class="action-btn action-btn--icon-only">
+                        <i class="fa-solid fa-house icon-amber"></i>
+                    </button>
                 </div>
             </div>
         </header>
 
-        <!-- 2.2 ساحة القتال المركزية (بدون قوائم جانبية مزدحمة!) -->
+        <!-- 2.2 ساحة القتال المركزية -->
         <main class="battle-arena-main">
 
             <!-- شريط كبسولات القوى النووية الأفقي المدمج أعلى المفاعل -->
             <div class="arena-top-strips">
                 <div id="playersListContainer" class="players-pods-strip">
                     <!-- يتم بناء كبسولات اللاعبين ديناميكياً بواسطة js/app.js -->
-                </div>
-
-                <!-- شريط حالة المفاعل ومقياس غايغر والتعبيرات السريعة -->
-                <div class="reactor-telemetry-bar glass-panel">
-                    <div class="telemetry-status">
-                        <i class="fa-solid fa-wave-square icon-emerald"></i>
-                        <span id="chainWaveStatus" class="reactor-status-badge reactor-status-badge--stable">
-                            المفاعل في حالة استقرار
-                        </span>
-                    </div>
-
-                    <div class="telemetry-geiger">
-                        <span class="geiger-mini-label">الإشعاع:</span>
-                        <div class="geiger-meter-bar">
-                            <div id="geigerMeterFill" class="geiger-meter-fill"></div>
-                        </div>
-                        <span id="geigerValueText" class="geiger-value">0.14 μSv/h</span>
-                    </div>
-
-                    <div id="quickEmotesBar" class="quick-emotes-dock">
-                        <button type="button" class="emote-btn" data-emote="☢️" title="خطر نووي!">☢️</button>
-                        <button type="button" class="emote-btn" data-emote="💥" title="انشطار كارثي!">💥</button>
-                        <button type="button" class="emote-btn" data-emote="🛡️" title="دفاع حصين!">🛡️</button>
-                        <button type="button" class="emote-btn" data-emote="🎯" title="ضربة محكمة!">🎯</button>
-                        <button type="button" class="emote-btn" data-emote="⚡" title="طاقة قصوى!">⚡</button>
-                        <button type="button" class="emote-btn" data-emote="🤝" title="لعب نظيف!">🤝</button>
-                    </div>
                 </div>
             </div>
 
@@ -440,7 +429,7 @@
                     </div>
                 </div>
 
-                <!-- منصة أوراق البطاقات التكتيكية السفلية (تظهر في وضع البطاقات الذرية فقط - بدون أزرار تبديل أطوار!) -->
+                <!-- منصة أوراق البطاقات التكتيكية السفلية (تظهر في وضع البطاقات الذرية فقط) -->
                 <div id="neutronArsenalBar" class="neutron-floating-dock hidden">
                     <div class="dock-energy-bar">
                         <div class="dock-neutron-info">
@@ -504,6 +493,27 @@
                         </button>
                     </div>
                 </div>
+
+                <!-- شريط سفلي مدمج جداً للإشعاع والتعبيرات السريعة أسفل المفاعل -->
+                <div class="reactor-bottom-bar glass-panel">
+                    <div class="telemetry-geiger">
+                        <i class="fa-solid fa-radiation icon-emerald"></i>
+                        <span class="geiger-mini-label">الإشعاع:</span>
+                        <div class="geiger-meter-bar">
+                            <div id="geigerMeterFill" class="geiger-meter-fill"></div>
+                        </div>
+                        <span id="geigerValueText" class="geiger-value">0.14 μSv/h</span>
+                    </div>
+
+                    <div id="quickEmotesBar" class="quick-emotes-dock">
+                        <button type="button" class="emote-btn" data-emote="☢️" title="خطر نووي!">☢️</button>
+                        <button type="button" class="emote-btn" data-emote="💥" title="انشطار كارثي!">💥</button>
+                        <button type="button" class="emote-btn" data-emote="🛡️" title="دفاع حصين!">🛡️</button>
+                        <button type="button" class="emote-btn" data-emote="🎯" title="ضربة محكمة!">🎯</button>
+                        <button type="button" class="emote-btn" data-emote="⚡" title="طاقة قصوى!">⚡</button>
+                        <button type="button" class="emote-btn" data-emote="🤝" title="لعب نظيف!">🤝</button>
+                    </div>
+                </div>
             </section>
         </main>
     </div><!-- نهاية حاوية شاشة المعركة #battleScreen -->
@@ -554,17 +564,63 @@
         </div>
     </div>
 
-    <!-- 2. نافذة الضبط السريع للسرعة والاهتزاز (تستخدم في الأونلاين أو الضبط السريع دون كسر قفل الطور) -->
+    <!-- 2. مركز الأدوات والضبط السريع الموحد (#settingsModal) -->
     <div id="settingsModal" class="modal-backdrop hidden">
         <div class="glass-panel modal-card">
             <div class="modal-header">
                 <h2 class="modal-title" id="settingsModalTitle">
-                    <i class="fa-solid fa-gauge-high icon-sky"></i>
-                    ضبط سرعة الانشطار والاهتزاز
+                    <i class="fa-solid fa-sliders icon-sky"></i>
+                    مركز الأدوات والضبط السريع
                 </h2>
                 <button id="btnCloseSettings" class="modal-close-btn">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
+            </div>
+
+            <!-- شبكة الأدوات السريعة (الصوت، الاهتزاز، الأرقام، المظهر، القواعد، ملف القائد) -->
+            <div class="settings-group">
+                <label class="settings-label">أدوات التحكم السريع في المفاعل:</label>
+                <div class="quick-tools-grid">
+                    <button type="button" id="btnSoundToggle" class="quick-tool-tile">
+                        <i id="soundIcon" class="fa-solid fa-volume-high icon-emerald"></i>
+                        <span>الصوتيات النووية</span>
+                    </button>
+                    <button type="button" id="btnBattleHaptic" class="quick-tool-tile">
+                        <i id="battleHapticIcon" class="fa-solid fa-mobile-screen icon-emerald"></i>
+                        <span>الاهتزاز اللمسي</span>
+                    </button>
+                    <button type="button" id="btnToggleNumbers" class="quick-tool-tile action-btn--active">
+                        <i class="fa-solid fa-hashtag icon-sky"></i>
+                        <span>أعداد الذرات</span>
+                    </button>
+                    <button type="button" id="btnBattleTheme" class="quick-tool-tile">
+                        <i class="fa-solid fa-palette icon-rose"></i>
+                        <span>تبديل المظهر</span>
+                    </button>
+                    <button type="button" id="btnRulesModal" class="quick-tool-tile">
+                        <i class="fa-solid fa-radiation icon-amber"></i>
+                        <span>قواعد الاشتباك</span>
+                    </button>
+                    <button type="button" id="btnBattleDossier" class="quick-tool-tile">
+                        <i class="fa-solid fa-id-card-clip icon-sky"></i>
+                        <span>ملف القائد والأنواط</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="settings-group">
+                <label class="settings-label"><i class="fa-solid fa-palette icon-rose"></i> مظهر المفاعل البصري:</label>
+                <div class="settings-options-grid" id="modalThemeButtons">
+                    <button type="button" data-theme="emerald" class="option-btn theme-option option-btn--active-emerald">
+                        <i class="fa-solid fa-atom"></i> الزمردي
+                    </button>
+                    <button type="button" data-theme="cyberpunk" class="option-btn theme-option">
+                        <i class="fa-solid fa-bolt"></i> السايبربانك
+                    </button>
+                    <button type="button" data-theme="retro" class="option-btn theme-option">
+                        <i class="fa-solid fa-terminal"></i> الرادار CRT
+                    </button>
+                </div>
             </div>
 
             <div class="settings-group">
@@ -577,22 +633,22 @@
             </div>
 
             <div class="settings-group">
-                <label class="settings-label">الاهتزاز اللمسي (Haptic Feedback):</label>
-                <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(30, 41, 59, 0.5); padding: 0.65rem 0.95rem; border-radius: 8px; border: 1px solid rgba(148, 163, 184, 0.2);">
+                <label class="settings-label">الاهتزاز التفاعلي عند الانشطار:</label>
+                <div class="haptic-toggle-box">
                     <div style="display: flex; align-items: center; gap: 0.5rem;">
-                        <i class="fa-solid fa-mobile-screen icon-sky" style="font-size: 1.1rem;"></i>
-                        <span style="font-size: 0.85rem; color: #cbd5e1;">اهتزاز تفاعلي عند وضع الذرات وسلاسل الانشطار</span>
+                        <i class="fa-solid fa-mobile-screen icon-sky"></i>
+                        <span style="font-size: 0.82rem; color: #cbd5e1;">نبضات اهتزاز عند التلقيم والانفجار</span>
                     </div>
                     <label class="player-ai-toggle" style="cursor: pointer; margin: 0;">
-                        <input type="checkbox" id="checkHapticSetting" checked style="width: 18px; height: 18px; accent-color: #38bdf8; cursor: pointer;">
-                        <span id="hapticSettingLabel" style="font-size: 0.85rem; font-weight: 700; color: #38bdf8; margin-right: 0.4rem;">مفعّل</span>
+                        <input type="checkbox" id="checkHapticSetting" checked style="width: 17px; height: 17px; accent-color: #38bdf8; cursor: pointer;">
+                        <span id="hapticSettingLabel" style="font-size: 0.82rem; font-weight: 700; color: #38bdf8; margin-right: 0.35rem;">مفعّل</span>
                     </label>
                 </div>
             </div>
 
             <div class="modal-actions">
                 <button id="btnApplySettings" class="modal-btn-primary">
-                    حفظ الضبط السريع
+                    حفظ وإغلاق
                 </button>
             </div>
         </div>

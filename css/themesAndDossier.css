@@ -3,36 +3,88 @@
    مسار الملف: css/themesAndDossier.css
    ========================================================================== */
 
-/* 1. ثيم السايبربانك (Cyberpunk Neon Matrix) */
+/* 1. ثيم السايبربانك النيوني (Cyberpunk Neon Matrix / Synthwave) */
 body.theme-cyberpunk {
   --color-bg-primary: #0a0118;
-  --color-bg-surface: rgba(22, 6, 48, 0.85);
-  --color-border: rgba(244, 63, 94, 0.4);
-  --color-accent: #f43f5e;
-  --color-accent-glow: rgba(244, 63, 94, 0.6);
+  --color-bg-surface: rgba(24, 6, 46, 0.9);
+  --color-border: rgba(255, 0, 127, 0.5);
+  --color-accent: #ff007f;
+  --color-accent-glow: rgba(255, 0, 127, 0.7);
   --color-neon-cyan: #00f0ff;
 }
 
+body.theme-cyberpunk.app-body {
+  background: radial-gradient(circle at 50% 12%, #260544 0%, #110024 45%, #06000e 100%) !important;
+  color: #fdf2f8 !important;
+}
+
+body.theme-cyberpunk.app-body::before {
+  background-image: 
+    radial-gradient(rgba(255, 0, 127, 0.22) 1.5px, transparent 1.5px),
+    linear-gradient(to right, rgba(0, 240, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 0, 127, 0.08) 1px, transparent 1px) !important;
+  background-size: 32px 32px, 64px 64px, 64px 64px !important;
+}
+
+body.theme-cyberpunk .glass-panel {
+  background: rgba(24, 6, 46, 0.88) !important;
+  border-color: rgba(255, 0, 127, 0.42) !important;
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.75), 0 0 25px rgba(255, 0, 127, 0.2) !important;
+}
+
 body.theme-cyberpunk .app-header,
-body.theme-cyberpunk .welcome-top-header {
-  border-bottom-color: rgba(244, 63, 94, 0.45);
-  box-shadow: 0 4px 20px rgba(244, 63, 94, 0.2);
+body.theme-cyberpunk .welcome-top-header,
+body.theme-cyberpunk .setup-header-bar,
+body.theme-cyberpunk .setup-footer-bar {
+  border-bottom-color: rgba(255, 0, 127, 0.45) !important;
+  box-shadow: 0 4px 25px rgba(255, 0, 127, 0.25) !important;
 }
 
-body.theme-cyberpunk .reactor-cell {
-  border-color: rgba(168, 85, 247, 0.35);
-  background: rgba(20, 8, 42, 0.65);
+body.theme-cyberpunk .brand-title,
+body.theme-cyberpunk .setup-main-title {
+  text-shadow: 0 0 12px rgba(255, 0, 127, 0.75), 0 0 24px rgba(0, 240, 255, 0.5) !important;
 }
 
-body.theme-cyberpunk .reactor-cell:hover {
-  border-color: #00f0ff;
-  box-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
+body.theme-cyberpunk .game-board-wrapper {
+  background: rgba(16, 3, 32, 0.94) !important;
+  border: 2px solid #ff007f !important;
+  box-shadow: 0 0 35px rgba(255, 0, 127, 0.5), 0 0 15px rgba(0, 240, 255, 0.3), inset 0 0 30px rgba(255, 0, 127, 0.15) !important;
+}
+
+body.theme-cyberpunk .board-cell {
+  border-color: rgba(255, 0, 127, 0.35) !important;
+  background: rgba(28, 6, 54, 0.75) !important;
+}
+
+body.theme-cyberpunk .board-cell:hover {
+  border-color: #00f0ff !important;
+  box-shadow: 0 0 22px rgba(0, 240, 255, 0.65), inset 0 0 12px rgba(255, 0, 127, 0.3) !important;
+}
+
+body.theme-cyberpunk .player-card {
+  background: rgba(24, 6, 46, 0.9) !important;
+  border-color: rgba(255, 0, 127, 0.35) !important;
+}
+
+body.theme-cyberpunk .player-card--active {
+  border-color: #ff007f !important;
+  box-shadow: 0 0 20px rgba(255, 0, 127, 0.45) !important;
+}
+
+body.theme-cyberpunk .player-energy-fill {
+  background: linear-gradient(90deg, #d946ef 0%, #ff007f 55%, #00f0ff 100%) !important;
+  box-shadow: 0 0 10px rgba(255, 0, 127, 0.9), inset 0 1px 1px rgba(255, 255, 255, 0.6) !important;
+}
+
+body.theme-cyberpunk .player-energy-icon {
+  color: #ff007f !important;
+  filter: drop-shadow(0 0 6px #ff007f) !important;
 }
 
 body.theme-cyberpunk .neutron-floating-dock {
-  background: rgba(18, 5, 40, 0.95);
-  border-color: rgba(244, 63, 94, 0.5);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7), 0 0 25px rgba(244, 63, 94, 0.25);
+  background: rgba(20, 4, 40, 0.95) !important;
+  border-color: #ff007f !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.8), 0 0 30px rgba(255, 0, 127, 0.4) !important;
 }
 
 /* 2. ثيم تيرمينال الرادار الكلاسيكي (Retro CRT Terminal) */
@@ -49,40 +101,21 @@ body.theme-retro::after {
   display: block;
   position: fixed;
   top: 0; left: 0; bottom: 0; right: 0;
-  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 255, 0, 0.03));
   z-index: 99999;
   background-size: 100% 3px, 3px 100%;
   pointer-events: none;
   opacity: 0.6;
 }
 
-body.theme-retro .reactor-cell {
+body.theme-retro .board-cell {
   border-color: rgba(34, 197, 94, 0.3);
   background: rgba(2, 20, 9, 0.7);
 }
 
-body.theme-retro .reactor-cell:hover {
+body.theme-retro .board-cell:hover {
   border-color: #4ade80;
   box-shadow: 0 0 16px rgba(74, 222, 128, 0.45);
-}
-
-/* 3. ثيم قلب المفاعل الجليدي (Deep Core Sci-Fi) */
-body.theme-deepcore {
-  --color-bg-primary: #030d1a;
-  --color-bg-surface: rgba(8, 28, 52, 0.88);
-  --color-border: rgba(56, 189, 248, 0.45);
-  --color-accent: #38bdf8;
-  --color-accent-glow: rgba(56, 189, 248, 0.5);
-}
-
-body.theme-deepcore .reactor-cell {
-  border-color: rgba(125, 211, 252, 0.25);
-  background: rgba(8, 24, 46, 0.65);
-}
-
-body.theme-deepcore .reactor-cell:hover {
-  border-color: #bae6fd;
-  box-shadow: 0 0 20px rgba(186, 230, 253, 0.45);
 }
 
 /* ==========================================================================
